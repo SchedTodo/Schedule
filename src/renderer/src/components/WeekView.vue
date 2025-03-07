@@ -11,8 +11,8 @@
       </div>
       <template v-if="getEventBriefsByOffset(i)">
         <n-tooltip
-          trigger="hover"
           v-for="event in getEventBriefsByOffset(i)"
+          trigger="hover"
           :show="stateMap.get(event.id)?.isHover && stateMap.get(event.id)?.isDrag == false"
           @mouseover="handleMouseOver(event)"
           @mouseleave="handleMouseLeave(event)"
@@ -21,12 +21,12 @@
             <div
               :style="stateMap.get(event.id)?.styleObject"
               class="event-card"
+              draggable="true"
               @click="handleClick(event)"
               @mouseover="handleMouseOver(event)"
               @mouseleave="handleMouseLeave(event)"
               @dragstart="handleDragStart($event, event)"
               @dragend="handleDragEnd($event, event)"
-              draggable="true"
             >
               <div class="name">{{ event.name }}</div>
               <div class="time">
@@ -142,14 +142,22 @@ const getData = async (start: string | null, end: string | null) => {
     }
   })
   for (const eventBrief of eventBriefs) {
-    const key = DateTime.fromISO(eventBrief.start!)
-      .setZone(settingsStore.getValue('rrule.timeZone'))
-      .toFormat('yyyy/M/d') // 一定不会是 null
-    if (eventBriefIndexed.has(key)) {
-      eventBriefIndexed.get(key)!.push(eventBrief) // 一定不会是 undefined
-    } else {
-      eventBriefIndexed.set(key, [eventBrief])
+    let start = DateTime.fromISO(eventBrief.start!).setZone(
+      settingsStore.getValue('rrule.timeZone')
+    )
+    // start 在 startTime 之前，显示在前一天
+    if (
+      start.hour < settingsStore.getValue('preferences.startTime.hour') ||
+      (start.hour === settingsStore.getValue('preferences.startTime.hour') &&
+        start.minute < settingsStore.getValue('preferences.startTime.minute'))
+    ) {
+      start = start.minus({ day: 1 })
     }
+    const key = start.toFormat('yyyy/M/d')
+    if (!eventBriefIndexed.has(key)) {
+      eventBriefIndexed.set(key, [])
+    }
+    eventBriefIndexed.get(key)!.push(eventBrief) // 一定不会是 undefined
     // 初始化
     if (!stateMap.has(eventBrief.id)) {
       stateMap.set(eventBrief.id, {
@@ -165,10 +173,18 @@ const getData = async (start: string | null, end: string | null) => {
 }
 
 const handleDataUpdate = () => {
+  let days = props.days
+  // 如果 startTime 不是 0:0，这里要加 1 天
+  if (
+    settingsStore.getValue('preferences.startTime.hour') > 0 ||
+    settingsStore.getValue('preferences.startTime.minute') > 0
+  ) {
+    days += 1
+  }
   getData(
     DateTime.now().setZone(settingsStore.getValue('rrule.timeZone')).startOf('day').toISO(),
     DateTime.now()
-      .plus({ day: props.days })
+      .plus({ day: days })
       .setZone(settingsStore.getValue('rrule.timeZone'))
       .endOf('day')
       .toISO()
