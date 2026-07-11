@@ -1,8 +1,11 @@
 node_modules
 .pnpm-store
 coverage/
+playwright-report/
+test-results/
 dist
 dist-web
+dist-electron
 out
 *.log*
 .vscode

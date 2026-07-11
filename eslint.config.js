@@ -5,6 +5,7 @@ import tseslint from 'typescript-eslint'
 export default defineConfig(
   globalIgnores([
     'coverage/**',
+    'dist-electron/**',
     'dist-web/**',
     'dist/**',
     'out/**',
