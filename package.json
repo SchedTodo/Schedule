@@ -12,6 +12,7 @@
   "packageManager": "pnpm@11.11.0+sha512.4463f65fd80ed80d69bc1d4bf163ee94f605c7380fc318bb5b2ebe15f8cd12d49c51a4d59e951b401e764d3b6ca751cbf51bc50ed7001a6bcb4935e684c34882",
   "scripts": {
     "dev:web": "vite",
+    "electron:download": "node tools/run-with-electron-mirror.mjs",
     "build:web": "vue-tsc --noEmit -p tsconfig.app.json && vite build",
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.electron.json",
     "test:unit": "vitest run tests/unit tests/contracts tests/parser",
@@ -41,6 +42,7 @@
     "@vitejs/plugin-vue": "latest",
     "@vue/test-utils": "latest",
     "drizzle-kit": "^0.31.10",
+    "electron": "43.1.0",
     "eslint": "latest",
     "eslint-plugin-vue": "latest",
     "fast-check": "^4.9.0",
