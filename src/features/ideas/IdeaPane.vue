@@ -14,7 +14,11 @@ function updateIdeas(value: string) {
 
 <template>
   <div class="idea-pane">
-    <NPopover v-model:show="show" placement="left-start" trigger="manual">
+    <NPopover
+      v-model:show="show"
+      placement="left-start"
+      trigger="manual"
+    >
       <template #trigger>
         <NButton
           text

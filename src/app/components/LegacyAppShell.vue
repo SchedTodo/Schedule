@@ -31,8 +31,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
 </script>
 
 <template>
-  <NLayout class="legacy-shell" position="absolute">
-    <NLayoutHeader class="legacy-header" bordered>
+  <NLayout
+    class="legacy-shell"
+    position="absolute"
+  >
+    <NLayoutHeader
+      class="legacy-header"
+      bordered
+    >
       <nav aria-label="Main navigation">
         <RouterLink
           v-for="item in navigation"
@@ -44,16 +50,29 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
         </RouterLink>
       </nav>
       <div class="guest-identity">
-        <NAvatar round size="small">G</NAvatar>
+        <NAvatar
+          round
+          size="small"
+        >
+          G
+        </NAvatar>
         <span>Guest</span>
       </div>
     </NLayoutHeader>
 
-    <NLayoutContent class="legacy-content" :native-scrollbar="false">
+    <NLayoutContent
+      class="legacy-content"
+      :native-scrollbar="false"
+    >
       <RouterView />
     </NLayoutContent>
 
-    <NLayoutFooter class="legacy-footer" bordered>© 2023</NLayoutFooter>
+    <NLayoutFooter
+      class="legacy-footer"
+      bordered
+    >
+      © 2023
+    </NLayoutFooter>
   </NLayout>
   <IdeaPane />
 </template>
