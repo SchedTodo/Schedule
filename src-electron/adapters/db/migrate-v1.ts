@@ -50,7 +50,11 @@ function instantMilliseconds(value: string | null, fallback: number): number {
   return Number.isNaN(milliseconds) ? fallback : milliseconds
 }
 
-export function migrateV1Database(databasePath: string, backupPath: string): MigrationResult {
+export function migrateV1Database(
+  databasePath: string,
+  backupPath: string,
+  bundledMigrationSql?: string
+): MigrationResult {
   const inspectionDatabase = new Database(databasePath)
   try {
     if (isCurrentDatabase(inspectionDatabase)) return { status: 'current' }
@@ -67,10 +71,9 @@ export function migrateV1Database(databasePath: string, backupPath: string): Mig
   copyFileSync(databasePath, backupPath, constants.COPYFILE_EXCL)
 
   const database = new Database(databasePath)
-  const migrationSql = readFileSync(
-    new URL('./migrations/0001_v2_schema.sql', import.meta.url),
-    'utf8'
-  )
+  const migrationSql =
+    bundledMigrationSql ??
+    readFileSync(new URL('./migrations/0001_v2_schema.sql', import.meta.url), 'utf8')
 
   try {
     database.transaction(() => {

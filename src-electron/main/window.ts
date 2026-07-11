@@ -1,4 +1,5 @@
 import type { BrowserWindowConstructorOptions } from 'electron'
+import { pathToFileURL } from 'node:url'
 
 export interface WindowLoader {
   loadURL(url: string): Promise<unknown>
@@ -25,5 +26,5 @@ export async function loadMainWindow(
     await window.loadURL(developmentUrl)
     return
   }
-  await window.loadFile(webEntryPath)
+  await window.loadURL(pathToFileURL(webEntryPath).href)
 }

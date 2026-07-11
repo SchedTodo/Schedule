@@ -15,9 +15,9 @@ describe('Electron main window loading', () => {
   it('loads dist-web in production', async () => {
     const window = { loadURL: vi.fn(), loadFile: vi.fn(async () => undefined) }
 
-    await loadMainWindow(window, undefined, 'D:/app/dist-web/index.html')
+    await loadMainWindow(window, undefined, 'D:\\app\\dist-web\\index.html')
 
-    expect(window.loadFile).toHaveBeenCalledWith('D:/app/dist-web/index.html')
-    expect(window.loadURL).not.toHaveBeenCalled()
+    expect(window.loadURL).toHaveBeenCalledWith('file:///D:/app/dist-web/index.html')
+    expect(window.loadFile).not.toHaveBeenCalled()
   })
 })
