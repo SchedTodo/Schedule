@@ -17,6 +17,16 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: () => import('./pages/settings.vue')
+    },
+    {
+      path: '/database',
+      name: 'database',
+      component: () => import('./pages/database.vue')
+    },
+    {
+      path: '/help',
+      name: 'help',
+      component: () => import('./pages/help.vue')
     }
   ]
 })

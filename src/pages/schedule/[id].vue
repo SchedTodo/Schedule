@@ -1,35 +1,30 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { NAlert, NDescriptions, NDescriptionsItem, NSpin } from 'naive-ui'
-import { useRoute } from 'vue-router'
-
+import { NAlert, NButton, NCard, NEmpty, NPageHeader, NSpin, NTag } from 'naive-ui'
+import { useRoute, useRouter } from 'vue-router'
 import { platformGatewayKey } from '../../app/injection-keys'
 import { useScheduleDetail } from '../../features/schedule/use-schedule-detail'
 
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
-
 const route = useRoute()
+const router = useRouter()
 const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
 if (!id) throw new Error('Schedule id is required')
 const detail = useScheduleDetail(gateway, id)
-
-function formatTimestamp(value: string) {
-  return new Intl.DateTimeFormat('zh-CN', {
-    dateStyle: 'medium',
-    timeStyle: 'short'
-  }).format(new Date(value))
-}
+const format = (value: string) => new Date(value).toLocaleString()
 </script>
 
 <template>
-  <section class="detail-page">
-    <RouterLink to="/">
-      返回日程
-    </RouterLink>
+  <div class="legacy-detail">
+    <NPageHeader
+      title="Schedule"
+      :show-breadcrumb="false"
+      @back="router.back()"
+    />
     <NSpin
       v-if="detail.loading.value"
-      description="正在加载日程"
+      description="Loading"
     />
     <NAlert
       v-else-if="detail.error.value"
@@ -37,47 +32,61 @@ function formatTimestamp(value: string) {
     >
       {{ detail.error.value.message }}
     </NAlert>
+    <template v-else-if="detail.schedule.value">
+      <NCard segmented>
+        <template #header>
+          <b>Info</b>
+        </template>
+        <template #header-extra>
+          <NButton
+            text
+            disabled
+            aria-label="Star"
+          >
+            {{ detail.schedule.value.starred ? '★' : '☆' }}
+          </NButton>
+          <NButton disabled>
+            Edit
+          </NButton><NButton disabled>
+            Delete
+          </NButton>
+        </template>
+        <div class="schedule-info">
+          <b>Name</b><span>{{ detail.schedule.value.title }}</span>
+          <b>Type</b><NTag type="success">
+            {{ detail.schedule.value.kind }}
+          </NTag>
+          <b>Comment</b><span class="pre-line">{{ detail.schedule.value.comment }}</span>
+          <b>rTime</b><span class="pre-line">{{ detail.schedule.value.recurrenceCode }}</span>
+          <b>exTime</b><span class="pre-line">{{ detail.schedule.value.exclusionCode }}</span>
+          <b>Star</b><span>{{ detail.schedule.value.starred }}</span>
+          <b>Created</b><span>{{ format(detail.schedule.value.createdAt) }}</span>
+          <b>Updated</b><span>{{ format(detail.schedule.value.updatedAt) }}</span>
+        </div>
+      </NCard>
+      <NCard segmented>
+        <template #header>
+          <b>Times</b>
+        </template>
+        <template #header-extra>
+          <NButton disabled>
+            Delete
+          </NButton>
+        </template>
+        <NEmpty description="No Times" />
+      </NCard>
+    </template>
     <NAlert
-      v-else-if="!detail.schedule.value"
+      v-else
       type="warning"
     >
-      未找到该日程
+      Schedule not found
     </NAlert>
-    <article v-else>
-      <h1>{{ detail.schedule.value.title }}</h1>
-      <NDescriptions
-        bordered
-        :column="1"
-      >
-        <NDescriptionsItem label="类型">
-          {{ detail.schedule.value.kind === 'event' ? '事件' : '待办' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="时间规则">
-          {{ detail.schedule.value.recurrenceCode || '无' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="备注">
-          {{ detail.schedule.value.comment || '无' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="星标">
-          {{ detail.schedule.value.starred ? '已星标' : '未星标' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="创建时间">
-          {{ formatTimestamp(detail.schedule.value.createdAt) }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="更新时间">
-          {{ formatTimestamp(detail.schedule.value.updatedAt) }}
-        </NDescriptionsItem>
-      </NDescriptions>
-    </article>
-  </section>
+  </div>
 </template>
 
 <style scoped>
-.detail-page {
-  display: grid;
-  max-inline-size: 50rem;
-  padding: 1.5rem;
-  margin-inline: auto;
-  gap: 1.5rem;
-}
+.legacy-detail { display: flex; flex-direction: column; gap: 1rem; padding: 6vh 8vw; }
+.schedule-info { display: grid; grid-template-columns: 5rem 1fr; gap: 1rem 2rem; }
+.pre-line { white-space: pre-line; }
 </style>
