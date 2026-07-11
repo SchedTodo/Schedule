@@ -21,7 +21,14 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "tests/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.vue",
+    "tests/unit/**/*.ts",
+    "tests/contracts/**/*.ts",
+    "tests/parser/**/*.ts"
+  ],
   "exclude": [
     "src/main",
     "src/preload",

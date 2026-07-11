@@ -1,4 +1,9 @@
 packages:
   - .
 
-onlyBuiltDependencies: []
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true
+
+onlyBuiltDependencies:
+  - better-sqlite3
