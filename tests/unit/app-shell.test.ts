@@ -34,7 +34,7 @@ describe('App shell', () => {
   it('cycles routes with the legacy Ctrl+Arrow shortcuts', async () => {
     const router = createRouter({ history: createMemoryHistory(), routes })
     await router.push('/')
-    const wrapper = mount(App, { global: { plugins: [createPinia(), router] } })
+    mount(App, { global: { plugins: [createPinia(), router] } })
 
     window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'ArrowRight' }))
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/database'))
