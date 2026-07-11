@@ -16,6 +16,8 @@
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json",
     "test:unit": "vitest run tests/unit tests/contracts tests/parser",
     "test:e2e:web": "playwright test tests/e2e/web",
+    "parser:generate": "java -jar tools/antlr/antlr-4.13.2-complete.jar -Dlanguage=TypeScript -visitor -no-listener -Xexact-output-dir -o src/parser/generated src/parser/grammar/Schedule.g4 && node tools/antlr/postprocess-generated.mjs",
+    "parser:check-generated": "pnpm parser:generate && git diff --exit-code -- src/parser/generated",
     "lint": "eslint .",
     "format": "prettier --write .",
     "check": "pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build:web"
@@ -23,6 +25,7 @@
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
     "@vueuse/core": "latest",
+    "antlr4": "4.13.2",
     "naive-ui": "latest",
     "pinia": "latest",
     "vue": "latest",
@@ -36,6 +39,7 @@
     "@vue/test-utils": "latest",
     "eslint": "latest",
     "eslint-plugin-vue": "latest",
+    "fast-check": "^4.9.0",
     "jsdom": "latest",
     "prettier": "^3.0.0",
     "typescript": "^6.0.0",

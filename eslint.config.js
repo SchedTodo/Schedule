@@ -8,6 +8,7 @@ export default defineConfig(
     'dist-web/**',
     'dist/**',
     'out/**',
+    'src/parser/generated/**',
     'src/main/**',
     'src/preload/**',
     'src/prisma/**',
