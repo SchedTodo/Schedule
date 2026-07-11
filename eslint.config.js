@@ -18,6 +18,30 @@ export default defineConfig(
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
   {
+    files: ['src/**/*.{ts,vue}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                'electron',
+                'electron/*',
+                'node:*',
+                'better-sqlite3',
+                'drizzle-orm',
+                'drizzle-orm/*',
+                '**/src-electron/**'
+              ],
+              message: 'Web source must depend on platform contracts, not host implementations.'
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     files: ['src/**/*.vue'],
     languageOptions: {
       parserOptions: {
