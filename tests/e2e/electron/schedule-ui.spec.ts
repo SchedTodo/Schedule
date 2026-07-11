@@ -26,9 +26,10 @@ test('creates and restores a schedule through the isolated host gateway', async 
   let application = await launch()
   try {
     let window = await application.firstWindow()
-    await window.getByLabel('标题').fill('持久化周会')
-    await window.getByLabel('时间规则').fill('2026-07-12 10:00')
-    await window.getByRole('button', { name: '创建日程' }).click()
+    await window.getByRole('button', { name: 'Add' }).click()
+    await window.getByLabel('Name').fill('持久化周会')
+    await window.getByLabel('rTime').fill('2026-07-12 10:00')
+    await window.getByRole('button', { name: 'Confirm' }).click()
     await expect(window.getByRole('button', { name: /持久化周会/ })).toBeVisible()
     expect(await window.evaluate(() => typeof process)).toBe('undefined')
 
