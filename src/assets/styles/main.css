@@ -41,4 +41,72 @@
     background: var(--color-canvas);
     color: var(--color-text);
   }
+
+  .legacy-shell {
+    min-block-size: 100vh;
+  }
+
+  .legacy-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    block-size: 53px;
+    padding-inline: 1rem;
+    background: #001428;
+    color: white;
+  }
+
+  .legacy-header nav {
+    display: flex;
+    align-items: stretch;
+    block-size: 100%;
+  }
+
+  .legacy-nav-item {
+    display: inline-flex;
+    align-items: center;
+    padding-inline: 1.25rem;
+    color: rgb(255 255 255 / 82%);
+    font-size: 1rem;
+    text-decoration: none;
+  }
+
+  .legacy-nav-item:hover,
+  .legacy-nav-item.active {
+    background: rgb(255 255 255 / 12%);
+    color: white;
+  }
+
+  .guest-identity {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .legacy-content {
+    position: absolute;
+    inset-block: 53px 5vh;
+    inset-inline: 0;
+  }
+
+  .legacy-footer {
+    position: absolute;
+    inset-block-end: 0;
+    block-size: 5vh;
+    padding-block: 0.75rem;
+    background: #001428;
+    color: white;
+    text-align: center;
+  }
+
+  .idea-pane {
+    position: fixed;
+    z-index: 20;
+    inset-block-start: 11.6vh;
+    inset-inline-end: 1vh;
+  }
+
+  .idea-trigger {
+    font-size: 4vh;
+  }
 }

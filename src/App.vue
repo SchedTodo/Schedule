@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { darkTheme, NConfigProvider } from 'naive-ui'
 
 import { naiveThemeOverrides } from './app/naive-theme'
+import LegacyAppShell from './app/components/LegacyAppShell.vue'
 import { usePreferencesStore } from './stores/preferences'
 
 const preferences = usePreferencesStore()
@@ -25,7 +26,7 @@ const usesDarkTheme = computed(
       data-testid="app-shell"
       :class="[{ 'theme-dark': usesDarkTheme, 'density-compact': preferences.compactDensity }]"
     >
-      <RouterView />
+      <LegacyAppShell />
     </main>
   </NConfigProvider>
 </template>
