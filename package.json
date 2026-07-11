@@ -21,6 +21,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build:web"
   },
   "dependencies": {
+    "@js-temporal/polyfill": "^0.5.1",
     "@vueuse/core": "latest",
     "naive-ui": "latest",
     "pinia": "latest",
