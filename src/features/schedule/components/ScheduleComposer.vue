@@ -34,10 +34,23 @@ function submit() {
 </script>
 
 <template>
-  <NForm class="schedule-composer" @submit.prevent="submit">
+  <NForm
+    class="schedule-composer"
+    @submit.prevent="submit"
+  >
     <h2>新建日程</h2>
-    <NAlert v-if="error" type="error">{{ error.message }}</NAlert>
-    <NAlert v-if="validationMessage" type="warning">{{ validationMessage }}</NAlert>
+    <NAlert
+      v-if="error"
+      type="error"
+    >
+      {{ error.message }}
+    </NAlert>
+    <NAlert
+      v-if="validationMessage"
+      type="warning"
+    >
+      {{ validationMessage }}
+    </NAlert>
 
     <div class="field">
       <label for="schedule-title">标题</label>
@@ -65,7 +78,12 @@ function submit() {
         type="textarea"
       />
     </div>
-    <NButton attr-type="submit" type="primary" :loading="loading" :disabled="loading">
+    <NButton
+      attr-type="submit"
+      type="primary"
+      :loading="loading"
+      :disabled="loading"
+    >
       创建日程
     </NButton>
   </NForm>

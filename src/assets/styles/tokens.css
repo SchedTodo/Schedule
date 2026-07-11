@@ -1,0 +1,29 @@
+@layer theme {
+  :root {
+    --color-canvas: #f4f6f8;
+    --color-surface: #ffffff;
+    --color-text: #17202a;
+    --color-text-muted: #617080;
+    --color-accent: #2563eb;
+    --color-danger: #dc2626;
+    --color-border: #d9e0e7;
+    --radius-small: 0.5rem;
+    --radius-medium: 0.875rem;
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --elevation-surface: 0 0.75rem 2rem rgb(15 23 42 / 8%);
+  }
+
+  .theme-dark {
+    --color-canvas: #111827;
+    --color-surface: #1f2937;
+    --color-text: #f3f4f6;
+    --color-text-muted: #aab4c2;
+    --color-accent: #60a5fa;
+    --color-danger: #f87171;
+    --color-border: #374151;
+  }
+}

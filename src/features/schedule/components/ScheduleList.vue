@@ -18,9 +18,20 @@ const emit = defineEmits<{ select: [id: string] }>()
 </script>
 
 <template>
-  <NAlert v-if="error" type="error">{{ error.message }}</NAlert>
-  <NSpin v-else-if="loading" description="正在加载日程" />
-  <NEmpty v-else-if="items.length === 0" description="暂无日程" />
+  <NAlert
+    v-if="error"
+    type="error"
+  >
+    {{ error.message }}
+  </NAlert>
+  <NSpin
+    v-else-if="loading"
+    description="正在加载日程"
+  />
+  <NEmpty
+    v-else-if="items.length === 0"
+    description="暂无日程"
+  />
   <NList v-else>
     <ScheduleListItem
       v-for="schedule in items"

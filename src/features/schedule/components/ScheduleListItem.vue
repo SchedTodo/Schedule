@@ -16,10 +16,16 @@ const emit = defineEmits<{ select: [id: string] }>()
       @click="emit('select', schedule.id)"
     >
       <span class="schedule-title">{{ schedule.title }}</span>
-      <NTag size="small" :type="schedule.kind === 'event' ? 'info' : 'success'">
+      <NTag
+        size="small"
+        :type="schedule.kind === 'event' ? 'info' : 'success'"
+      >
         {{ schedule.kind === 'event' ? '事件' : '待办' }}
       </NTag>
-      <span v-if="schedule.recurrenceCode" class="schedule-recurrence">
+      <span
+        v-if="schedule.recurrenceCode"
+        class="schedule-recurrence"
+      >
         {{ schedule.recurrenceCode }}
       </span>
     </button>

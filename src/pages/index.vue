@@ -41,17 +41,33 @@ async function createSchedule(input: CreateScheduleInput) {
   <section class="home-page">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Schedule v2</p>
+        <p class="eyebrow">
+          Schedule v2
+        </p>
         <h1>今日日程</h1>
       </div>
-      <RouterLink to="/settings">设置</RouterLink>
+      <RouterLink to="/settings">
+        设置
+      </RouterLink>
     </header>
 
     <div class="schedule-layout">
-      <section class="schedule-panel" aria-labelledby="schedule-list-title">
-        <h2 id="schedule-list-title">日程列表</h2>
-        <div class="filters" aria-label="筛选日程">
-          <NInput v-model:value="search" aria-label="搜索日程" clearable />
+      <section
+        class="schedule-panel"
+        aria-labelledby="schedule-list-title"
+      >
+        <h2 id="schedule-list-title">
+          日程列表
+        </h2>
+        <div
+          class="filters"
+          aria-label="筛选日程"
+        >
+          <NInput
+            v-model:value="search"
+            aria-label="搜索日程"
+            clearable
+          />
           <NSelect
             :value="kind ?? ''"
             :options="kindOptions"

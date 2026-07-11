@@ -24,15 +24,31 @@ function formatTimestamp(value: string) {
 
 <template>
   <section class="detail-page">
-    <RouterLink to="/">返回日程</RouterLink>
-    <NSpin v-if="detail.loading.value" description="正在加载日程" />
-    <NAlert v-else-if="detail.error.value" type="error">
+    <RouterLink to="/">
+      返回日程
+    </RouterLink>
+    <NSpin
+      v-if="detail.loading.value"
+      description="正在加载日程"
+    />
+    <NAlert
+      v-else-if="detail.error.value"
+      type="error"
+    >
       {{ detail.error.value.message }}
     </NAlert>
-    <NAlert v-else-if="!detail.schedule.value" type="warning">未找到该日程</NAlert>
+    <NAlert
+      v-else-if="!detail.schedule.value"
+      type="warning"
+    >
+      未找到该日程
+    </NAlert>
     <article v-else>
       <h1>{{ detail.schedule.value.title }}</h1>
-      <NDescriptions bordered :column="1">
+      <NDescriptions
+        bordered
+        :column="1"
+      >
         <NDescriptionsItem label="类型">
           {{ detail.schedule.value.kind === 'event' ? '事件' : '待办' }}
         </NDescriptionsItem>
