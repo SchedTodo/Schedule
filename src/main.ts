@@ -1,8 +1,4 @@
-import { createPinia } from 'pinia'
-import { createApp } from 'vue'
+import { bootstrapApplication } from './app/bootstrap'
+import { createInMemoryGateway } from './platform/browser/in-memory-gateway'
 
-import App from './App.vue'
-import router from './router'
-import './assets/styles/main.css'
-
-createApp(App).use(createPinia()).use(router).mount('#app')
+bootstrapApplication(createInMemoryGateway()).mount('#app')
