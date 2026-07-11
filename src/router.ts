@@ -7,6 +7,16 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: () => import('./pages/index.vue')
+    },
+    {
+      path: '/schedule/:id',
+      name: 'schedule-detail',
+      component: () => import('./pages/schedule/[id].vue')
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('./pages/settings.vue')
     }
   ]
 })
