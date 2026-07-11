@@ -1,6 +1,7 @@
 node_modules
 coverage/
 dist
+dist-web
 out
 *.log*
 .vscode
