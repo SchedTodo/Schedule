@@ -8,10 +8,10 @@ import IdeaPane from '../../features/ideas/IdeaPane.vue'
 const route = useRoute()
 const router = useRouter()
 const navigation = [
-  { label: 'Home', path: '/' },
-  { label: 'Database', path: '/database' },
-  { label: 'Settings', path: '/settings' },
-  { label: 'Help', path: '/help' }
+  { label: 'Home', path: '/', icon: '⌂' },
+  { label: 'Database', path: '/database', icon: '◉' },
+  { label: 'Settings', path: '/settings', icon: '⚙' },
+  { label: 'Help', path: '/help', icon: '?' }
 ]
 const activePath = computed(() => {
   if (route.path.startsWith('/schedule/')) return '/'
@@ -36,8 +36,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
     position="absolute"
   >
     <NLayoutHeader
-      class="application-header"
-      bordered
+    class="application-header"
+    bordered
+    :style="{
+      backgroundColor: 'var(--color-navigation)',
+      color: 'var(--color-navigation-text)'
+    }"
     >
       <nav aria-label="Main navigation">
         <RouterLink
@@ -46,6 +50,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
           :to="item.path"
           :class="['navigation-item', { active: activePath === item.path }]"
         >
+          <span class="navigation-icon" aria-hidden="true">{{ item.icon }}</span>
           {{ item.label }}
         </RouterLink>
       </nav>
@@ -68,8 +73,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
     </NLayoutContent>
 
     <NLayoutFooter
-      class="application-footer"
-      bordered
+    class="application-footer"
+    bordered
+    :style="{
+      backgroundColor: 'var(--color-navigation)',
+      color: 'var(--color-navigation-text)'
+    }"
     >
       © 2023
     </NLayoutFooter>

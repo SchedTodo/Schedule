@@ -52,8 +52,8 @@
     justify-content: space-between;
     block-size: 53px;
     padding-inline: 1rem;
-    background: #001428;
-    color: white;
+    background: var(--color-navigation) !important;
+    color: var(--color-navigation-text) !important;
   }
 
   .application-header nav {
@@ -66,7 +66,8 @@
     display: inline-flex;
     align-items: center;
     padding-inline: 1.25rem;
-    color: rgb(255 255 255 / 82%);
+    gap: 0.5rem;
+    color: var(--color-navigation-text);
     font-size: 1rem;
     text-decoration: none;
   }
@@ -74,7 +75,7 @@
   .navigation-item:hover,
   .navigation-item.active {
     background: rgb(255 255 255 / 12%);
-    color: white;
+    color: var(--color-navigation-active);
   }
 
   .guest-identity {
@@ -94,8 +95,8 @@
     inset-block-end: 0;
     block-size: 5vh;
     padding-block: 0.75rem;
-    background: #001428;
-    color: white;
+    background: var(--color-navigation) !important;
+    color: var(--color-navigation-text) !important;
     text-align: center;
   }
 
@@ -104,6 +105,14 @@
     z-index: 20;
     inset-block-start: 11.6vh;
     inset-inline-end: 1vh;
+  }
+
+  .navigation-icon {
+    display: inline-grid;
+    inline-size: 1rem;
+    place-items: center;
+    color: inherit;
+    font-size: 0.9rem;
   }
 
   .idea-trigger {

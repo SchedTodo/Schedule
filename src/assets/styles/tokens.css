@@ -7,6 +7,9 @@
     --color-accent: #2563eb;
     --color-danger: #dc2626;
     --color-border: #d9e0e7;
+    --color-navigation: #001428;
+    --color-navigation-text: rgb(255 255 255 / 82%);
+    --color-navigation-active: #ffffff;
     --radius-small: 0.5rem;
     --radius-medium: 0.875rem;
     --space-1: 0.25rem;

@@ -4,6 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { describe, expect, it, vi } from 'vitest'
 
 import App from '../../src/App.vue'
+import { usePreferencesStore } from '../../src/stores/preferences'
 
 const routes = [
   { path: '/', component: { template: '<div>Home page</div>' } },
@@ -40,5 +41,24 @@ describe('App shell', () => {
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/database'))
     window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'ArrowLeft' }))
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/'))
+  })
+
+  it.each(['light', 'dark'] as const)('keeps navigation contrast in %s mode', async (mode) => {
+    const pinia = createPinia()
+    const router = createRouter({ history: createMemoryHistory(), routes })
+    await router.push('/')
+    const preferences = usePreferencesStore(pinia)
+    preferences.update({ themeMode: mode }, { getItem: () => null, setItem: () => undefined })
+    const wrapper = mount(App, { global: { plugins: [pinia, router] } })
+
+    expect(wrapper.get('.application-header').attributes('style')).toContain(
+      'background-color: var(--color-navigation)'
+    )
+    expect(wrapper.get('.application-header').attributes('style')).toContain(
+      'color: var(--color-navigation-text)'
+    )
+    expect(wrapper.get('.application-footer').attributes('style')).toContain(
+      'background-color: var(--color-navigation)'
+    )
   })
 })
