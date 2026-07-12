@@ -6,6 +6,8 @@ import {
 } from '../../src/contracts/schedule.contract'
 import {
   ExcludeOccurrenceInputSchema,
+  TodoOccurrenceQuerySchema,
+  SetOccurrenceDoneInputSchema,
   UpdateOccurrenceCommentInputSchema
 } from '../../src/contracts/occurrence.contract'
 
@@ -35,5 +37,13 @@ describe('schedule management contracts', () => {
     expect(UpdateOccurrenceCommentInputSchema.safeParse({ id, comment: 'Moved' }).success).toBe(true)
     expect(ExcludeOccurrenceInputSchema.safeParse({ id }).success).toBe(true)
     expect(ExcludeOccurrenceInputSchema.safeParse({ id: 'invalid' }).success).toBe(false)
+  })
+
+  it('validates logical-day Todo queries and completion updates', () => {
+    expect(TodoOccurrenceQuerySchema.parse({ now: '2026-07-12T02:00:00Z' })).toMatchObject({
+      logicalDayStartHour: 0,
+      logicalDayStartMinute: 0
+    })
+    expect(SetOccurrenceDoneInputSchema.safeParse({ id, done: true }).success).toBe(true)
   })
 })

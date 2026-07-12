@@ -83,6 +83,20 @@ describe('ScheduleService', () => {
     )
   })
 
+  it('infers Todo from a single deadline time', async () => {
+    const repository = repositoryWith()
+    const service = new ScheduleService(repository, {
+      clock: new FixedClock('2026-07-11T08:00:00Z'),
+      idGenerator: { next: () => '10000000-0000-4000-8000-000000000001' },
+      defaultTimeZone: 'UTC', weekStartsOn: 1,
+      resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
+    })
+    const result = await service.create({
+      title: 'Deadline', recurrenceCode: '2026/7/13 10:00;', exclusionCode: '', comment: ''
+    })
+    expect(result.ok && result.value.kind).toBe('todo')
+  })
+
   it('returns repository failures and delegates reads', async () => {
     const error = { code: 'PERSISTENCE_FAILED' as const, message: '保存失败' }
     const repository = repositoryWith({

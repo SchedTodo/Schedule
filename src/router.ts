@@ -19,6 +19,11 @@ const router = createRouter({
       component: () => import('./pages/settings.vue')
     },
     {
+      path: '/concentrate/:timeId',
+      name: 'concentrate',
+      component: () => import('./pages/concentrate/[timeId].vue')
+    },
+    {
       path: '/database',
       name: 'database',
       component: () => import('./pages/database.vue')

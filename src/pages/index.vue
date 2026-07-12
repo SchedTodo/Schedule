@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue'
+import { inject, ref } from 'vue'
 import { NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { CreateScheduleInput } from '../contracts/schedule.contract'
+import type { ScheduleOccurrenceDto } from '../contracts/occurrence.contract'
+import { defaultSettings } from '../contracts/settings.contract'
 import ScheduleModal from '../features/schedule/components/ScheduleModal.vue'
 import MonthScheduleView from '../features/schedule/components/MonthScheduleView.vue'
 import TodoSidebar from '../features/schedule/components/TodoSidebar.vue'
@@ -15,13 +17,15 @@ import { usePreferencesStore } from '../stores/preferences'
 
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
+const platform = gateway
 const router = useRouter()
 const preferences = usePreferencesStore()
 const list = useScheduleList(gateway, { offset: 0, limit: 200 })
 const mutations = useScheduleMutations(gateway, list.refresh)
 const view = ref(preferences.calendarMode)
 const sidebarCollapsed = ref(false)
-const todos = computed(() => list.items.value.filter(({ kind }) => kind === 'todo'))
+const todos = ref<readonly ScheduleOccurrenceDto[]>([])
+const appSettings = ref({ ...defaultSettings })
 const now = new Date()
 const occurrenceStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
 occurrenceStart.setUTCDate(occurrenceStart.getUTCDate() - 7)
@@ -38,7 +42,26 @@ function select(id: string) {
 }
 async function create(input: CreateScheduleInput) {
   await mutations.createSchedule(input)
+  await refreshTodos()
 }
+async function refreshTodos() {
+  const settings = await platform.settings.get()
+  if (settings.ok) appSettings.value = settings.value
+  const result = await platform.occurrences.listTodos({
+    now: new Date().toISOString(),
+    logicalDayStartHour: settings.ok ? settings.value.logicalDayStartHour : 0,
+    logicalDayStartMinute: settings.ok ? settings.value.logicalDayStartMinute : 0
+  })
+  if (result.ok) todos.value = result.value
+}
+async function setDone(id: string, done: boolean) {
+  await platform.occurrences.setDone(id, done)
+  await refreshTodos()
+}
+function concentrate(id: string) {
+  void router.push({ name: 'concentrate', params: { timeId: id } })
+}
+void refreshTodos()
 </script>
 
 <template>
@@ -59,6 +82,8 @@ async function create(input: CreateScheduleInput) {
       <TodoSidebar
         :items="todos"
         @select="select"
+        @done="setDone"
+        @concentrate="concentrate"
       />
     </NLayoutSider>
     <NLayoutContent
@@ -103,6 +128,8 @@ async function create(input: CreateScheduleInput) {
       <WeekScheduleView
         v-else
         :items="occurrenceRange.items.value"
+        :day-count="appSettings.weekViewDays"
+        :start-hour="appSettings.logicalDayStartHour"
         @select="select"
       />
     </NLayoutContent>

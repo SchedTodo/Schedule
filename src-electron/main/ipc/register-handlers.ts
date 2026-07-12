@@ -123,4 +123,43 @@ export function registerScheduleIpcHandlers(
     ({ id }) => gateway.occurrences.exclude(id),
     (value) => excludeContract.output.parse(value)
   ))
+  const todoContract = scheduleIpcContracts[scheduleIpcChannels.listTodos]
+  ipcMain.handle(scheduleIpcChannels.listTodos, (_event, input) => execute(
+    input, (value) => todoContract.input.parse(value),
+    (value) => gateway.occurrences.listTodos(value),
+    (value) => todoContract.output.parse(value)
+  ))
+  const doneContract = scheduleIpcContracts[scheduleIpcChannels.setOccurrenceDone]
+  ipcMain.handle(scheduleIpcChannels.setOccurrenceDone, (_event, input) => execute(
+    input, (value) => doneContract.input.parse(value),
+    ({ id, done }) => gateway.occurrences.setDone(id, done),
+    (value) => doneContract.output.parse(value)
+  ))
+  const getSettingsContract = scheduleIpcContracts[scheduleIpcChannels.getSettings]
+  ipcMain.handle(scheduleIpcChannels.getSettings, (_event, input) => execute(
+    input, (value) => getSettingsContract.input.parse(value),
+    () => gateway.settings.get(), (value) => getSettingsContract.output.parse(value)
+  ))
+  const updateSettingsContract = scheduleIpcContracts[scheduleIpcChannels.updateSettings]
+  ipcMain.handle(scheduleIpcChannels.updateSettings, (_event, input) => execute(
+    input, (value) => updateSettingsContract.input.parse(value),
+    (value) => gateway.settings.update(value),
+    (value) => updateSettingsContract.output.parse(value)
+  ))
+  const createRecordContract = scheduleIpcContracts[scheduleIpcChannels.createRecord]
+  ipcMain.handle(scheduleIpcChannels.createRecord, (_event, input) => execute(
+    input, (value) => createRecordContract.input.parse(value),
+    (value) => gateway.records.create(value), (value) => createRecordContract.output.parse(value)
+  ))
+  const listRecordsContract = scheduleIpcContracts[scheduleIpcChannels.listRecords]
+  ipcMain.handle(scheduleIpcChannels.listRecords, (_event, input) => execute(
+    input, (value) => listRecordsContract.input.parse(value),
+    ({ scheduleId }) => gateway.records.listBySchedule(scheduleId),
+    (value) => listRecordsContract.output.parse(value)
+  ))
+  const deleteRecordContract = scheduleIpcContracts[scheduleIpcChannels.deleteRecord]
+  ipcMain.handle(scheduleIpcChannels.deleteRecord, (_event, input) => execute(
+    input, (value) => deleteRecordContract.input.parse(value),
+    ({ id }) => gateway.records.delete(id), (value) => deleteRecordContract.output.parse(value)
+  ))
 }

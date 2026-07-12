@@ -17,7 +17,18 @@ export function createHostGateway(host: unknown): PlatformGateway {
       listRange: (query) => api.listOccurrences(query),
       listBySchedule: (scheduleId) => api.listScheduleOccurrences(scheduleId),
       updateComment: (id, comment) => api.updateOccurrenceComment(id, comment),
-      exclude: (id) => api.excludeOccurrence(id)
+      exclude: (id) => api.excludeOccurrence(id),
+      listTodos: (query) => api.listTodos(query),
+      setDone: (id, done) => api.setOccurrenceDone(id, done)
+    },
+    settings: {
+      get: () => api.getSettings(),
+      update: (input) => api.updateSettings(input)
+    },
+    records: {
+      create: (input) => api.createRecord(input),
+      listBySchedule: (scheduleId) => api.listRecords(scheduleId),
+      delete: (id) => api.deleteRecord(id)
     }
   }
 }

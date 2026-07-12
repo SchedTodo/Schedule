@@ -1,9 +1,12 @@
 import type { z } from 'zod'
 
 import type { AppResult } from '../../src/contracts/result'
+import type { SettingsDto, UpdateSettingsInput } from '../../src/contracts/settings.contract'
+import type { ConcentrationRecordDto, CreateConcentrationRecordInput } from '../../src/contracts/record.contract'
 import type {
   OccurrenceRangeQuery,
-  ScheduleOccurrenceDto
+  ScheduleOccurrenceDto,
+  TodoOccurrenceQuery
 } from '../../src/contracts/occurrence.contract'
 import type {
   ScheduleDto
@@ -35,6 +38,13 @@ export interface ScheduleHostApi {
   listScheduleOccurrences(scheduleId: string): Promise<AppResult<ScheduleOccurrenceDto[]>>
   updateOccurrenceComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
   excludeOccurrence(id: string): Promise<AppResult<void>>
+  listTodos(query: TodoOccurrenceQuery): Promise<AppResult<ScheduleOccurrenceDto[]>>
+  setOccurrenceDone(id: string, done: boolean): Promise<AppResult<ScheduleOccurrenceDto>>
+  getSettings(): Promise<AppResult<SettingsDto>>
+  updateSettings(input: UpdateSettingsInput): Promise<AppResult<SettingsDto>>
+  createRecord(input: CreateConcentrationRecordInput): Promise<AppResult<ConcentrationRecordDto>>
+  listRecords(scheduleId: string): Promise<AppResult<ConcentrationRecordDto[]>>
+  deleteRecord(id: string): Promise<AppResult<void>>
 }
 
 export function createScheduleHostApi(invoke: IpcInvoke): ScheduleHostApi {
@@ -88,6 +98,41 @@ export function createScheduleHostApi(invoke: IpcInvoke): ScheduleHostApi {
     async excludeOccurrence(id) {
       return scheduleIpcContracts[scheduleIpcChannels.excludeOccurrence].output.parse(
         await invoke(scheduleIpcChannels.excludeOccurrence, { id })
+      )
+    },
+    async listTodos(query) {
+      return scheduleIpcContracts[scheduleIpcChannels.listTodos].output.parse(
+        await invoke(scheduleIpcChannels.listTodos, query)
+      )
+    },
+    async setOccurrenceDone(id, done) {
+      return scheduleIpcContracts[scheduleIpcChannels.setOccurrenceDone].output.parse(
+        await invoke(scheduleIpcChannels.setOccurrenceDone, { id, done })
+      )
+    },
+    async getSettings() {
+      return scheduleIpcContracts[scheduleIpcChannels.getSettings].output.parse(
+        await invoke(scheduleIpcChannels.getSettings, {})
+      )
+    },
+    async updateSettings(input) {
+      return scheduleIpcContracts[scheduleIpcChannels.updateSettings].output.parse(
+        await invoke(scheduleIpcChannels.updateSettings, input)
+      )
+    },
+    async createRecord(input) {
+      return scheduleIpcContracts[scheduleIpcChannels.createRecord].output.parse(
+        await invoke(scheduleIpcChannels.createRecord, input)
+      )
+    },
+    async listRecords(scheduleId) {
+      return scheduleIpcContracts[scheduleIpcChannels.listRecords].output.parse(
+        await invoke(scheduleIpcChannels.listRecords, { scheduleId })
+      )
+    },
+    async deleteRecord(id) {
+      return scheduleIpcContracts[scheduleIpcChannels.deleteRecord].output.parse(
+        await invoke(scheduleIpcChannels.deleteRecord, { id })
       )
     }
   }

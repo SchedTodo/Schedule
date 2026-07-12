@@ -57,7 +57,7 @@ Month view queries the visible month plus its surrounding calendar week and rend
 
 Add title, recurrence, exclusion, and comment updates; star/unstar; soft-delete/restore; detail-page Edit/Delete/Star/Times actions; occurrence comment and exclusion actions; and server-side database filtering and pagination. List results return items and total count. Ordinary lists hide deleted schedules, while the Database page retains the legacy deleted-state visibility.
 
-Dragging one occurrence follows legacy-compatible exception semantics: exclude the original occurrence and add a concrete replacement without directly mutating a whole recurrence series.
+Dragging one occurrence in the week view is presentation-only. It accumulates a temporary vertical pixel offset keyed by occurrence ID so users can reveal overlapping cards. It never changes the occurrence date, start, end, recurrence, or exclusion data; it never calls a gateway or writes persistence; and a page reload resets every offset.
 
 ## Todo behavior
 

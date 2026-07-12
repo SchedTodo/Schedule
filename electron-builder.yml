@@ -3,23 +3,19 @@ productName: schedule
 directories:
   buildResources: build
 files:
-  - '!**/.vscode/*'
-  - '!src/*'
-  - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
-# asarUnpack:
-#   - resources/**
+  - dist-web/**
+  - dist-electron/**
+  - package.json
+  - resources/**
+asarUnpack:
+  - node_modules/better-sqlite3/**
 # afterSign: build/notarize.js
 win:
   executableName: schedule
   icon: 'resources/icon256.ico'
   extraResources:
-    - 'database/**/*'
-    - 'node_modules/.prisma/**/*'
-    - 'node_modules/@prisma/client/**/*'
-    - '.env.production'
+    - from: resources
+      to: resources
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

@@ -47,6 +47,17 @@ function gatewayWith(
       ,listBySchedule: vi.fn(async () => ({ ok: true as const, value: [] }))
       ,updateComment: vi.fn()
       ,exclude: vi.fn()
+      ,listTodos: vi.fn(async () => ({ ok: true as const, value: [] }))
+      ,setDone: vi.fn()
+    },
+    settings: {
+      get: vi.fn(),
+      update: vi.fn()
+    },
+    records: {
+      create: vi.fn(),
+      listBySchedule: vi.fn(),
+      delete: vi.fn()
     }
   }
 }

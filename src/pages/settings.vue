@@ -1,11 +1,26 @@
 <script setup lang="ts">
+import { inject, ref } from 'vue'
 import { NCard, NInputNumber, NRadio, NRadioGroup, NSelect, NSwitch } from 'naive-ui'
+import { platformGatewayKey } from '../app/injection-keys'
+import { defaultSettings, type SettingsDto } from '../contracts/settings.contract'
 import type { Preferences } from '../stores/preferences'
 import { usePreferencesStore } from '../stores/preferences'
 
 const preferences = usePreferencesStore()
+const gateway = inject(platformGatewayKey)
+const settings = ref<SettingsDto>({ ...defaultSettings })
+if (gateway) {
+  void gateway.settings.get().then((result) => {
+    if (result.ok) settings.value = result.value
+  })
+}
 function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
   preferences.update({ [key]: value })
+}
+async function updateSetting<K extends keyof SettingsDto>(key: K, value: SettingsDto[K]) {
+  if (!gateway) return
+  const result = await gateway.settings.update({ [key]: value })
+  if (result.ok) settings.value = result.value
 }
 </script>
 
@@ -17,14 +32,14 @@ function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
       </template>
       <div class="settings-group">
         <label>Time Zone</label><NSelect
-          value="Local"
-          :options="[{ label: 'Local', value: 'Local' }]"
-          disabled
+          :value="settings.timeZone"
+          :options="[{ label: 'UTC', value: 'UTC' }, { label: Intl.DateTimeFormat().resolvedOptions().timeZone, value: Intl.DateTimeFormat().resolvedOptions().timeZone }]"
           style="width: 15rem"
+          @update:value="updateSetting('timeZone', $event)"
         />
         <label>WKST</label><NRadioGroup
-          :value="preferences.weekStart"
-          @update:value="update('weekStart', $event)"
+          :value="settings.weekStart"
+          @update:value="updateSetting('weekStart', $event); update('weekStart', $event)"
         >
           <NRadio :value="1">
             MO
@@ -40,22 +55,24 @@ function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
       </template>
       <div class="settings-group">
         <label>Todo</label><div>
-          <NSwitch disabled /> <NInputNumber
-            :value="1"
-            disabled
-          /> : <NInputNumber
-            :value="0"
-            disabled
+          <NSwitch
+            :value="settings.todoAlarmEnabled"
+            @update:value="updateSetting('todoAlarmEnabled', $event)"
           />
+          <NInputNumber
+            :value="settings.todoAlarmBeforeMinutes"
+            @update:value="updateSetting('todoAlarmBeforeMinutes', $event ?? 0)"
+          /> minutes
         </div>
         <label>Event</label><div>
-          <NSwitch disabled /> <NInputNumber
-            :value="0"
-            disabled
-          /> : <NInputNumber
-            :value="15"
-            disabled
+          <NSwitch
+            :value="settings.eventAlarmEnabled"
+            @update:value="updateSetting('eventAlarmEnabled', $event)"
           />
+          <NInputNumber
+            :value="settings.eventAlarmBeforeMinutes"
+            @update:value="updateSetting('eventAlarmBeforeMinutes', $event ?? 0)"
+          /> minutes
         </div>
       </div>
     </NCard>
@@ -65,8 +82,8 @@ function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
       </template>
       <div class="settings-group">
         <label>Priority</label><NRadioGroup
-          :value="preferences.calendarMode"
-          @update:value="update('calendarMode', $event)"
+          :value="settings.calendarMode"
+          @update:value="updateSetting('calendarMode', $event); update('calendarMode', $event)"
         >
           <NRadio value="month">
             MonthView
@@ -75,19 +92,22 @@ function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
           </NRadio>
         </NRadioGroup>
         <label>Week View Days</label><NInputNumber
-          :value="5"
-          disabled
+          :value="settings.weekViewDays"
+          @update:value="updateSetting('weekViewDays', $event ?? 5)"
         />
         <label>Week View Start Time</label><div>
           <NInputNumber
-            :value="0"
-            disabled
+            :value="settings.logicalDayStartHour"
+            @update:value="updateSetting('logicalDayStartHour', $event ?? 0)"
           /> : <NInputNumber
-            :value="0"
-            disabled
+            :value="settings.logicalDayStartMinute"
+            @update:value="updateSetting('logicalDayStartMinute', $event ?? 0)"
           />
         </div>
-        <label>Open At Login</label><NSwitch disabled />
+        <label>Open At Login</label><NSwitch
+          :value="settings.openAtLogin"
+          @update:value="updateSetting('openAtLogin', $event)"
+        />
       </div>
     </NCard>
     <NCard segmented>
@@ -97,30 +117,21 @@ function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
       <div class="settings-group">
         <label>Focus Time</label><div>
           <NInputNumber
-            :value="0"
-            disabled
-          /> : <NInputNumber
-            :value="25"
-            disabled
-          />
+            :value="settings.focusMinutes"
+            @update:value="updateSetting('focusMinutes', $event ?? 25)"
+          /> minutes
         </div>
         <label>Small Break</label><div>
           <NInputNumber
-            :value="0"
-            disabled
-          /> : <NInputNumber
-            :value="5"
-            disabled
-          />
+            :value="settings.smallBreakMinutes"
+            @update:value="updateSetting('smallBreakMinutes', $event ?? 5)"
+          /> minutes
         </div>
         <label>Big Break</label><div>
           <NInputNumber
-            :value="0"
-            disabled
-          /> : <NInputNumber
-            :value="20"
-            disabled
-          />
+            :value="settings.bigBreakMinutes"
+            @update:value="updateSetting('bigBreakMinutes', $event ?? 20)"
+          /> minutes
         </div>
       </div>
     </NCard>

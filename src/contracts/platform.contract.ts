@@ -9,9 +9,12 @@ import type {
   UpdateScheduleInput
 } from './schedule.contract'
 import type { AppResult } from './result'
+import type { SettingsDto, UpdateSettingsInput } from './settings.contract'
+import type { ConcentrationRecordDto, CreateConcentrationRecordInput } from './record.contract'
 import type {
   OccurrenceRangeQuery,
-  ScheduleOccurrenceDto
+  ScheduleOccurrenceDto,
+  TodoOccurrenceQuery
 } from './occurrence.contract'
 
 export interface ScheduleGateway {
@@ -29,9 +32,20 @@ export interface OccurrenceGateway {
   listBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   updateComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
   exclude(id: string): Promise<AppResult<void>>
+  listTodos(query: TodoOccurrenceQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
+  setDone(id: string, done: boolean): Promise<AppResult<ScheduleOccurrenceDto>>
 }
 
 export interface PlatformGateway {
   readonly schedules: ScheduleGateway
   readonly occurrences: OccurrenceGateway
+  readonly settings: {
+    get(): Promise<AppResult<SettingsDto>>
+    update(input: UpdateSettingsInput): Promise<AppResult<SettingsDto>>
+  }
+  readonly records: {
+    create(input: CreateConcentrationRecordInput): Promise<AppResult<ConcentrationRecordDto>>
+    listBySchedule(scheduleId: string): Promise<AppResult<readonly ConcentrationRecordDto[]>>
+    delete(id: string): Promise<AppResult<void>>
+  }
 }

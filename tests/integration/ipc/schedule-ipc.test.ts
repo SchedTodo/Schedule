@@ -57,7 +57,23 @@ function createHarness(
         listRange: gateway.occurrences?.listRange ?? vi.fn(async () => ({ ok: true as const, value: [] })),
         listBySchedule: gateway.occurrences?.listBySchedule ?? vi.fn(async () => ({ ok: true as const, value: [] })),
         updateComment: gateway.occurrences?.updateComment ?? vi.fn(),
-        exclude: gateway.occurrences?.exclude ?? vi.fn()
+        exclude: gateway.occurrences?.exclude ?? vi.fn(),
+        listTodos: gateway.occurrences?.listTodos ?? vi.fn(async () => ({ ok: true as const, value: [] })),
+        setDone: gateway.occurrences?.setDone ?? vi.fn()
+      },
+      settings: {
+        get: vi.fn(async () => ({ ok: true as const, value: {
+          timeZone: 'UTC', weekStart: 1 as const, todoAlarmEnabled: true, todoAlarmBeforeMinutes: 5,
+          eventAlarmEnabled: true, eventAlarmBeforeMinutes: 5, calendarMode: 'month' as const,
+          weekViewDays: 5, logicalDayStartHour: 0, logicalDayStartMinute: 0,
+          openAtLogin: false, focusMinutes: 25, smallBreakMinutes: 5, bigBreakMinutes: 20
+        } })),
+        update: vi.fn()
+      },
+      records: {
+        create: vi.fn(),
+        listBySchedule: vi.fn(async () => ({ ok: true as const, value: [] })),
+        delete: vi.fn()
       }
     }
   )

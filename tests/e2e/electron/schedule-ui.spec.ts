@@ -11,15 +11,13 @@ test('creates and restores a schedule through the isolated host gateway', async 
   const launch = () =>
     electron.launch({
       args: [
-        '--disable-gpu',
-        '--disable-gpu-compositing',
-        '--disable-software-rasterizer',
         `--user-data-dir=${profilePath}`,
         '.'
       ],
       env: {
         ...process.env,
-        SCHEDULE_DATABASE_PATH: databasePath
+        SCHEDULE_DATABASE_PATH: databasePath,
+        SCHEDULE_DISABLE_TRAY: '1'
       }
     })
 
@@ -28,7 +26,7 @@ test('creates and restores a schedule through the isolated host gateway', async 
     let window = await application.firstWindow()
     await window.getByRole('button', { name: 'Add' }).click()
     await window.getByLabel('Name').fill('持久化周会')
-    await window.getByLabel('rTime').fill('2026-07-12 10:00')
+    await window.getByLabel('rTime').fill('2026/7/12 10:00')
     await window.getByRole('button', { name: 'Confirm' }).click()
     await expect(window.getByRole('button', { name: /持久化周会/ })).toBeVisible()
     expect(await window.evaluate(() => typeof process)).toBe('undefined')

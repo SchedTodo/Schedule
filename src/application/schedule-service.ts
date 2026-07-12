@@ -11,7 +11,7 @@ import { Schedule } from '../domain/schedule/schedule'
 import type { Clock } from '../domain/shared/clock'
 import type { IdGenerator } from '../domain/shared/id-generator'
 import type { OccurrenceRepository, ScheduleRepository } from '../platform/ports'
-import { expandScheduleOccurrences } from '../parser/parse-schedule'
+import { expandScheduleOccurrences, parseSchedule } from '../parser/parse-schedule'
 import type { TimeZoneResolution } from '../parser/evaluator'
 
 export interface ScheduleServiceDependencies {
@@ -38,9 +38,28 @@ export class ScheduleService implements ScheduleGateway {
       }
     }
 
+    let kind: 'event' | 'todo' = parsed.data.recurrenceCode === '' ? 'todo' : 'event'
+    if (
+      parsed.data.recurrenceCode !== '' &&
+      this.dependencies.defaultTimeZone !== undefined &&
+      this.dependencies.weekStartsOn !== undefined &&
+      this.dependencies.resolveTimeZoneAbbreviation !== undefined
+    ) {
+      const specification = parseSchedule(parsed.data.recurrenceCode, {
+        now: this.dependencies.clock.now(),
+        defaultTimeZone: this.dependencies.defaultTimeZone,
+        weekStartsOn: this.dependencies.weekStartsOn,
+        resolveTimeZoneAbbreviation: this.dependencies.resolveTimeZoneAbbreviation
+      })
+      if (!specification.ok || new Set(specification.value.statements.map((value) => value.kind)).size !== 1) {
+        return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程时间规则无效' } }
+      }
+      kind = specification.value.statements[0]?.kind ?? 'todo'
+    }
+
     const schedule = Schedule.create(
       {
-        kind: parsed.data.recurrenceCode === '' ? 'todo' : 'event',
+        kind,
         title: parsed.data.title,
         recurrenceCode: parsed.data.recurrenceCode,
         exclusionCode: parsed.data.exclusionCode,
@@ -115,7 +134,16 @@ export class ScheduleService implements ScheduleGateway {
     const found = await this.repository.findById(parsed.data.id)
     if (!found.ok) return found
     if (found.value === null) return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: '日程不存在' } }
-    const kind = parsed.data.recurrenceCode === '' ? 'todo' : 'event'
+    let kind: 'event' | 'todo' = parsed.data.recurrenceCode === '' ? 'todo' : found.value.kind
+    if (parsed.data.recurrenceCode !== '' && this.dependencies.defaultTimeZone !== undefined && this.dependencies.weekStartsOn !== undefined && this.dependencies.resolveTimeZoneAbbreviation !== undefined) {
+      const specification = parseSchedule(parsed.data.recurrenceCode, {
+        now: this.dependencies.clock.now(), defaultTimeZone: this.dependencies.defaultTimeZone,
+        weekStartsOn: this.dependencies.weekStartsOn,
+        resolveTimeZoneAbbreviation: this.dependencies.resolveTimeZoneAbbreviation
+      })
+      if (!specification.ok) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程时间规则无效' } }
+      kind = specification.value.statements[0]?.kind ?? 'todo'
+    }
     if (kind !== found.value.kind) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能更改日程类型' } }
     const now = this.dependencies.clock.now().toString()
     const updated: ScheduleDto = { ...found.value, ...parsed.data, kind, updatedAt: now }

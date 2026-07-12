@@ -4,6 +4,7 @@ import { NAlert, NButton, NCard, NEmpty, NInput, NPageHeader, NSpin, NTag } from
 import { useRoute, useRouter } from 'vue-router'
 import { platformGatewayKey } from '../../app/injection-keys'
 import type { ScheduleOccurrenceDto } from '../../contracts/occurrence.contract'
+import type { ConcentrationRecordDto } from '../../contracts/record.contract'
 import { useScheduleDetail } from '../../features/schedule/use-schedule-detail'
 
 const gateway = inject(platformGatewayKey)
@@ -17,6 +18,7 @@ const scheduleId = id
 const detail = useScheduleDetail(platform, scheduleId)
 const format = (value: string) => new Date(value).toLocaleString()
 const occurrences = ref<ScheduleOccurrenceDto[]>([])
+const records = ref<ConcentrationRecordDto[]>([])
 const editing = ref(false)
 const title = ref('')
 const recurrenceCode = ref('')
@@ -26,6 +28,10 @@ const comment = ref('')
 async function refreshOccurrences() {
   const result = await platform.occurrences.listBySchedule(scheduleId)
   if (result.ok) occurrences.value = [...result.value]
+}
+async function refreshRecords() {
+  const result = await platform.records.listBySchedule(scheduleId)
+  if (result.ok) records.value = [...result.value]
 }
 async function toggleStar() {
   const schedule = detail.schedule.value
@@ -64,6 +70,7 @@ async function excludeOccurrence(occurrenceId: string) {
   await refreshOccurrences()
 }
 void refreshOccurrences()
+void refreshRecords()
 </script>
 
 <template>
@@ -142,6 +149,28 @@ void refreshOccurrences()
             Cancel
           </NButton>
         </form>
+      </NCard>
+      <NCard segmented>
+        <template #header>
+          <b>Records</b>
+        </template>
+        <NEmpty
+          v-if="records.length === 0"
+          description="No Records"
+        />
+        <table v-else>
+          <thead><tr><th>Start</th><th>End</th><th>Duration</th></tr></thead>
+          <tbody>
+            <tr
+              v-for="record in records"
+              :key="record.id"
+            >
+              <td>{{ format(record.start) }}</td>
+              <td>{{ format(record.end) }}</td>
+              <td>{{ Math.round((Date.parse(record.end) - Date.parse(record.start)) / 60000) }} min</td>
+            </tr>
+          </tbody>
+        </table>
       </NCard>
       <NCard segmented>
         <template #header>

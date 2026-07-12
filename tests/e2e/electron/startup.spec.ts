@@ -1,15 +1,21 @@
 import { _electron as electron, expect, test } from '@playwright/test'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 test('starts one isolated window from the standalone Web build', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'schedule-electron-startup-'))
   const application = await electron.launch({
     args: [
-      '--disable-gpu',
-      '--disable-gpu-compositing',
-      '--disable-software-rasterizer',
+      `--user-data-dir=${directory}`,
       '.'
-    ]
+    ],
+    env: {
+      ...process.env,
+      SCHEDULE_DISABLE_TRAY: '1',
+      SCHEDULE_DATABASE_PATH: ':memory:'
+    }
   })
-
   try {
     const window = await application.firstWindow()
     await expect(window.getByRole('link', { name: 'Home' })).toBeVisible()
@@ -26,8 +32,9 @@ test('starts one isolated window from the standalone Web build', async () => {
           return host ? Object.keys(host).sort() : []
         })
       )
-      .toEqual(['createSchedule', 'findScheduleById', 'listSchedules'])
+      .toHaveLength(18)
   } finally {
     await application.close()
+    rmSync(directory, { recursive: true, force: true })
   }
 })

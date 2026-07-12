@@ -174,4 +174,59 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
       return { ok: false, error: persistenceError(error) }
     }
   }
+
+  async listTodos(query: import('../../../src/contracts/occurrence.contract').TodoOccurrenceQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>> {
+    try {
+      const now = new Date(query.now)
+      const logicalStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1, query.logicalDayStartHour, query.logicalDayStartMinute)
+      const logicalEnd = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, query.logicalDayStartHour, query.logicalDayStartMinute)
+      const rows = this.database
+        .select({ occurrence: scheduleOccurrences, schedule: schedules })
+        .from(scheduleOccurrences)
+        .innerJoin(schedules, eq(scheduleOccurrences.scheduleId, schedules.id))
+        .where(and(
+          eq(schedules.kind, 'todo'), eq(scheduleOccurrences.excluded, false),
+          isNull(scheduleOccurrences.deletedAt), isNull(schedules.deletedAt),
+          gte(scheduleOccurrences.end, new Date(logicalStart))
+        ))
+        .orderBy(asc(scheduleOccurrences.end)).all()
+        .map(({ occurrence, schedule }) => ({
+          id: occurrence.id, scheduleId: occurrence.scheduleId, kind: schedule.kind,
+          title: schedule.title, excluded: occurrence.excluded,
+          start: occurrence.start?.toISOString() ?? null, end: occurrence.end.toISOString(),
+          startMark: occurrence.startMark, endMark: occurrence.endMark,
+          comment: occurrence.comment, done: occurrence.done
+        }))
+      const first = new Map<string, ScheduleOccurrenceDto>()
+      for (const value of rows) if (!first.has(value.scheduleId)) first.set(value.scheduleId, value)
+      const result = new Map([...first.values()].map((value) => [value.id, value]))
+      for (const value of rows) {
+        const end = Date.parse(value.end)
+        if (end >= logicalStart && end <= logicalEnd) result.set(value.id, value)
+      }
+      return { ok: true, value: [...result.values()] }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
+
+  async setDone(id: string, done: boolean): Promise<AppResult<ScheduleOccurrenceDto>> {
+    try {
+      const changed = this.database.update(scheduleOccurrences).set({ done, updatedAt: new Date() })
+        .where(eq(scheduleOccurrences.id, id)).run()
+      if (changed.changes === 0) return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+      const listed = this.database.select({ occurrence: scheduleOccurrences, schedule: schedules })
+        .from(scheduleOccurrences).innerJoin(schedules, eq(scheduleOccurrences.scheduleId, schedules.id))
+        .where(eq(scheduleOccurrences.id, id)).get()!
+      return { ok: true, value: {
+        id: listed.occurrence.id, scheduleId: listed.occurrence.scheduleId,
+        kind: listed.schedule.kind, title: listed.schedule.title,
+        excluded: listed.occurrence.excluded, start: listed.occurrence.start?.toISOString() ?? null,
+        end: listed.occurrence.end.toISOString(), startMark: listed.occurrence.startMark,
+        endMark: listed.occurrence.endMark, comment: listed.occurrence.comment, done: listed.occurrence.done
+      } }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
 }

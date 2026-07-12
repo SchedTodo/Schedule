@@ -47,6 +47,13 @@ describe('createHostGateway', () => {
     const listScheduleOccurrences = vi.fn(async () => ({ ok: true as const, value: [] }))
     const updateOccurrenceComment = vi.fn()
     const excludeOccurrence = vi.fn()
+    const listTodos = vi.fn(async () => ({ ok: true as const, value: [] }))
+    const setOccurrenceDone = vi.fn()
+    const getSettings = vi.fn()
+    const updateSettings = vi.fn()
+    const createRecord = vi.fn()
+    const listRecords = vi.fn()
+    const deleteRecord = vi.fn()
     const gateway = createHostGateway({
       createSchedule,
       findScheduleById,
@@ -58,7 +65,14 @@ describe('createHostGateway', () => {
       listOccurrences,
       listScheduleOccurrences,
       updateOccurrenceComment,
-      excludeOccurrence
+      excludeOccurrence,
+      listTodos,
+      setOccurrenceDone,
+      getSettings,
+      updateSettings,
+      createRecord,
+      listRecords,
+      deleteRecord
     })
     const input = {
       title: '周会',

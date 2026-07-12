@@ -2,14 +2,21 @@
 import { computed, ref } from 'vue'
 import { NEmpty } from 'naive-ui'
 
-import type { ScheduleDto } from '../../../contracts/schedule.contract'
-import { parseFirstScheduleDate } from '../recurrence-presentation'
+import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
 
-const props = defineProps<{ items: readonly ScheduleDto[] }>()
-const emit = defineEmits<{ select: [id: string] }>()
+const props = defineProps<{ items: readonly ScheduleOccurrenceDto[] }>()
+const emit = defineEmits<{
+  select: [id: string]
+  done: [id: string, done: boolean]
+  concentrate: [id: string]
+}>()
 const hideExpired = ref(false)
 const hideDone = ref(false)
-const visibleItems = computed(() => props.items)
+const visibleItems = computed(() => props.items.filter((item) => {
+  if (hideExpired.value && Date.parse(item.end) < Date.now()) return false
+  if (hideDone.value && item.done) return false
+  return true
+}))
 </script>
 
 <template>
@@ -40,16 +47,16 @@ const visibleItems = computed(() => props.items)
           <td>
             <button
               class="cell-link"
-              @click="emit('select', item.id)"
+              @click="emit('select', item.scheduleId)"
             >
               {{ item.title }}
             </button>
           </td>
-          <td>{{ parseFirstScheduleDate(item.recurrenceCode)?.timeLabel ?? '-' }}</td>
+          <td>{{ new Date(item.end).toLocaleString() }}</td>
           <td>
             <button
-              disabled
               aria-label="Concentrate"
+              @click="emit('concentrate', item.id)"
             >
               ▶
             </button>
@@ -57,8 +64,9 @@ const visibleItems = computed(() => props.items)
           <td>
             <input
               type="checkbox"
-              disabled
+              :checked="item.done"
               aria-label="Done"
+              @change="emit('done', item.id, ($event.target as HTMLInputElement).checked)"
             >
           </td>
         </tr>

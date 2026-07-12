@@ -1,12 +1,16 @@
 import { z } from 'zod'
 
 import { AppErrorDtoSchema } from '../../src/contracts/result'
+import { SettingsDtoSchema, UpdateSettingsInputSchema } from '../../src/contracts/settings.contract'
+import { ConcentrationRecordDtoSchema, CreateConcentrationRecordInputSchema } from '../../src/contracts/record.contract'
 import {
   OccurrenceRangeQuerySchema,
   ScheduleOccurrenceDtoSchema,
   ScheduleOccurrenceListInputSchema,
   UpdateOccurrenceCommentInputSchema,
-  ExcludeOccurrenceInputSchema
+  ExcludeOccurrenceInputSchema,
+  TodoOccurrenceQuerySchema,
+  SetOccurrenceDoneInputSchema
 } from '../../src/contracts/occurrence.contract'
 import {
   CreateScheduleInputSchema,
@@ -30,7 +34,14 @@ export const scheduleIpcChannels = {
   listOccurrences: 'occurrence:list-range',
   listScheduleOccurrences: 'occurrence:list-by-schedule',
   updateOccurrenceComment: 'occurrence:update-comment',
-  excludeOccurrence: 'occurrence:exclude'
+  excludeOccurrence: 'occurrence:exclude',
+  listTodos: 'occurrence:list-todos',
+  setOccurrenceDone: 'occurrence:set-done',
+  getSettings: 'settings:get',
+  updateSettings: 'settings:update',
+  createRecord: 'record:create',
+  listRecords: 'record:list-by-schedule',
+  deleteRecord: 'record:delete'
 } as const
 
 export const FindScheduleByIdInputSchema = z.object({ id: z.uuid() }).strict()
@@ -84,6 +95,34 @@ export const scheduleIpcContracts = {
     output: appResultSchema(ScheduleOccurrenceDtoSchema)
   },
   [scheduleIpcChannels.excludeOccurrence]: {
+    input: ExcludeOccurrenceInputSchema,
+    output: appResultSchema(z.void())
+  },
+  [scheduleIpcChannels.listTodos]: {
+    input: TodoOccurrenceQuerySchema,
+    output: appResultSchema(z.array(ScheduleOccurrenceDtoSchema))
+  },
+  [scheduleIpcChannels.setOccurrenceDone]: {
+    input: SetOccurrenceDoneInputSchema,
+    output: appResultSchema(ScheduleOccurrenceDtoSchema)
+  },
+  [scheduleIpcChannels.getSettings]: {
+    input: z.object({}).strict(),
+    output: appResultSchema(SettingsDtoSchema)
+  },
+  [scheduleIpcChannels.updateSettings]: {
+    input: UpdateSettingsInputSchema,
+    output: appResultSchema(SettingsDtoSchema)
+  },
+  [scheduleIpcChannels.createRecord]: {
+    input: CreateConcentrationRecordInputSchema,
+    output: appResultSchema(ConcentrationRecordDtoSchema)
+  },
+  [scheduleIpcChannels.listRecords]: {
+    input: ScheduleOccurrenceListInputSchema,
+    output: appResultSchema(z.array(ConcentrationRecordDtoSchema))
+  },
+  [scheduleIpcChannels.deleteRecord]: {
     input: ExcludeOccurrenceInputSchema,
     output: appResultSchema(z.void())
   }

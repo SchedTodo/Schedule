@@ -43,7 +43,7 @@ describe('createInMemoryGateway', () => {
       ok: true,
       value: {
         id: '0198f0de-8f7f-7000-8000-000000000003',
-        kind: 'event',
+        kind: 'todo',
         title: '周会',
         recurrenceCode: '2026/7/12 10:00',
         exclusionCode: '',

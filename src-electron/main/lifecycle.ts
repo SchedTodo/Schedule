@@ -10,6 +10,7 @@ export function registerApplicationLifecycle(
   })
 
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
+    // Keep the background process alive; the tray menu owns explicit quitting.
+    if (process.env.SCHEDULE_DISABLE_TRAY === '1') app.quit()
   })
 }

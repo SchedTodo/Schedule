@@ -39,7 +39,21 @@ export const scheduleOccurrences = sqliteTable(
   ]
 )
 
-export const databaseSchema = { schedules, scheduleOccurrences }
+export const appSettings = sqliteTable('app_settings', {
+  id: integer('id').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
+})
+
+export const concentrationRecords = sqliteTable('concentration_record', {
+  id: text('id').primaryKey(),
+  scheduleId: text('schedule_id').notNull().references(() => schedules.id),
+  start: integer('start', { mode: 'timestamp_ms' }).notNull(),
+  end: integer('end', { mode: 'timestamp_ms' }).notNull(),
+  deletedAt: integer('deleted_at', { mode: 'timestamp_ms' })
+}, (table) => [index('record_schedule_start_idx').on(table.scheduleId, table.start)])
+
+export const databaseSchema = { schedules, scheduleOccurrences, appSettings, concentrationRecords }
 
 export type ScheduleRow = typeof schedules.$inferSelect
 export type NewScheduleRow = typeof schedules.$inferInsert
