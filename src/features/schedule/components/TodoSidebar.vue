@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { NEmpty } from 'naive-ui'
 
 import type { ScheduleDto } from '../../../contracts/schedule.contract'
 import { parseFirstScheduleDate } from '../recurrence-presentation'
@@ -63,15 +64,21 @@ const visibleItems = computed(() => props.items)
         </tr>
       </tbody>
     </table>
+    <NEmpty
+      v-if="visibleItems.length === 0"
+      class="todo-empty"
+      description="No Data"
+    />
   </section>
 </template>
 
 <style scoped>
-.todo-sidebar { block-size: 100%; padding: 2vh 1vw; }
+.todo-sidebar { position: relative; block-size: 100%; padding: 2vh 1vw; }
 .todo-toolbar { display: flex; padding-block-end: 1vh; }
 .todo-toolbar button { padding: 0.55rem 0.8rem; border: 1px solid var(--color-border); background: var(--color-surface); color: inherit; }
 .todo-toolbar button.active { box-shadow: 1px 1px 1px rgb(0 14 28 / 60%) inset; }
 table { inline-size: 100%; border-collapse: collapse; }
 th, td { padding: 0.7rem 0.4rem; border-block-end: 1px solid var(--color-border); text-align: start; }
 .cell-link { border: 0; background: transparent; color: inherit; cursor: pointer; }
+.todo-empty { position: absolute; inset-block-start: 50%; inset-inline: 0; transform: translateY(-50%); }
 </style>

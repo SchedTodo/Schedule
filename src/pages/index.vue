@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, ref } from 'vue'
+import { NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { CreateScheduleInput } from '../contracts/schedule.contract'
@@ -18,6 +19,7 @@ const preferences = usePreferencesStore()
 const list = useScheduleList(gateway, { offset: 0, limit: 200 })
 const mutations = useScheduleMutations(gateway, list.refresh)
 const view = ref(preferences.calendarMode)
+const sidebarCollapsed = ref(false)
 const todos = computed(() => list.items.value.filter(({ kind }) => kind === 'todo'))
 const events = computed(() => list.items.value.filter(({ kind }) => kind === 'event'))
 
@@ -30,14 +32,30 @@ async function create(input: CreateScheduleInput) {
 </script>
 
 <template>
-  <div class="home-workspace">
-    <aside>
+  <NLayout
+    class="home-workspace"
+    has-sider
+  >
+    <NLayoutSider
+      v-model:collapsed="sidebarCollapsed"
+      bordered
+      collapse-mode="width"
+      :collapsed-width="0"
+      width="30vw"
+      show-trigger="arrow-circle"
+      :native-scrollbar="false"
+      content-style="height: 100%;"
+    >
       <TodoSidebar
         :items="todos"
         @select="select"
       />
-    </aside>
-    <main>
+    </NLayoutSider>
+    <NLayoutContent
+      class="schedule-workspace"
+      bordered
+      :native-scrollbar="false"
+    >
       <div class="home-toolbar">
         <div class="view-switcher">
           <button
@@ -77,17 +95,15 @@ async function create(input: CreateScheduleInput) {
         :items="events"
         @select="select"
       />
-    </main>
-  </div>
+    </NLayoutContent>
+  </NLayout>
 </template>
 
 <style scoped>
-.home-workspace { display: grid; block-size: 100%; grid-template-columns: 30vw 1fr; }
-.home-workspace > aside { border-inline-end: 1px solid var(--color-border); overflow: auto; }
-.home-workspace > main { padding: 2vh 3vw; overflow: auto; }
+.home-workspace { block-size: 100%; }
+.schedule-workspace { padding: 2vh 3vw; overflow: hidden; }
 .home-toolbar { display: flex; gap: 1vw; padding-block-end: 1vh; }
 .view-switcher { display: flex; }
 .view-switcher button, .sync-placeholder { padding: 0.55rem 0.8rem; border: 1px solid var(--color-border); background: var(--color-surface); color: inherit; }
 .view-switcher button.active { background: rgb(0 14 28 / 10%); box-shadow: 1px 1px 1px rgb(0 14 28 / 60%) inset; }
-@media (max-width: 760px) { .home-workspace { grid-template-columns: 1fr; } .home-workspace > aside { max-block-size: 18rem; border-inline-end: 0; border-block-end: 1px solid var(--color-border); } }
 </style>

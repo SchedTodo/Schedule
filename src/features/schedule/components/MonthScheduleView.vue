@@ -39,7 +39,7 @@ const indexed = computed(() => {
 </template>
 
 <style scoped>
-.month-view { block-size: 81vh; }
+.month-view { block-size: calc(100% - 3rem); min-block-size: 70vh; }
 .schedule-card { display: flex; justify-content: space-between; inline-size: 100%; padding: 4px; border: 1.5px solid #eee; border-radius: 4px; background: var(--color-surface); color: inherit; cursor: pointer; }
 .schedule-card:hover { border-color: #18a058; }
 </style>

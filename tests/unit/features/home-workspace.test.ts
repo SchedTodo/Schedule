@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
+import { NLayoutSider } from 'naive-ui'
 import { describe, expect, it, vi } from 'vitest'
 
 import { platformGatewayKey } from '../../../src/app/injection-keys'
@@ -22,18 +23,22 @@ const todo: ScheduleDto = {
 }
 
 describe('home workspace', () => {
-  it('renders the todo sidebar and month/week workspace', async () => {
+  async function mountHome(seed: readonly ScheduleDto[] = []) {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [{ path: '/', component: HomePage }]
     })
     await router.push('/')
-    const wrapper = mount(HomePage, {
+    return mount(HomePage, {
       global: {
         plugins: [createPinia(), router],
-        provide: { [platformGatewayKey as symbol]: createInMemoryGateway([todo]) }
+        provide: { [platformGatewayKey as symbol]: createInMemoryGateway(seed) }
       }
     })
+  }
+
+  it('renders the todo sidebar and month/week workspace', async () => {
+    const wrapper = await mountHome([todo])
     await vi.waitFor(() => expect(wrapper.text()).toContain('Submit report'))
 
     for (const text of ['Not Expired', 'Not Done', 'Name', 'Deadline', 'Action', 'Done']) {
@@ -42,6 +47,27 @@ describe('home workspace', () => {
     expect(wrapper.get('[data-testid="month-view"]')).toBeTruthy()
     await wrapper.get('button[data-view="week"]').trigger('click')
     expect(wrapper.get('[data-testid="week-view"]')).toBeTruthy()
+  })
+
+  it('uses the native collapsible sider configuration', async () => {
+    const wrapper = await mountHome()
+    const sider = wrapper.findComponent(NLayoutSider)
+
+    expect(sider.exists()).toBe(true)
+    expect(sider.props('width')).toBe('30vw')
+    expect(sider.props('collapsedWidth')).toBe(0)
+    expect(sider.props('collapseMode')).toBe('width')
+    expect(sider.props('showTrigger')).toBe('arrow-circle')
+    expect(wrapper.find('.n-layout-toggle-button').exists()).toBe(true)
+  })
+
+  it('renders reference empty states and five week columns', async () => {
+    const wrapper = await mountHome()
+    await vi.waitFor(() => expect(wrapper.text()).toContain('No Data'))
+    await wrapper.get('button[data-view="week"]').trigger('click')
+
+    expect(wrapper.findAll('.day-card')).toHaveLength(5)
+    expect(wrapper.findAll('[data-testid="no-events"]')).toHaveLength(5)
   })
 
   it('uses the Add modal fields and keyboard shortcuts', async () => {

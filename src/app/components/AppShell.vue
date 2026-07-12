@@ -36,12 +36,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
     position="absolute"
   >
     <NLayoutHeader
-    class="application-header"
-    bordered
-    :style="{
-      backgroundColor: 'var(--color-navigation)',
-      color: 'var(--color-navigation-text)'
-    }"
+      class="application-header"
+      bordered
+      :style="{
+        backgroundColor: 'var(--color-navigation)',
+        color: 'var(--color-navigation-text)'
+      }"
     >
       <nav aria-label="Main navigation">
         <RouterLink
@@ -50,7 +50,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
           :to="item.path"
           :class="['navigation-item', { active: activePath === item.path }]"
         >
-          <span class="navigation-icon" aria-hidden="true">{{ item.icon }}</span>
+          <span
+            class="navigation-icon"
+            aria-hidden="true"
+          >{{ item.icon }}</span>
           {{ item.label }}
         </RouterLink>
       </nav>
@@ -73,12 +76,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
     </NLayoutContent>
 
     <NLayoutFooter
-    class="application-footer"
-    bordered
-    :style="{
-      backgroundColor: 'var(--color-navigation)',
-      color: 'var(--color-navigation-text)'
-    }"
+      class="application-footer"
+      bordered
+      :style="{
+        backgroundColor: 'var(--color-navigation)',
+        color: 'var(--color-navigation-text)'
+      }"
     >
       © 2023
     </NLayoutFooter>

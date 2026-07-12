@@ -46,7 +46,7 @@ describe('secondary pages', () => {
       }
     })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Weekly review'))
-    for (const text of ['Database', 'Search Name or Comment', 'Type', 'ID', 'Name', 'Created', 'Updated', 'Star']) {
+    for (const text of ['Database', 'Search Name or Comment', 'Start Date', 'Type', 'ID', 'Name', 'Deleted', 'Created', 'Updated', 'Star', 'Total is']) {
       expect(wrapper.text()).toContain(text)
     }
   })
@@ -70,7 +70,10 @@ describe('secondary pages', () => {
     const router = await routerAt('/settings')
     const wrapper = mount(SettingsPage, { global: { plugins: [createPinia(), router] } })
     expect(wrapper.text()).toContain('Appearance')
+    expect(wrapper.text()).toContain('RRule')
+    expect(wrapper.text()).toContain('Alarm')
     expect(wrapper.text()).toContain('Preferences')
+    expect(wrapper.text()).toContain('Pomodoro')
     expect(wrapper.text()).toContain('Theme')
     expect(wrapper.text()).toContain('Priority')
   })
