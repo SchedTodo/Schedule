@@ -2,6 +2,10 @@ import { z } from 'zod'
 
 import { AppErrorDtoSchema } from '../../src/contracts/result'
 import {
+  OccurrenceRangeQuerySchema,
+  ScheduleOccurrenceDtoSchema
+} from '../../src/contracts/occurrence.contract'
+import {
   CreateScheduleInputSchema,
   ScheduleDtoSchema,
   ScheduleListQuerySchema
@@ -10,7 +14,8 @@ import {
 export const scheduleIpcChannels = {
   create: 'schedule:create',
   findById: 'schedule:find-by-id',
-  list: 'schedule:list'
+  list: 'schedule:list',
+  listOccurrences: 'occurrence:list-range'
 } as const
 
 export const FindScheduleByIdInputSchema = z.object({ id: z.uuid() }).strict()
@@ -34,6 +39,9 @@ export const scheduleIpcContracts = {
   [scheduleIpcChannels.list]: {
     input: ScheduleListQuerySchema,
     output: appResultSchema(z.array(ScheduleDtoSchema))
+  },
+  [scheduleIpcChannels.listOccurrences]: {
+    input: OccurrenceRangeQuerySchema,
+    output: appResultSchema(z.array(ScheduleOccurrenceDtoSchema))
   }
 } as const
-

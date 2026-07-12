@@ -18,7 +18,23 @@ const schedule = {
   updatedAt: '2026-07-11T08:00:00.000Z'
 }
 
-function createHarness(gateway: PlatformGateway) {
+const occurrence = {
+  id: '1198f0de-8f7f-7000-8000-000000000001',
+  scheduleId: schedule.id,
+  kind: 'event' as const,
+  title: schedule.title,
+  excluded: false,
+  start: '2026-07-12T10:00:00.000Z',
+  end: '2026-07-12T11:00:00.000Z',
+  startMark: '11' as const,
+  endMark: '11' as const,
+  comment: '',
+  done: false
+}
+
+function createHarness(
+  gateway: Pick<PlatformGateway, 'schedules'> & Partial<Pick<PlatformGateway, 'occurrences'>>
+) {
   const handlers = new Map<string, (_event: unknown, input: unknown) => Promise<unknown>>()
   registerScheduleIpcHandlers(
     {
@@ -26,7 +42,12 @@ function createHarness(gateway: PlatformGateway) {
         handlers.set(channel, handler)
       }
     },
-    gateway
+    {
+      ...gateway,
+      occurrences: gateway.occurrences ?? {
+        listRange: vi.fn(async () => ({ ok: true as const, value: [] }))
+      }
+    }
   )
 
   const api = createScheduleHostApi(async (channel, input) => {
@@ -116,6 +137,24 @@ describe('typed schedule IPC', () => {
 
     expect(found.ok && found.value?.createdAt).toBe('2026-07-11T08:00:00.000Z')
     expect(listed.ok && listed.value[0]?.updatedAt).toBe('2026-07-11T08:00:00.000Z')
+  })
+
+  it('validates and round trips occurrence range queries', async () => {
+    const listRange = vi.fn(async () => ({ ok: true as const, value: [occurrence] }))
+    const { api, handlers } = createHarness({
+      schedules: { create: vi.fn(), findById: vi.fn(), list: vi.fn() },
+      occurrences: { listRange }
+    })
+    const query = {
+      start: '2026-07-01T00:00:00Z',
+      end: '2026-08-01T00:00:00Z',
+      limit: 5000
+    }
+
+    await expect(api.listOccurrences(query)).resolves.toEqual({ ok: true, value: [occurrence] })
+    await expect(handlers.get('occurrence:list-range')?.({}, { ...query, extra: true }))
+      .resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
+    expect(listRange).toHaveBeenCalledWith(query)
   })
 })
 

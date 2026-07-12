@@ -37,6 +37,9 @@ function gatewayWith(
       findById: vi.fn(),
       list: vi.fn(),
       ...overrides
+    },
+    occurrences: {
+      listRange: vi.fn(async () => ({ ok: true as const, value: [] }))
     }
   }
 }

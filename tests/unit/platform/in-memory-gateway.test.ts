@@ -34,7 +34,7 @@ describe('createInMemoryGateway', () => {
 
     const result = await gateway.schedules.create({
       title: ' 周会 ',
-      recurrenceCode: '2026-07-12 10:00',
+      recurrenceCode: '2026/7/12 10:00',
       exclusionCode: '',
       comment: ''
     })
@@ -45,7 +45,7 @@ describe('createInMemoryGateway', () => {
         id: '0198f0de-8f7f-7000-8000-000000000003',
         kind: 'event',
         title: '周会',
-        recurrenceCode: '2026-07-12 10:00',
+        recurrenceCode: '2026/7/12 10:00',
         exclusionCode: '',
         comment: '',
         starred: false,
@@ -53,6 +53,31 @@ describe('createInMemoryGateway', () => {
         updatedAt: '2026-07-11T08:00:00Z'
       }
     })
+  })
+
+  it('generates and queries concrete occurrences in a UTC range', async () => {
+    let sequence = 0
+    const gateway = createInMemoryGateway([], {
+      clock: new FixedClock('2026-07-11T08:00:00Z'),
+      idGenerator: { next: () => `10000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}` }
+    })
+    await gateway.schedules.create({
+      title: '周会',
+      recurrenceCode: '2026/7/12-13 10:00-11:00 daily;',
+      exclusionCode: '',
+      comment: ''
+    })
+
+    const result = await gateway.occurrences.listRange({
+      start: '2026-07-12T00:00:00Z',
+      end: '2026-07-14T00:00:00Z',
+      limit: 5000
+    })
+
+    expect(result.ok && result.value.map(({ start }) => start)).toEqual([
+      '2026-07-12T10:00:00Z',
+      '2026-07-13T10:00:00Z'
+    ])
   })
 
   it('filters deterministically before applying pagination', async () => {

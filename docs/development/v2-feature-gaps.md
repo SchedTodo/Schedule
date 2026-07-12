@@ -12,10 +12,10 @@ The current `ScheduleGateway` supports only:
 
 These three operations are available through the browser in-memory gateway and the validated Electron preload/IPC/database path.
 
+Schedule creation now expands recurrence and exclusion rules into persisted concrete occurrences. Browser and Electron gateways expose validated occurrence range queries, and month/week views render every returned occurrence instead of parsing the first date from source text.
+
 ## Backend and gateway gaps
 
-- Parse complete recurrence/exclusion syntax and generate occurrences.
-- Query event occurrences by time range.
 - Model Todo deadline occurrences and completion state.
 - Update schedule title, recurrence, exclusion, and comment.
 - Star and unstar schedules.
@@ -33,7 +33,6 @@ These three operations are available through the browser in-memory gateway and t
 - `Not Expired` and `Not Done` do not yet filter occurrence data.
 - Todo completion checkbox and concentration action are disabled.
 - Week view does not position cards by occurrence duration or support drag-to-reschedule.
-- Month and week views currently display only the first concrete date parsed from `recurrenceCode`.
 - Database date-range, deleted, and star filters are presentational; remote pagination is not connected.
 - Detail Edit, Delete, Star, Times, and Records operations are unavailable.
 - Settings Time Zone, Alarm, Week View Days/Start Time, Open At Login, and Pomodoro controls are disabled until matching ports exist.

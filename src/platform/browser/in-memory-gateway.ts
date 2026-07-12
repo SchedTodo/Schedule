@@ -1,5 +1,9 @@
 import type { PlatformGateway } from '../../contracts/platform.contract'
 import {
+  OccurrenceRangeQuerySchema,
+  type ScheduleOccurrenceDto
+} from '../../contracts/occurrence.contract'
+import {
   CreateScheduleInputSchema,
   ScheduleListQuerySchema,
   type ScheduleDto
@@ -8,6 +12,7 @@ import type { Clock } from '../../domain/shared/clock'
 import { SystemClock } from '../../domain/shared/clock'
 import type { IdGenerator } from '../../domain/shared/id-generator'
 import { CryptoIdGenerator } from '../../domain/shared/id-generator'
+import { expandScheduleOccurrences } from '../../parser/parse-schedule'
 
 export interface InMemoryGatewayDependencies {
   readonly clock: Clock
@@ -27,6 +32,7 @@ export function createInMemoryGateway(
   }
 ): PlatformGateway {
   const schedules = [...seed]
+  const occurrences: ScheduleOccurrenceDto[] = []
 
   return {
     schedules: {
@@ -47,6 +53,26 @@ export function createInMemoryGateway(
           updatedAt: now
         }
         schedules.push(schedule)
+        if (parsed.data.recurrenceCode.trim() !== '') {
+          const expanded = expandScheduleOccurrences(
+            parsed.data.recurrenceCode,
+            parsed.data.exclusionCode,
+            {
+              now: dependencies.clock.now(),
+              defaultTimeZone: 'UTC',
+              weekStartsOn: 1,
+              resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
+            }
+          )
+          if (!expanded.ok) return { ok: false, error: validationError }
+          occurrences.push(...expanded.value.map((value) => ({
+            ...value,
+            id: dependencies.idGenerator.next(),
+            scheduleId: schedule.id,
+            kind: schedule.kind,
+            title: schedule.title
+          })))
+        }
         return { ok: true, value: schedule }
       },
 
@@ -67,6 +93,24 @@ export function createInMemoryGateway(
             : true
         })
         return { ok: true, value: Object.freeze(matches.slice(offset, offset + limit)) }
+      }
+    },
+    occurrences: {
+      async listRange(query) {
+        const parsed = OccurrenceRangeQuerySchema.safeParse(query)
+        if (!parsed.success) return { ok: false, error: validationError }
+        const start = Date.parse(parsed.data.start)
+        const end = Date.parse(parsed.data.end)
+        return {
+          ok: true,
+          value: occurrences
+            .filter((value) =>
+              !value.excluded && !value.done && value.start !== null &&
+              Date.parse(value.start) >= start && Date.parse(value.start) < end
+            )
+            .sort((left, right) => Date.parse(left.start!) - Date.parse(right.start!))
+            .slice(0, parsed.data.limit)
+        }
       }
     }
   }

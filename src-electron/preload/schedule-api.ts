@@ -2,6 +2,10 @@ import type { z } from 'zod'
 
 import type { AppResult } from '../../src/contracts/result'
 import type {
+  OccurrenceRangeQuery,
+  ScheduleOccurrenceDto
+} from '../../src/contracts/occurrence.contract'
+import type {
   ScheduleDto
 } from '../../src/contracts/schedule.contract'
 import {
@@ -18,6 +22,7 @@ export interface ScheduleHostApi {
   createSchedule(input: CreateScheduleRequest): Promise<AppResult<ScheduleDto>>
   findScheduleById(id: string): Promise<AppResult<ScheduleDto | null>>
   listSchedules(query: ScheduleListRequest): Promise<AppResult<ScheduleDto[]>>
+  listOccurrences(query: OccurrenceRangeQuery): Promise<AppResult<ScheduleOccurrenceDto[]>>
 }
 
 export function createScheduleHostApi(invoke: IpcInvoke): ScheduleHostApi {
@@ -33,6 +38,10 @@ export function createScheduleHostApi(invoke: IpcInvoke): ScheduleHostApi {
     async listSchedules(query) {
       const value = await invoke(scheduleIpcChannels.list, query)
       return scheduleIpcContracts[scheduleIpcChannels.list].output.parse(value)
+    },
+    async listOccurrences(query) {
+      const value = await invoke(scheduleIpcChannels.listOccurrences, query)
+      return scheduleIpcContracts[scheduleIpcChannels.listOccurrences].output.parse(value)
     }
   }
 }

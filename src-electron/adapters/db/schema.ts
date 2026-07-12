@@ -17,7 +17,30 @@ export const schedules = sqliteTable(
   (table) => [index('schedule_kind_updated_idx').on(table.kind, table.updatedAt)]
 )
 
-export const databaseSchema = { schedules }
+export const scheduleOccurrences = sqliteTable(
+  'schedule_occurrence',
+  {
+    id: text('id').primaryKey(),
+    scheduleId: text('schedule_id').notNull().references(() => schedules.id),
+    excluded: integer('excluded', { mode: 'boolean' }).notNull().default(false),
+    start: integer('start', { mode: 'timestamp_ms' }),
+    end: integer('end', { mode: 'timestamp_ms' }).notNull(),
+    startMark: text('start_mark', { enum: ['00', '01', '10', '11'] }).notNull(),
+    endMark: text('end_mark', { enum: ['00', '01', '10', '11'] }).notNull(),
+    comment: text('comment').notNull().default(''),
+    done: integer('done', { mode: 'boolean' }).notNull().default(false),
+    deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
+  },
+  (table) => [
+    index('occurrence_start_end_idx').on(table.start, table.end),
+    index('occurrence_schedule_deleted_idx').on(table.scheduleId, table.deletedAt)
+  ]
+)
+
+export const databaseSchema = { schedules, scheduleOccurrences }
 
 export type ScheduleRow = typeof schedules.$inferSelect
 export type NewScheduleRow = typeof schedules.$inferInsert
+export type ScheduleOccurrenceRow = typeof scheduleOccurrences.$inferSelect

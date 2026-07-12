@@ -26,6 +26,7 @@ describe('HostScheduleApiSchema', () => {
       createSchedule: vi.fn(),
       findScheduleById: vi.fn(),
       listSchedules: vi.fn(),
+      listOccurrences: vi.fn(),
       invoke: vi.fn()
     }
   ])('rejects absent, incomplete, raw, or additional host APIs', (host) => {
@@ -34,14 +35,16 @@ describe('HostScheduleApiSchema', () => {
 })
 
 describe('createHostGateway', () => {
-  it('delegates only the three named schedule methods', async () => {
+  it('delegates only the named platform methods', async () => {
     const createSchedule = vi.fn(async () => ({ ok: true as const, value: schedule }))
     const findScheduleById = vi.fn(async () => ({ ok: true as const, value: schedule }))
     const listSchedules = vi.fn(async () => ({ ok: true as const, value: [schedule] }))
+    const listOccurrences = vi.fn(async () => ({ ok: true as const, value: [] }))
     const gateway = createHostGateway({
       createSchedule,
       findScheduleById,
-      listSchedules
+      listSchedules,
+      listOccurrences
     })
     const input = {
       title: '周会',

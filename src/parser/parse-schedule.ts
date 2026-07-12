@@ -7,6 +7,8 @@ import type { Diagnostic } from './diagnostics'
 import { SyntaxDiagnosticListener } from './diagnostics'
 import type { EvaluationContext, ScheduleSpec } from './evaluator'
 import { evaluateSchedule } from './evaluator'
+import type { ScheduleOccurrenceDraft } from '../contracts/occurrence.contract'
+import { expandScheduleSpec, occurrenceKey } from '../domain/schedule/occurrence'
 
 export type ParseResult<T> =
   | { readonly ok: true; readonly value: T }
@@ -35,4 +37,24 @@ export function parseSchedule(
   }
 
   return evaluateSchedule(buildScheduleAst(tree), context)
+}
+
+export function expandScheduleOccurrences(
+  recurrenceCode: string,
+  exclusionCode: string,
+  context: EvaluationContext
+): ParseResult<readonly ScheduleOccurrenceDraft[]> {
+  const recurrence = parseSchedule(recurrenceCode, context)
+  if (!recurrence.ok) return recurrence
+  const recurrenceOccurrences = expandScheduleSpec(recurrence.value)
+  if (exclusionCode.trim() === '') return { ok: true, value: recurrenceOccurrences }
+
+  const exclusion = parseSchedule(exclusionCode, context)
+  if (!exclusion.ok) return exclusion
+  const exclusionKeys = new Set(expandScheduleSpec(exclusion.value).map(occurrenceKey))
+  const included = recurrenceOccurrences.filter((value) => !exclusionKeys.has(occurrenceKey(value)))
+  const excluded = recurrenceOccurrences
+    .filter((value) => exclusionKeys.has(occurrenceKey(value)))
+    .map((value) => ({ ...value, excluded: true }))
+  return { ok: true, value: [...included, ...excluded] }
 }

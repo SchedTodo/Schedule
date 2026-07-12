@@ -10,6 +10,7 @@ import TodoSidebar from '../features/schedule/components/TodoSidebar.vue'
 import WeekScheduleView from '../features/schedule/components/WeekScheduleView.vue'
 import { useScheduleList } from '../features/schedule/use-schedule-list'
 import { useScheduleMutations } from '../features/schedule/use-schedule-mutations'
+import { useOccurrenceRange } from '../features/schedule/use-occurrence-range'
 import { usePreferencesStore } from '../stores/preferences'
 
 const gateway = inject(platformGatewayKey)
@@ -21,7 +22,16 @@ const mutations = useScheduleMutations(gateway, list.refresh)
 const view = ref(preferences.calendarMode)
 const sidebarCollapsed = ref(false)
 const todos = computed(() => list.items.value.filter(({ kind }) => kind === 'todo'))
-const events = computed(() => list.items.value.filter(({ kind }) => kind === 'event'))
+const now = new Date()
+const occurrenceStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+occurrenceStart.setUTCDate(occurrenceStart.getUTCDate() - 7)
+const occurrenceEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
+occurrenceEnd.setUTCDate(occurrenceEnd.getUTCDate() + 7)
+const occurrenceRange = useOccurrenceRange(gateway, {
+  start: occurrenceStart.toISOString(),
+  end: occurrenceEnd.toISOString(),
+  limit: 5000
+})
 
 function select(id: string) {
   void router.push({ name: 'schedule-detail', params: { id } })
@@ -87,12 +97,12 @@ async function create(input: CreateScheduleInput) {
       </div>
       <MonthScheduleView
         v-if="view === 'month'"
-        :items="events"
+        :items="occurrenceRange.items.value"
         @select="select"
       />
       <WeekScheduleView
         v-else
-        :items="events"
+        :items="occurrenceRange.items.value"
         @select="select"
       />
     </NLayoutContent>

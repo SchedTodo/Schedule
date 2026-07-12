@@ -1,15 +1,26 @@
 <script setup lang="ts">
-import type { ScheduleDto } from '../../../contracts/schedule.contract'
+import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
 import { NEmpty } from 'naive-ui'
-import { parseFirstScheduleDate } from '../recurrence-presentation'
 
-defineProps<{ items: readonly ScheduleDto[] }>()
+const props = withDefaults(defineProps<{
+  items: readonly ScheduleOccurrenceDto[]
+  startDate?: string
+}>(), { startDate: () => new Date().toISOString().slice(0, 10) })
 const emit = defineEmits<{ select: [id: string] }>()
 const days = Array.from({ length: 5 }, (_, offset) => {
-  const date = new Date()
-  date.setDate(date.getDate() + offset)
+  const date = new Date(`${props.startDate}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + offset)
   return date.toISOString().slice(0, 10)
 })
+
+function occursOn(item: ScheduleOccurrenceDto, day: string): boolean {
+  return item.start?.slice(0, 10) === day
+}
+
+function timeLabel(item: ScheduleOccurrenceDto): string {
+  if (item.start === null) return ''
+  return `${item.start.slice(11, 16)}–${item.end.slice(11, 16)}`
+}
 </script>
 
 <template>
@@ -24,16 +35,17 @@ const days = Array.from({ length: 5 }, (_, offset) => {
     >
       <header>{{ day.replaceAll('-', '/') }}</header>
       <button
-        v-for="item in items.filter((value) => parseFirstScheduleDate(value.recurrenceCode)?.dateKey === day)"
+        v-for="item in items.filter((value) => occursOn(value, day))"
         :key="item.id"
+        :data-occurrence-id="item.id"
         class="event-card"
-        @click="emit('select', item.id)"
+        @click="emit('select', item.scheduleId)"
       >
         <span>{{ item.title }}</span>
-        <span>{{ parseFirstScheduleDate(item.recurrenceCode)?.timeLabel }}</span>
+        <span>{{ timeLabel(item) }}</span>
       </button>
       <NEmpty
-        v-if="!items.some((value) => parseFirstScheduleDate(value.recurrenceCode)?.dateKey === day)"
+        v-if="!items.some((value) => occursOn(value, day))"
         data-testid="no-events"
         class="day-empty"
         description="No Events"

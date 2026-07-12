@@ -74,4 +74,14 @@ export function registerScheduleIpcHandlers(
       (value) => listContract.output.parse(value)
     )
   )
+
+  const occurrenceListContract = scheduleIpcContracts[scheduleIpcChannels.listOccurrences]
+  ipcMain.handle(scheduleIpcChannels.listOccurrences, (_event, input) =>
+    execute(
+      input,
+      (value) => occurrenceListContract.input.parse(value),
+      (value) => gateway.occurrences.listRange(value),
+      (value) => occurrenceListContract.output.parse(value)
+    )
+  )
 }

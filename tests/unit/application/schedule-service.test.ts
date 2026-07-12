@@ -7,6 +7,7 @@ import type { ScheduleRepository } from '../../../src/platform/ports'
 function repositoryWith(overrides: Partial<ScheduleRepository> = {}): ScheduleRepository {
   return {
     save: vi.fn(async (schedule) => ({ ok: true as const, value: schedule })),
+    saveWithOccurrences: vi.fn(async (schedule) => ({ ok: true as const, value: schedule })),
     findById: vi.fn(async () => ({ ok: true as const, value: null })),
     list: vi.fn(async () => ({ ok: true as const, value: [] })),
     deleteById: vi.fn(async () => ({ ok: true as const, value: undefined })),
@@ -44,6 +45,35 @@ describe('ScheduleService', () => {
       }
     })
     expect(repository.save).toHaveBeenCalledWith(result.ok && result.value)
+  })
+
+  it('expands recurrence and persists schedule occurrences atomically', async () => {
+    let sequence = 0
+    const repository = repositoryWith()
+    const service = new ScheduleService(repository, {
+      clock: new FixedClock('2026-07-11T08:00:00Z'),
+      idGenerator: { next: () => `10000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}` },
+      defaultTimeZone: 'Asia/Shanghai',
+      weekStartsOn: 1,
+      resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
+    })
+
+    const result = await service.create({
+      title: '周会',
+      recurrenceCode: '2026/7/13 10:00-11:00;',
+      exclusionCode: '',
+      comment: ''
+    })
+
+    expect(result.ok).toBe(true)
+    expect(repository.saveWithOccurrences).toHaveBeenCalledWith(
+      expect.objectContaining({ title: '周会' }),
+      [expect.objectContaining({
+        scheduleId: '10000000-0000-4000-8000-000000000001',
+        start: '2026-07-13T02:00:00Z',
+        end: '2026-07-13T03:00:00Z'
+      })]
+    )
   })
 
   it('returns repository failures and delegates reads', async () => {

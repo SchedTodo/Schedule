@@ -8,6 +8,9 @@ export function createHostGateway(host: unknown): PlatformGateway {
       create: (input) => api.createSchedule(input),
       findById: (id) => api.findScheduleById(id),
       list: (query) => api.listSchedules(query)
+    },
+    occurrences: {
+      listRange: (query) => api.listOccurrences(query)
     }
   }
 }

@@ -9,6 +9,8 @@ import { CryptoIdGenerator } from '../../src/domain/shared/id-generator'
 import { openScheduleDatabase } from '../adapters/db/client'
 import { migrateV1Database } from '../adapters/db/migrate-v1'
 import migrationSql from '../adapters/db/migrations/0001_v2_schema.sql?raw'
+import occurrenceMigrationSql from '../adapters/db/migrations/0002_occurrence.sql?raw'
+import { DrizzleOccurrenceRepository } from '../adapters/db/occurrence-repository'
 import { DrizzleScheduleRepository } from '../adapters/db/schedule-repository'
 import { registerScheduleIpcHandlers } from './ipc/register-handlers'
 import { registerApplicationLifecycle } from './lifecycle'
@@ -34,12 +36,17 @@ function registerSchedulePlatform(): void {
 
   const connection = openScheduleDatabase(databasePath)
   if (!databaseExists) connection.sqlite.exec(migrationSql)
+  connection.sqlite.exec(occurrenceMigrationSql)
   const repository = new DrizzleScheduleRepository(connection.database)
+  const occurrenceRepository = new DrizzleOccurrenceRepository(connection.database)
   const service = new ScheduleService(repository, {
     clock: new SystemClock(),
-    idGenerator: new CryptoIdGenerator()
+    idGenerator: new CryptoIdGenerator(),
+    defaultTimeZone: 'UTC',
+    weekStartsOn: 1,
+    resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
   })
-  registerScheduleIpcHandlers(ipcMain, { schedules: service })
+  registerScheduleIpcHandlers(ipcMain, { schedules: service, occurrences: occurrenceRepository })
   app.on('before-quit', () => connection.sqlite.close())
 }
 

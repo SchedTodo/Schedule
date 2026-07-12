@@ -6,9 +6,10 @@ import type {
   ScheduleListQuery
 } from '../../../src/contracts/schedule.contract'
 import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
+import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import type { ScheduleRepository } from '../../../src/platform/ports'
 import { scheduleDtoToRow, scheduleRowToDto } from './schedule-mapper'
-import { databaseSchema, schedules } from './schema'
+import { databaseSchema, scheduleOccurrences, schedules } from './schema'
 
 type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
 
@@ -45,6 +46,51 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
           }
         })
         .run()
+      return { ok: true, value: schedule }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
+
+  async saveWithOccurrences(
+    schedule: ScheduleDto,
+    occurrences: readonly ScheduleOccurrenceDto[]
+  ): Promise<AppResult<ScheduleDto>> {
+    try {
+      const row = scheduleDtoToRow(schedule)
+      this.database.transaction((transaction) => {
+        transaction.insert(schedules).values(row).onConflictDoUpdate({
+          target: schedules.id,
+          set: {
+            kind: row.kind,
+            title: row.title,
+            recurrenceCode: row.recurrenceCode,
+            exclusionCode: row.exclusionCode,
+            comment: row.comment,
+            starred: row.starred,
+            deletedAt: null,
+            updatedAt: row.updatedAt
+          }
+        }).run()
+        transaction.delete(scheduleOccurrences)
+          .where(eq(scheduleOccurrences.scheduleId, schedule.id)).run()
+        if (occurrences.length > 0) {
+          transaction.insert(scheduleOccurrences).values(occurrences.map((occurrence) => ({
+            id: occurrence.id,
+            scheduleId: occurrence.scheduleId,
+            excluded: occurrence.excluded,
+            start: occurrence.start === null ? null : new Date(occurrence.start),
+            end: new Date(occurrence.end),
+            startMark: occurrence.startMark,
+            endMark: occurrence.endMark,
+            comment: occurrence.comment,
+            done: occurrence.done,
+            deletedAt: null,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt
+          }))).run()
+        }
+      })
       return { ok: true, value: schedule }
     } catch (error) {
       return { ok: false, error: persistenceError(error) }
