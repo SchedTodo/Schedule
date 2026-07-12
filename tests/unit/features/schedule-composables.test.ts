@@ -36,10 +36,17 @@ function gatewayWith(
       create: vi.fn(),
       findById: vi.fn(),
       list: vi.fn(),
+      update: vi.fn(),
+      setStarred: vi.fn(),
+      setDeleted: vi.fn(),
+      searchPage: vi.fn(),
       ...overrides
     },
     occurrences: {
       listRange: vi.fn(async () => ({ ok: true as const, value: [] }))
+      ,listBySchedule: vi.fn(async () => ({ ok: true as const, value: [] }))
+      ,updateComment: vi.fn()
+      ,exclude: vi.fn()
     }
   }
 }

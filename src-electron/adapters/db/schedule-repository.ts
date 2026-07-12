@@ -1,9 +1,10 @@
-import { and, desc, eq, isNull, like, type SQL } from 'drizzle-orm'
+import { and, desc, eq, isNotNull, isNull, like, type SQL } from 'drizzle-orm'
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 
 import type {
   ScheduleDto,
-  ScheduleListQuery
+  ScheduleListQuery,
+  ScheduleSearchQuery
 } from '../../../src/contracts/schedule.contract'
 import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
 import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
@@ -143,6 +144,71 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
       return { ok: true, value: undefined }
     } catch (error) {
       return { ok: false, error: persistenceError(error) }
+    }
+  }
+
+  async setStarred(id: string, starred: boolean, updatedAt: string): Promise<AppResult<ScheduleDto>> {
+    try {
+      const changed = this.database.update(schedules)
+        .set({ starred, updatedAt: new Date(updatedAt) }).where(eq(schedules.id, id)).run()
+      if (changed.changes === 0) return { ok: false, error: { code: 'NOT_FOUND', message: '日程不存在' } }
+      const row = this.database.select().from(schedules).where(eq(schedules.id, id)).get()!
+      return { ok: true, value: scheduleRowToDto(row) }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
+
+  async setDeleted(id: string, deleted: boolean, updatedAt: string): Promise<AppResult<void>> {
+    try {
+      const timestamp = new Date(updatedAt)
+      const changed = this.database.transaction((transaction) => {
+        const result = transaction.update(schedules)
+          .set({ deletedAt: deleted ? timestamp : null, updatedAt: timestamp })
+          .where(eq(schedules.id, id)).run()
+        transaction.update(scheduleOccurrences)
+          .set({ deletedAt: deleted ? timestamp : null, updatedAt: timestamp })
+          .where(eq(scheduleOccurrences.scheduleId, id)).run()
+        return result.changes
+      })
+      return changed === 0
+        ? { ok: false, error: { code: 'NOT_FOUND', message: '日程不存在' } }
+        : { ok: true, value: undefined }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
+
+  async searchPage(query: ScheduleSearchQuery) {
+    try {
+      const conditions: SQL[] = [query.deleted ? isNotNull(schedules.deletedAt) : isNull(schedules.deletedAt)]
+      if (query.kind !== undefined) conditions.push(eq(schedules.kind, query.kind))
+      if (query.starred !== undefined) conditions.push(eq(schedules.starred, query.starred))
+      if (query.search !== '') conditions.push(like(schedules.title, `%${query.search}%`))
+      let rows = this.database.select().from(schedules).where(and(...conditions))
+        .orderBy(desc(schedules.updatedAt)).all()
+      if (query.start !== undefined || query.end !== undefined) {
+        const occurrenceRows = this.database.select({ scheduleId: scheduleOccurrences.scheduleId, start: scheduleOccurrences.start, end: scheduleOccurrences.end })
+          .from(scheduleOccurrences).where(isNull(scheduleOccurrences.deletedAt)).all()
+        const ids = new Set(occurrenceRows.filter((value) =>
+          (query.start === undefined || value.end.getTime() >= Date.parse(query.start)) &&
+          (query.end === undefined || (value.start ?? value.end).getTime() <= Date.parse(query.end))
+        ).map(({ scheduleId }) => scheduleId))
+        rows = rows.filter(({ id }) => ids.has(id))
+      }
+      const total = rows.length
+      const offset = (query.page - 1) * query.pageSize
+      return {
+        ok: true as const,
+        value: {
+          total,
+          items: rows.slice(offset, offset + query.pageSize).map((row) => ({
+            ...scheduleRowToDto(row), deleted: row.deletedAt !== null
+          }))
+        }
+      }
+    } catch (error) {
+      return { ok: false as const, error: persistenceError(error) }
     }
   }
 }

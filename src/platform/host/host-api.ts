@@ -8,14 +8,26 @@ import type {
 import type {
   CreateScheduleInput,
   ScheduleDto,
-  ScheduleListQuery
+  ScheduleListQuery,
+  SchedulePageDto,
+  ScheduleSearchQuery,
+  SetScheduleDeletedInput,
+  SetScheduleStarredInput,
+  UpdateScheduleInput
 } from '../../contracts/schedule.contract'
 
 export interface HostScheduleApi {
   createSchedule(input: CreateScheduleInput): Promise<AppResult<ScheduleDto>>
   findScheduleById(id: string): Promise<AppResult<ScheduleDto | null>>
   listSchedules(query: ScheduleListQuery): Promise<AppResult<readonly ScheduleDto[]>>
+  updateSchedule(input: UpdateScheduleInput): Promise<AppResult<ScheduleDto>>
+  setScheduleStarred(input: SetScheduleStarredInput): Promise<AppResult<ScheduleDto>>
+  setScheduleDeleted(input: SetScheduleDeletedInput): Promise<AppResult<void>>
+  searchSchedules(query: ScheduleSearchQuery): Promise<AppResult<SchedulePageDto>>
   listOccurrences(query: OccurrenceRangeQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
+  listScheduleOccurrences(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
+  updateOccurrenceComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
+  excludeOccurrence(id: string): Promise<AppResult<void>>
 }
 
 function method<T extends (...arguments_: never[]) => unknown>() {
@@ -27,6 +39,13 @@ export const HostScheduleApiSchema = z
     createSchedule: method<HostScheduleApi['createSchedule']>(),
     findScheduleById: method<HostScheduleApi['findScheduleById']>(),
     listSchedules: method<HostScheduleApi['listSchedules']>(),
-    listOccurrences: method<HostScheduleApi['listOccurrences']>()
+    updateSchedule: method<HostScheduleApi['updateSchedule']>(),
+    setScheduleStarred: method<HostScheduleApi['setScheduleStarred']>(),
+    setScheduleDeleted: method<HostScheduleApi['setScheduleDeleted']>(),
+    searchSchedules: method<HostScheduleApi['searchSchedules']>(),
+    listOccurrences: method<HostScheduleApi['listOccurrences']>(),
+    listScheduleOccurrences: method<HostScheduleApi['listScheduleOccurrences']>(),
+    updateOccurrenceComment: method<HostScheduleApi['updateOccurrenceComment']>(),
+    excludeOccurrence: method<HostScheduleApi['excludeOccurrence']>()
   })
   .strict()

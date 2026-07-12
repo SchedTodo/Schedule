@@ -11,6 +11,13 @@ function repositoryWith(overrides: Partial<ScheduleRepository> = {}): ScheduleRe
     findById: vi.fn(async () => ({ ok: true as const, value: null })),
     list: vi.fn(async () => ({ ok: true as const, value: [] })),
     deleteById: vi.fn(async () => ({ ok: true as const, value: undefined })),
+    setStarred: vi.fn(async () => ({ ok: true as const, value: {
+      id: '0198f0de-8f7f-7000-8000-000000000001', kind: 'event' as const, title: '周会',
+      recurrenceCode: '2026/7/12 10:00-11:00', exclusionCode: '', comment: '', starred: true,
+      createdAt: '2026-07-11T08:00:00Z', updatedAt: '2026-07-11T08:00:00Z'
+    } })),
+    setDeleted: vi.fn(async () => ({ ok: true as const, value: undefined })),
+    searchPage: vi.fn(async () => ({ ok: true as const, value: { items: [], total: 0 } })),
     ...overrides
   }
 }

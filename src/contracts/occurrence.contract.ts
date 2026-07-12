@@ -55,7 +55,17 @@ export const OccurrenceRangeQuerySchema = z
     path: ['end']
   })
 
+export const ScheduleOccurrenceListInputSchema = z.object({ scheduleId: z.uuid() }).strict()
+export const UpdateOccurrenceCommentInputSchema = z.object({
+  id: z.uuid(),
+  comment: z.string().max(20_000)
+}).strict()
+export const ExcludeOccurrenceInputSchema = z.object({ id: z.uuid() }).strict()
+
 export type KnownTimeMark = z.infer<typeof KnownTimeMarkSchema>
 export type ScheduleOccurrenceDto = z.infer<typeof ScheduleOccurrenceDtoSchema>
 export type ScheduleOccurrenceDraft = z.infer<typeof ScheduleOccurrenceDraftSchema>
 export type OccurrenceRangeQuery = z.infer<typeof OccurrenceRangeQuerySchema>
+export type ScheduleOccurrenceListInput = z.infer<typeof ScheduleOccurrenceListInputSchema>
+export type UpdateOccurrenceCommentInput = z.infer<typeof UpdateOccurrenceCommentInputSchema>
+export type ExcludeOccurrenceInput = z.infer<typeof ExcludeOccurrenceInputSchema>

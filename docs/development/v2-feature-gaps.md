@@ -17,10 +17,6 @@ Schedule creation now expands recurrence and exclusion rules into persisted conc
 ## Backend and gateway gaps
 
 - Model Todo deadline occurrences and completion state.
-- Update schedule title, recurrence, exclusion, and comment.
-- Star and unstar schedules.
-- Soft-delete and restore schedules through the public gateway.
-- Query, edit, and delete individual time occurrences.
 - Store and query concentration records.
 - Persist application settings outside browser local storage.
 - Schedule alarms and deliver system notifications.
@@ -33,8 +29,7 @@ Schedule creation now expands recurrence and exclusion rules into persisted conc
 - `Not Expired` and `Not Done` do not yet filter occurrence data.
 - Todo completion checkbox and concentration action are disabled.
 - Week view does not position cards by occurrence duration or support drag-to-reschedule.
-- Database date-range, deleted, and star filters are presentational; remote pagination is not connected.
-- Detail Edit, Delete, Star, Times, and Records operations are unavailable.
+- Detail Records operations are unavailable.
 - Settings Time Zone, Alarm, Week View Days/Start Time, Open At Login, and Pomodoro controls are disabled until matching ports exist.
 - Concentration timer page and record submission are not migrated.
 - User menu, authentication feedback, sync action, and syncing overlay are not migrated.

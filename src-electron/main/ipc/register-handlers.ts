@@ -75,6 +75,27 @@ export function registerScheduleIpcHandlers(
     )
   )
 
+  const updateContract = scheduleIpcContracts[scheduleIpcChannels.update]
+  ipcMain.handle(scheduleIpcChannels.update, (_event, input) => execute(
+    input, (value) => updateContract.input.parse(value),
+    (value) => gateway.schedules.update(value), (value) => updateContract.output.parse(value)
+  ))
+  const starredContract = scheduleIpcContracts[scheduleIpcChannels.setStarred]
+  ipcMain.handle(scheduleIpcChannels.setStarred, (_event, input) => execute(
+    input, (value) => starredContract.input.parse(value),
+    (value) => gateway.schedules.setStarred(value), (value) => starredContract.output.parse(value)
+  ))
+  const deletedContract = scheduleIpcContracts[scheduleIpcChannels.setDeleted]
+  ipcMain.handle(scheduleIpcChannels.setDeleted, (_event, input) => execute(
+    input, (value) => deletedContract.input.parse(value),
+    (value) => gateway.schedules.setDeleted(value), (value) => deletedContract.output.parse(value)
+  ))
+  const searchContract = scheduleIpcContracts[scheduleIpcChannels.search]
+  ipcMain.handle(scheduleIpcChannels.search, (_event, input) => execute(
+    input, (value) => searchContract.input.parse(value),
+    (value) => gateway.schedules.searchPage(value), (value) => searchContract.output.parse(value)
+  ))
+
   const occurrenceListContract = scheduleIpcContracts[scheduleIpcChannels.listOccurrences]
   ipcMain.handle(scheduleIpcChannels.listOccurrences, (_event, input) =>
     execute(
@@ -84,4 +105,22 @@ export function registerScheduleIpcHandlers(
       (value) => occurrenceListContract.output.parse(value)
     )
   )
+  const scheduleOccurrencesContract = scheduleIpcContracts[scheduleIpcChannels.listScheduleOccurrences]
+  ipcMain.handle(scheduleIpcChannels.listScheduleOccurrences, (_event, input) => execute(
+    input, (value) => scheduleOccurrencesContract.input.parse(value),
+    ({ scheduleId }) => gateway.occurrences.listBySchedule(scheduleId),
+    (value) => scheduleOccurrencesContract.output.parse(value)
+  ))
+  const commentContract = scheduleIpcContracts[scheduleIpcChannels.updateOccurrenceComment]
+  ipcMain.handle(scheduleIpcChannels.updateOccurrenceComment, (_event, input) => execute(
+    input, (value) => commentContract.input.parse(value),
+    ({ id, comment }) => gateway.occurrences.updateComment(id, comment),
+    (value) => commentContract.output.parse(value)
+  ))
+  const excludeContract = scheduleIpcContracts[scheduleIpcChannels.excludeOccurrence]
+  ipcMain.handle(scheduleIpcChannels.excludeOccurrence, (_event, input) => execute(
+    input, (value) => excludeContract.input.parse(value),
+    ({ id }) => gateway.occurrences.exclude(id),
+    (value) => excludeContract.output.parse(value)
+  ))
 }

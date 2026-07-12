@@ -40,11 +40,25 @@ describe('createHostGateway', () => {
     const findScheduleById = vi.fn(async () => ({ ok: true as const, value: schedule }))
     const listSchedules = vi.fn(async () => ({ ok: true as const, value: [schedule] }))
     const listOccurrences = vi.fn(async () => ({ ok: true as const, value: [] }))
+    const updateSchedule = vi.fn(async () => ({ ok: true as const, value: schedule }))
+    const setScheduleStarred = vi.fn(async () => ({ ok: true as const, value: schedule }))
+    const setScheduleDeleted = vi.fn(async () => ({ ok: true as const, value: undefined }))
+    const searchSchedules = vi.fn(async () => ({ ok: true as const, value: { items: [], total: 0 } }))
+    const listScheduleOccurrences = vi.fn(async () => ({ ok: true as const, value: [] }))
+    const updateOccurrenceComment = vi.fn()
+    const excludeOccurrence = vi.fn()
     const gateway = createHostGateway({
       createSchedule,
       findScheduleById,
       listSchedules,
-      listOccurrences
+      updateSchedule,
+      setScheduleStarred,
+      setScheduleDeleted,
+      searchSchedules,
+      listOccurrences,
+      listScheduleOccurrences,
+      updateOccurrenceComment,
+      excludeOccurrence
     })
     const input = {
       title: '周会',

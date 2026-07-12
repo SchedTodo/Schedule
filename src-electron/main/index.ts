@@ -45,7 +45,7 @@ function registerSchedulePlatform(): void {
     defaultTimeZone: 'UTC',
     weekStartsOn: 1,
     resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
-  })
+  }, occurrenceRepository)
   registerScheduleIpcHandlers(ipcMain, { schedules: service, occurrences: occurrenceRepository })
   app.on('before-quit', () => connection.sqlite.close())
 }

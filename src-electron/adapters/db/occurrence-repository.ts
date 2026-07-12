@@ -102,4 +102,76 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
       return { ok: false, error: persistenceError(error) }
     }
   }
+
+  async listBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>> {
+    try {
+      const rows = this.database
+        .select({ occurrence: scheduleOccurrences, schedule: schedules })
+        .from(scheduleOccurrences)
+        .innerJoin(schedules, eq(scheduleOccurrences.scheduleId, schedules.id))
+        .where(and(
+          eq(scheduleOccurrences.scheduleId, scheduleId),
+          eq(scheduleOccurrences.excluded, false),
+          isNull(scheduleOccurrences.deletedAt),
+          isNull(schedules.deletedAt)
+        ))
+        .orderBy(asc(scheduleOccurrences.end))
+        .all()
+      return { ok: true, value: rows.map(({ occurrence, schedule }) => ({
+        id: occurrence.id,
+        scheduleId: occurrence.scheduleId,
+        kind: schedule.kind,
+        title: schedule.title,
+        excluded: occurrence.excluded,
+        start: occurrence.start?.toISOString() ?? null,
+        end: occurrence.end.toISOString(),
+        startMark: occurrence.startMark,
+        endMark: occurrence.endMark,
+        comment: occurrence.comment,
+        done: occurrence.done
+      })) }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
+
+  async updateComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>> {
+    try {
+      this.database.update(scheduleOccurrences).set({ comment, updatedAt: new Date() })
+        .where(eq(scheduleOccurrences.id, id)).run()
+      const row = this.database
+        .select({ occurrence: scheduleOccurrences, schedule: schedules })
+        .from(scheduleOccurrences)
+        .innerJoin(schedules, eq(scheduleOccurrences.scheduleId, schedules.id))
+        .where(eq(scheduleOccurrences.id, id)).get()
+      if (row === undefined) return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+      return { ok: true, value: {
+        id: row.occurrence.id,
+        scheduleId: row.occurrence.scheduleId,
+        kind: row.schedule.kind,
+        title: row.schedule.title,
+        excluded: row.occurrence.excluded,
+        start: row.occurrence.start?.toISOString() ?? null,
+        end: row.occurrence.end.toISOString(),
+        startMark: row.occurrence.startMark,
+        endMark: row.occurrence.endMark,
+        comment: row.occurrence.comment,
+        done: row.occurrence.done
+      } }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
+
+  async exclude(id: string): Promise<AppResult<void>> {
+    try {
+      const result = this.database.update(scheduleOccurrences)
+        .set({ excluded: true, updatedAt: new Date() })
+        .where(eq(scheduleOccurrences.id, id)).run()
+      if (result.changes === 0) return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+      return { ok: true, value: undefined }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
 }

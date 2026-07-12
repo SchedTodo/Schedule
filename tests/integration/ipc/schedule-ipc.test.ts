@@ -33,7 +33,10 @@ const occurrence = {
 }
 
 function createHarness(
-  gateway: Pick<PlatformGateway, 'schedules'> & Partial<Pick<PlatformGateway, 'occurrences'>>
+  gateway: {
+    schedules: Pick<PlatformGateway['schedules'], 'create' | 'findById' | 'list'> & Partial<PlatformGateway['schedules']>
+    occurrences?: Partial<PlatformGateway['occurrences']>
+  }
 ) {
   const handlers = new Map<string, (_event: unknown, input: unknown) => Promise<unknown>>()
   registerScheduleIpcHandlers(
@@ -43,9 +46,18 @@ function createHarness(
       }
     },
     {
-      ...gateway,
-      occurrences: gateway.occurrences ?? {
-        listRange: vi.fn(async () => ({ ok: true as const, value: [] }))
+      schedules: {
+        ...gateway.schedules,
+        update: gateway.schedules.update ?? vi.fn(),
+        setStarred: gateway.schedules.setStarred ?? vi.fn(),
+        setDeleted: gateway.schedules.setDeleted ?? vi.fn(),
+        searchPage: gateway.schedules.searchPage ?? vi.fn()
+      },
+      occurrences: {
+        listRange: gateway.occurrences?.listRange ?? vi.fn(async () => ({ ok: true as const, value: [] })),
+        listBySchedule: gateway.occurrences?.listBySchedule ?? vi.fn(async () => ({ ok: true as const, value: [] })),
+        updateComment: gateway.occurrences?.updateComment ?? vi.fn(),
+        exclude: gateway.occurrences?.exclude ?? vi.fn()
       }
     }
   )
