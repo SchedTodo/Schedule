@@ -51,7 +51,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
   </NButton>
   <NModal v-model:show="show">
     <NCard
-      class="legacy-schedule-modal"
+      class="schedule-modal"
       title="Add"
       :bordered="false"
       role="dialog"
@@ -113,7 +113,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
 </template>
 
 <style scoped>
-.legacy-schedule-modal {
+.schedule-modal {
   inline-size: 58vw;
   min-inline-size: 32rem;
 }

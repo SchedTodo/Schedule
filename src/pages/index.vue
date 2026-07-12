@@ -3,7 +3,7 @@ import { computed, inject, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { CreateScheduleInput } from '../contracts/schedule.contract'
-import LegacyScheduleModal from '../features/schedule/components/LegacyScheduleModal.vue'
+import ScheduleModal from '../features/schedule/components/ScheduleModal.vue'
 import MonthScheduleView from '../features/schedule/components/MonthScheduleView.vue'
 import TodoSidebar from '../features/schedule/components/TodoSidebar.vue'
 import WeekScheduleView from '../features/schedule/components/WeekScheduleView.vue'
@@ -30,7 +30,7 @@ async function create(input: CreateScheduleInput) {
 </script>
 
 <template>
-  <div class="legacy-home">
+  <div class="home-workspace">
     <aside>
       <TodoSidebar
         :items="todos"
@@ -38,7 +38,7 @@ async function create(input: CreateScheduleInput) {
       />
     </aside>
     <main>
-      <div class="legacy-toolbar">
+      <div class="home-toolbar">
         <div class="view-switcher">
           <button
             data-view="month"
@@ -55,7 +55,7 @@ async function create(input: CreateScheduleInput) {
             week
           </button>
         </div>
-        <LegacyScheduleModal
+        <ScheduleModal
           :loading="mutations.loading.value"
           @submit="create"
         />
@@ -82,12 +82,12 @@ async function create(input: CreateScheduleInput) {
 </template>
 
 <style scoped>
-.legacy-home { display: grid; block-size: 100%; grid-template-columns: 30vw 1fr; }
-.legacy-home > aside { border-inline-end: 1px solid var(--color-border); overflow: auto; }
-.legacy-home > main { padding: 2vh 3vw; overflow: auto; }
-.legacy-toolbar { display: flex; gap: 1vw; padding-block-end: 1vh; }
+.home-workspace { display: grid; block-size: 100%; grid-template-columns: 30vw 1fr; }
+.home-workspace > aside { border-inline-end: 1px solid var(--color-border); overflow: auto; }
+.home-workspace > main { padding: 2vh 3vw; overflow: auto; }
+.home-toolbar { display: flex; gap: 1vw; padding-block-end: 1vh; }
 .view-switcher { display: flex; }
 .view-switcher button, .sync-placeholder { padding: 0.55rem 0.8rem; border: 1px solid var(--color-border); background: var(--color-surface); color: inherit; }
 .view-switcher button.active { background: rgb(0 14 28 / 10%); box-shadow: 1px 1px 1px rgb(0 14 28 / 60%) inset; }
-@media (max-width: 760px) { .legacy-home { grid-template-columns: 1fr; } .legacy-home > aside { max-block-size: 18rem; border-inline-end: 0; border-block-end: 1px solid var(--color-border); } }
+@media (max-width: 760px) { .home-workspace { grid-template-columns: 1fr; } .home-workspace > aside { max-block-size: 18rem; border-inline-end: 0; border-block-end: 1px solid var(--color-border); } }
 </style>

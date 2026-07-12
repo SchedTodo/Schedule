@@ -20,7 +20,7 @@ const filtered = computed(() => list.items.value.filter((item) => {
 </script>
 
 <template>
-  <div class="legacy-page">
+  <div class="database-page">
     <NCard segmented>
       <template #header>
         <b>Database</b>
@@ -71,7 +71,7 @@ const filtered = computed(() => list.items.value.filter((item) => {
 </template>
 
 <style scoped>
-.legacy-page { padding: 6vh 8vw 4vh; }
+.database-page { padding: 6vh 8vw 4vh; }
 .database-wrapper { display: grid; gap: 1rem; }
 .database-filter { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; }
 .database-filter > :first-of-type { max-inline-size: 28rem; }

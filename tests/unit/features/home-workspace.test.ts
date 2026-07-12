@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { platformGatewayKey } from '../../../src/app/injection-keys'
 import type { ScheduleDto } from '../../../src/contracts/schedule.contract'
-import LegacyScheduleModal from '../../../src/features/schedule/components/LegacyScheduleModal.vue'
+import ScheduleModal from '../../../src/features/schedule/components/ScheduleModal.vue'
 import { createInMemoryGateway } from '../../../src/platform/browser/in-memory-gateway'
 import HomePage from '../../../src/pages/index.vue'
 
@@ -21,7 +21,7 @@ const todo: ScheduleDto = {
   updatedAt: '2026-07-11T08:00:00Z'
 }
 
-describe('legacy home UI', () => {
+describe('home workspace', () => {
   it('renders the todo sidebar and month/week workspace', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
@@ -44,8 +44,8 @@ describe('legacy home UI', () => {
     expect(wrapper.get('[data-testid="week-view"]')).toBeTruthy()
   })
 
-  it('uses the legacy Add modal fields and keyboard shortcuts', async () => {
-    const wrapper = mount(LegacyScheduleModal, {
+  it('uses the Add modal fields and keyboard shortcuts', async () => {
+    const wrapper = mount(ScheduleModal, {
       global: { stubs: { teleport: true } }
     })
 

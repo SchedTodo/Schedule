@@ -42,11 +42,11 @@
     color: var(--color-text);
   }
 
-  .legacy-shell {
+  .application-layout {
     min-block-size: 100vh;
   }
 
-  .legacy-header {
+  .application-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -56,13 +56,13 @@
     color: white;
   }
 
-  .legacy-header nav {
+  .application-header nav {
     display: flex;
     align-items: stretch;
     block-size: 100%;
   }
 
-  .legacy-nav-item {
+  .navigation-item {
     display: inline-flex;
     align-items: center;
     padding-inline: 1.25rem;
@@ -71,8 +71,8 @@
     text-decoration: none;
   }
 
-  .legacy-nav-item:hover,
-  .legacy-nav-item.active {
+  .navigation-item:hover,
+  .navigation-item.active {
     background: rgb(255 255 255 / 12%);
     color: white;
   }
@@ -83,13 +83,13 @@
     gap: 0.5rem;
   }
 
-  .legacy-content {
+  .application-content {
     position: absolute;
     inset-block: 53px 5vh;
     inset-inline: 0;
   }
 
-  .legacy-footer {
+  .application-footer {
     position: absolute;
     inset-block-end: 0;
     block-size: 5vh;

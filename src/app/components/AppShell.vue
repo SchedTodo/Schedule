@@ -32,11 +32,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
 
 <template>
   <NLayout
-    class="legacy-shell"
+    class="application-layout"
     position="absolute"
   >
     <NLayoutHeader
-      class="legacy-header"
+      class="application-header"
       bordered
     >
       <nav aria-label="Main navigation">
@@ -44,7 +44,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
           v-for="item in navigation"
           :key="item.path"
           :to="item.path"
-          :class="['legacy-nav-item', { active: activePath === item.path }]"
+          :class="['navigation-item', { active: activePath === item.path }]"
         >
           {{ item.label }}
         </RouterLink>
@@ -61,14 +61,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
     </NLayoutHeader>
 
     <NLayoutContent
-      class="legacy-content"
+      class="application-content"
       :native-scrollbar="false"
     >
       <RouterView />
     </NLayoutContent>
 
     <NLayoutFooter
-      class="legacy-footer"
+      class="application-footer"
       bordered
     >
       © 2023

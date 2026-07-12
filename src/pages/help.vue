@@ -1,5 +1,5 @@
 <template>
-  <div class="legacy-page help-page">
+  <div class="help-page">
     <h1>Help</h1>
     <h2>Keyboard Shortcuts</h2>
     <dl>
@@ -12,7 +12,7 @@
 </template>
 
 <style scoped>
-.legacy-page { padding: 6vh 8vw; }
+.help-page { padding: 6vh 8vw; }
 dl { display: grid; grid-template-columns: 16rem 1fr; gap: 0.8rem 1.5rem; }
 dt { font-weight: 700; }
 </style>

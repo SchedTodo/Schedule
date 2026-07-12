@@ -13,7 +13,7 @@ const routes = [
 ]
 
 describe('App shell', () => {
-  it('renders the legacy navigation, guest identity, idea pane, and footer', async () => {
+  it('renders the application navigation, guest identity, idea pane, and footer', async () => {
     const router = createRouter({ history: createMemoryHistory(), routes })
     await router.push('/')
     const wrapper = mount(App, {
@@ -31,7 +31,7 @@ describe('App shell', () => {
     expect('api' in window).toBe(false)
   })
 
-  it('cycles routes with the legacy Ctrl+Arrow shortcuts', async () => {
+  it('cycles routes with the Ctrl+Arrow shortcuts', async () => {
     const router = createRouter({ history: createMemoryHistory(), routes })
     await router.push('/')
     mount(App, { global: { plugins: [createPinia(), router] } })

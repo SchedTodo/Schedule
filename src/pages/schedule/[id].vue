@@ -16,7 +16,7 @@ const format = (value: string) => new Date(value).toLocaleString()
 </script>
 
 <template>
-  <div class="legacy-detail">
+  <div class="detail-page">
     <NPageHeader
       title="Schedule"
       :show-breadcrumb="false"
@@ -86,7 +86,7 @@ const format = (value: string) => new Date(value).toLocaleString()
 </template>
 
 <style scoped>
-.legacy-detail { display: flex; flex-direction: column; gap: 1rem; padding: 6vh 8vw; }
+.detail-page { display: flex; flex-direction: column; gap: 1rem; padding: 6vh 8vw; }
 .schedule-info { display: grid; grid-template-columns: 5rem 1fr; gap: 1rem 2rem; }
 .pre-line { white-space: pre-line; }
 </style>

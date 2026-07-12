@@ -36,7 +36,7 @@ function routerAt(path: string) {
   return router.push(path).then(() => router)
 }
 
-describe('legacy secondary pages', () => {
+describe('secondary pages', () => {
   it('restores the Database card, filters, and table', async () => {
     const router = await routerAt('/database')
     const wrapper = mount(DatabasePage, {
@@ -66,7 +66,7 @@ describe('legacy secondary pages', () => {
     expect(wrapper.text()).toContain('Review notes')
   })
 
-  it('keeps legacy Settings groups and adds theme controls', async () => {
+  it('keeps Settings groups and adds theme controls', async () => {
     const router = await routerAt('/settings')
     const wrapper = mount(SettingsPage, { global: { plugins: [createPinia(), router] } })
     expect(wrapper.text()).toContain('Appearance')
@@ -75,7 +75,7 @@ describe('legacy secondary pages', () => {
     expect(wrapper.text()).toContain('Priority')
   })
 
-  it('documents the legacy shortcuts on Help', () => {
+  it('documents the shortcuts on Help', () => {
     const wrapper = mount(HelpPage)
     expect(wrapper.text()).toContain('Ctrl + Arrow Left / Right')
     expect(wrapper.text()).toContain('Ctrl + Arrow Up')

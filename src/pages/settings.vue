@@ -10,7 +10,7 @@ function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
 </script>
 
 <template>
-  <div class="legacy-settings">
+  <div class="settings-page">
     <NCard segmented>
       <template #header>
         <b>Appearance</b>
@@ -63,7 +63,7 @@ function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
 </template>
 
 <style scoped>
-.legacy-settings { display: flex; flex-direction: column; gap: 1rem; padding: 6vh 8vw; }
+.settings-page { display: flex; flex-direction: column; gap: 1rem; padding: 6vh 8vw; }
 .settings-group { display: grid; grid-template-columns: 12rem 1fr; align-items: center; gap: 1rem 2rem; }
 .settings-group > label { font-weight: 700; }
 </style>
