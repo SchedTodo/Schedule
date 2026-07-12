@@ -12,7 +12,7 @@
 ## Development Rules
 
 - Use Node.js 24 LTS and the exact pnpm version pinned by `packageManager`.
-- Ask the user to run dependency installation commands; do not install or upgrade packages automatically.
+- The agent may install, upgrade, or rebuild dependencies when required by an approved task. Keep dependency changes minimal, preserve the pinned package manager, update the lockfile, and verify the result.
 - Use test-driven development for behavior changes: failing test, minimal implementation, passing verification.
 - Do not weaken TypeScript strictness to accommodate project code.
 - Validate process, network, file, and persistence boundaries with Zod.
@@ -37,4 +37,3 @@ Add focused integration or Playwright commands when the changed area requires th
 - Follow [`docs/development/git-conventions.md`](docs/development/git-conventions.md).
 - All new commit subjects must use a Conventional Commit type followed by a concise Chinese description.
 - Do not rewrite the two existing English v2 commits; the Chinese requirement applies prospectively.
-
