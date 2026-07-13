@@ -63,6 +63,7 @@ export const UpdateOccurrenceCommentInputSchema = z.object({
 export const ExcludeOccurrenceInputSchema = z.object({ id: z.uuid() }).strict()
 export const TodoOccurrenceQuerySchema = z.object({
   now: z.iso.datetime({ offset: true }),
+  timeZone: z.string().min(1).max(100),
   logicalDayStartHour: z.number().int().min(0).max(23).default(0),
   logicalDayStartMinute: z.number().int().min(0).max(59).default(0)
 }).strict()

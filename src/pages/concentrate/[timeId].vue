@@ -25,10 +25,14 @@ const percentage = computed(() => Math.round((1 - remainingSeconds.value / durat
 const display = computed(() => `${String(Math.floor(remainingSeconds.value / 60)).padStart(2, '0')}:${String(remainingSeconds.value % 60).padStart(2, '0')}`)
 
 async function load() {
-  const [settings, todoResult] = await Promise.all([
-    platform.settings.get(),
-    platform.occurrences.listTodos({ now: new Date().toISOString(), logicalDayStartHour: 0, logicalDayStartMinute: 0 })
-  ])
+  const settings = await platform.settings.get()
+  const values = settings.ok ? settings.value : undefined
+  const todoResult = await platform.occurrences.listTodos({
+    now: new Date().toISOString(),
+    timeZone: values?.timeZone ?? 'UTC',
+    logicalDayStartHour: values?.logicalDayStartHour ?? 0,
+    logicalDayStartMinute: values?.logicalDayStartMinute ?? 0
+  })
   if (settings.ok) {
     durationSeconds.value = settings.value.focusMinutes * 60
     remainingSeconds.value = durationSeconds.value

@@ -1,3 +1,4 @@
+import type { OccurrenceRangeQuery } from '../../contracts/occurrence.contract'
 import { Temporal } from '../../domain/shared/temporal'
 
 export interface OccurrenceWallTime {
@@ -20,6 +21,26 @@ export function todayInTimeZone(
   now: Temporal.Instant = Temporal.Now.instant()
 ): string {
   return now.toZonedDateTimeISO(timeZone).toPlainDate().toString()
+}
+
+export function calendarRange(
+  timeZone: string,
+  now: Temporal.Instant = Temporal.Now.instant()
+): OccurrenceRangeQuery {
+  const firstDay = now.toZonedDateTimeISO(timeZone).toPlainDate().with({ day: 1 })
+  const start = firstDay.subtract({ days: 7 }).toZonedDateTime({
+    timeZone,
+    plainTime: Temporal.PlainTime.from('00:00')
+  })
+  const end = firstDay.add({ months: 1, days: 7 }).toZonedDateTime({
+    timeZone,
+    plainTime: Temporal.PlainTime.from('00:00')
+  })
+  return {
+    start: start.toInstant().toString(),
+    end: end.toInstant().toString(),
+    limit: 5000
+  }
 }
 
 export function formatInstant(instant: string, timeZone: string): string {

@@ -60,4 +60,25 @@ describe('DrizzleOccurrenceRepository', () => {
       start: '2026-07-13T00:00:00Z', end: '2026-07-14T00:00:00Z', limit: 5000
     })).resolves.toEqual({ ok: true, value: [] })
   })
+
+  it('uses the selected time zone for Todo logical-day boundaries', async () => {
+    sqlite.prepare('UPDATE schedule SET kind = ? WHERE id = ?')
+      .run('todo', '10000000-0000-4000-8000-000000000001')
+    await repository.replaceForSchedule('10000000-0000-4000-8000-000000000001', [
+      { id: '20000000-0000-4000-8000-000000000001', excluded: false, start: null, end: '2026-07-13T15:00:00Z', startMark: '11', endMark: '11', comment: '', done: false },
+      { id: '20000000-0000-4000-8000-000000000002', excluded: false, start: null, end: '2026-07-14T12:00:00Z', startMark: '11', endMark: '11', comment: '', done: false }
+    ])
+
+    const result = await repository.listTodos({
+      now: '2026-07-13T18:00:00Z',
+      timeZone: 'Asia/Shanghai',
+      logicalDayStartHour: 0,
+      logicalDayStartMinute: 0
+    })
+
+    expect(result.ok && result.value.map(({ id }) => id)).toEqual([
+      '20000000-0000-4000-8000-000000000001',
+      '20000000-0000-4000-8000-000000000002'
+    ])
+  })
 })

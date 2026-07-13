@@ -8,6 +8,7 @@ import type {
 } from '../../../src/contracts/occurrence.contract'
 import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
 import type { OccurrenceRepository } from '../../../src/platform/ports'
+import { todoLogicalDayRange } from '../../../src/domain/schedule/logical-day'
 import { databaseSchema, scheduleOccurrences, schedules } from './schema'
 
 type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
@@ -177,9 +178,7 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
 
   async listTodos(query: import('../../../src/contracts/occurrence.contract').TodoOccurrenceQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>> {
     try {
-      const now = new Date(query.now)
-      const logicalStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1, query.logicalDayStartHour, query.logicalDayStartMinute)
-      const logicalEnd = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, query.logicalDayStartHour, query.logicalDayStartMinute)
+      const { start: logicalStart, end: logicalEnd } = todoLogicalDayRange(query)
       const rows = this.database
         .select({ occurrence: scheduleOccurrences, schedule: schedules })
         .from(scheduleOccurrences)

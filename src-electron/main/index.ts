@@ -109,6 +109,7 @@ function registerSchedulePlatform(): void {
         occurrenceRepository.listRange({ start: now.toISOString(), end: end.toISOString(), limit: 5000 }),
         occurrenceRepository.listTodos({
           now: now.toISOString(),
+          timeZone: settings.value.timeZone,
           logicalDayStartHour: settings.value.logicalDayStartHour,
           logicalDayStartMinute: settings.value.logicalDayStartMinute
         })

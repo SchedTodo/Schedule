@@ -13,7 +13,7 @@ import WeekScheduleView from '../features/schedule/components/WeekScheduleView.v
 import { useScheduleList } from '../features/schedule/use-schedule-list'
 import { useScheduleMutations } from '../features/schedule/use-schedule-mutations'
 import { useOccurrenceRange } from '../features/schedule/use-occurrence-range'
-import { todayInTimeZone } from '../features/schedule/occurrence-time'
+import { calendarRange, todayInTimeZone } from '../features/schedule/occurrence-time'
 import { usePreferencesStore } from '../stores/preferences'
 
 const gateway = inject(platformGatewayKey)
@@ -27,16 +27,7 @@ const view = ref(preferences.calendarMode)
 const sidebarCollapsed = ref(false)
 const todos = ref<readonly ScheduleOccurrenceDto[]>([])
 const appSettings = ref({ ...defaultSettings })
-const now = new Date()
-const occurrenceStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
-occurrenceStart.setUTCDate(occurrenceStart.getUTCDate() - 7)
-const occurrenceEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
-occurrenceEnd.setUTCDate(occurrenceEnd.getUTCDate() + 7)
-const occurrenceRange = useOccurrenceRange(gateway, {
-  start: occurrenceStart.toISOString(),
-  end: occurrenceEnd.toISOString(),
-  limit: 5000
-})
+const occurrenceRange = useOccurrenceRange(gateway, calendarRange(appSettings.value.timeZone))
 
 function select(id: string) {
   void router.push({ name: 'schedule-detail', params: { id } })
@@ -47,9 +38,13 @@ async function create(input: CreateScheduleInput) {
 }
 async function refreshTodos() {
   const settings = await platform.settings.get()
-  if (settings.ok) appSettings.value = settings.value
+  if (settings.ok) {
+    appSettings.value = settings.value
+    await occurrenceRange.refresh(calendarRange(settings.value.timeZone))
+  }
   const result = await platform.occurrences.listTodos({
     now: new Date().toISOString(),
+    timeZone: settings.ok ? settings.value.timeZone : defaultSettings.timeZone,
     logicalDayStartHour: settings.ok ? settings.value.logicalDayStartHour : 0,
     logicalDayStartMinute: settings.ok ? settings.value.logicalDayStartMinute : 0
   })

@@ -18,6 +18,7 @@ import { CreateConcentrationRecordInputSchema, type ConcentrationRecordDto } fro
 import { SystemClock } from '../../domain/shared/clock'
 import type { IdGenerator } from '../../domain/shared/id-generator'
 import { CryptoIdGenerator } from '../../domain/shared/id-generator'
+import { todoLogicalDayRange } from '../../domain/schedule/logical-day'
 import {
   expandScheduleOccurrences,
   normalizeScheduleOccurrences
@@ -268,15 +269,7 @@ export function createInMemoryGateway(
         return { ok: true, value: undefined }
       },
       async listTodos(query) {
-        const now = new Date(query.now)
-        const logicalStart = Date.UTC(
-          now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1,
-          query.logicalDayStartHour, query.logicalDayStartMinute
-        )
-        const logicalEnd = Date.UTC(
-          now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1,
-          query.logicalDayStartHour, query.logicalDayStartMinute
-        )
+        const { start: logicalStart, end: logicalEnd } = todoLogicalDayRange(query)
         const candidates = occurrences
           .filter((value) => value.kind === 'todo' && !value.excluded && Date.parse(value.end) >= logicalStart)
           .sort((left, right) => Date.parse(left.end) - Date.parse(right.end))

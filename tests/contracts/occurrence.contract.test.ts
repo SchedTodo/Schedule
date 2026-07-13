@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   OccurrenceRangeQuerySchema,
-  ScheduleOccurrenceDtoSchema
+  ScheduleOccurrenceDtoSchema,
+  TodoOccurrenceQuerySchema
 } from '../../src/contracts/occurrence.contract'
 
 const baseOccurrence = {
@@ -59,5 +60,18 @@ describe('schedule occurrence contracts', () => {
       start: '2026-08-01T00:00:00Z',
       end: '2026-07-01T00:00:00Z'
     }).success).toBe(false)
+  })
+
+  it('requires a time zone for Todo logical-day queries', () => {
+    const query = {
+      now: '2026-07-13T18:00:00Z',
+      timeZone: 'Asia/Shanghai',
+      logicalDayStartHour: 0,
+      logicalDayStartMinute: 0
+    }
+    const withoutTimeZone: Record<string, unknown> = { ...query }
+    delete withoutTimeZone.timeZone
+    expect(TodoOccurrenceQuerySchema.safeParse(query).success).toBe(true)
+    expect(TodoOccurrenceQuerySchema.safeParse(withoutTimeZone).success).toBe(false)
   })
 })
