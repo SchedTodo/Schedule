@@ -61,6 +61,8 @@ describe('home workspace', () => {
       expect(wrapper.text()).toContain(text)
     }
     expect(wrapper.get('[data-testid="month-view"]')).toBeTruthy()
+    expect(wrapper.find('[aria-label="Sync"]').exists()).toBe(false)
+    expect(wrapper.get('.workspace-content').classes()).toContain('workspace-content')
     await wrapper.get('button[data-view="week"]').trigger('click')
     expect(wrapper.get('[data-testid="week-view"]')).toBeTruthy()
   })

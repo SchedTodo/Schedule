@@ -23,4 +23,13 @@ describe('current UI source conventions', () => {
 
     expect(violations).toEqual([])
   })
+
+  it('does not use text or emoji glyphs as application icons', () => {
+    const forbidden = ['⌂', '◉', '⚙', '💡', '▶', '↻']
+    const violations = Object.entries(currentUiModules)
+      .filter(([, source]) => forbidden.some((glyph) => source.includes(glyph)))
+      .map(([path]) => path)
+
+    expect(violations).toEqual([])
+  })
 })

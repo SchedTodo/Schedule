@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { Play } from '@vicons/ionicons5'
 import { computed, ref } from 'vue'
-import { NEmpty } from 'naive-ui'
+import { NEmpty, NIcon } from 'naive-ui'
 
 import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
 import { formatInstant } from '../occurrence-time'
@@ -59,7 +60,7 @@ const visibleItems = computed(() => props.items.filter((item) => {
               aria-label="Concentrate"
               @click="emit('concentrate', item.id)"
             >
-              ▶
+              <NIcon><Play /></NIcon>
             </button>
           </td>
           <td>

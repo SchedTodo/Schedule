@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { Bulb } from '@vicons/ionicons5'
 import { ref } from 'vue'
-import { NButton, NInput, NPopover } from 'naive-ui'
+import { NButton, NIcon, NInput, NPopover } from 'naive-ui'
 
 const storageKey = 'schedule-v2-ideas'
 const show = ref(false)
@@ -22,11 +23,12 @@ function updateIdeas(value: string) {
       <template #trigger>
         <NButton
           text
+          color="#ffe21e"
           class="idea-trigger"
           aria-label="Idea"
           @click="show = !show"
         >
-          💡
+          <NIcon><Bulb /></NIcon>
         </NButton>
       </template>
       <NInput

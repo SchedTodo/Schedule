@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { UserOutlined } from '@vicons/antd'
+import { HelpCircleOutline, HomeOutline, SettingsOutline } from '@vicons/ionicons5'
+import { Database } from '@vicons/tabler'
 import { computed, onBeforeUnmount, onMounted } from 'vue'
-import { NAvatar, NLayoutContent, NLayoutFooter, NLayoutHeader } from 'naive-ui'
+import { NAvatar, NIcon, NLayoutContent, NLayoutFooter, NLayoutHeader } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 
 import IdeaPane from '../../features/ideas/IdeaPane.vue'
@@ -8,10 +11,10 @@ import IdeaPane from '../../features/ideas/IdeaPane.vue'
 const route = useRoute()
 const router = useRouter()
 const navigation = [
-  { label: 'Home', path: '/', icon: '⌂' },
-  { label: 'Database', path: '/database', icon: '◉' },
-  { label: 'Settings', path: '/settings', icon: '⚙' },
-  { label: 'Help', path: '/help', icon: '?' }
+  { label: 'Home', path: '/', icon: HomeOutline },
+  { label: 'Database', path: '/database', icon: Database },
+  { label: 'Settings', path: '/settings', icon: SettingsOutline },
+  { label: 'Help', path: '/help', icon: HelpCircleOutline }
 ]
 const activePath = computed(() => {
   if (route.path.startsWith('/schedule/')) return '/'
@@ -47,10 +50,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
           :to="item.path"
           :class="['navigation-item', { active: activePath === item.path }]"
         >
-          <span
+          <NIcon
             class="navigation-icon"
             aria-hidden="true"
-          >{{ item.icon }}</span>
+          >
+            <component :is="item.icon" />
+          </NIcon>
           {{ item.label }}
         </RouterLink>
       </nav>
@@ -59,7 +64,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
           round
           size="small"
         >
-          G
+          <NIcon><UserOutlined /></NIcon>
         </NAvatar>
         <span>Guest</span>
       </div>

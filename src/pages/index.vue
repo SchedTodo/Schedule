@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, ref } from 'vue'
-import { NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
+import { NButton, NButtonGroup, NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { CreateScheduleInput } from '../contracts/schedule.contract'
@@ -88,59 +88,52 @@ void refreshTodos()
       bordered
       :native-scrollbar="false"
     >
-      <div class="home-toolbar">
-        <div class="view-switcher">
-          <button
-            data-view="month"
-            :class="{ active: view === 'month' }"
-            @click="view = 'month'"
-          >
-            month
-          </button>
-          <button
-            data-view="week"
-            :class="{ active: view === 'week' }"
-            @click="view = 'week'"
-          >
-            week
-          </button>
+      <div class="workspace-content">
+        <div class="home-toolbar">
+          <NButtonGroup class="segmented-control">
+            <NButton
+              data-view="month"
+              :class="{ active: view === 'month' }"
+              @click="view = 'month'"
+            >
+              month
+            </NButton>
+            <NButton
+              data-view="week"
+              :class="{ active: view === 'week' }"
+              @click="view = 'week'"
+            >
+              week
+            </NButton>
+          </NButtonGroup>
+          <ScheduleModal
+            :loading="mutations.loading.value"
+            @submit="create"
+          />
         </div>
-        <ScheduleModal
-          :loading="mutations.loading.value"
-          @submit="create"
+        <MonthScheduleView
+          v-if="view === 'month'"
+          :items="occurrenceRange.items.value"
+          :time-zone="appSettings.timeZone"
+          @select="select"
         />
-        <button
-          class="sync-placeholder"
-          disabled
-          aria-label="Sync"
-        >
-          ↻
-        </button>
+        <WeekScheduleView
+          v-else
+          :items="occurrenceRange.items.value"
+          :time-zone="appSettings.timeZone"
+          :start-date="todayInTimeZone(appSettings.timeZone)"
+          :day-count="appSettings.weekViewDays"
+          :start-hour="appSettings.logicalDayStartHour"
+          @select="select"
+        />
       </div>
-      <MonthScheduleView
-        v-if="view === 'month'"
-        :items="occurrenceRange.items.value"
-        :time-zone="appSettings.timeZone"
-        @select="select"
-      />
-      <WeekScheduleView
-        v-else
-        :items="occurrenceRange.items.value"
-        :time-zone="appSettings.timeZone"
-        :start-date="todayInTimeZone(appSettings.timeZone)"
-        :day-count="appSettings.weekViewDays"
-        :start-hour="appSettings.logicalDayStartHour"
-        @select="select"
-      />
     </NLayoutContent>
   </NLayout>
 </template>
 
 <style scoped>
 .home-workspace { block-size: 100%; }
-.schedule-workspace { padding: 2vh 3vw; overflow: hidden; }
-.home-toolbar { display: flex; gap: 1vw; padding-block-end: 1vh; }
-.view-switcher { display: flex; }
-.view-switcher button, .sync-placeholder { padding: 0.55rem 0.8rem; border: 1px solid var(--color-border); background: var(--color-surface); color: inherit; }
-.view-switcher button.active { background: rgb(0 14 28 / 10%); box-shadow: 1px 1px 1px rgb(0 14 28 / 60%) inset; }
+.schedule-workspace { block-size: 100%; overflow: hidden; }
+.workspace-content { display: flex; flex-direction: column; block-size: 100%; padding: 2vh 3vw; overflow: hidden; }
+.home-toolbar { display: flex; flex: none; gap: 1vw; padding-block-end: 1vh; }
 </style>

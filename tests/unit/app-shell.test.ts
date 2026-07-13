@@ -36,6 +36,8 @@ describe('App shell', () => {
     expect(wrapper.text()).toContain('Guest')
     expect(wrapper.text()).toContain('© 2023')
     expect(wrapper.get('[aria-label="Idea"]')).toBeTruthy()
+    expect(wrapper.findAll('.navigation-icon.n-icon')).toHaveLength(4)
+    expect(wrapper.get('[aria-label="Idea"]').find('.n-icon').exists()).toBe(true)
     expect('api' in window).toBe(false)
   })
 

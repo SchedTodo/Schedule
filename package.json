@@ -30,6 +30,9 @@
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
+    "@vicons/antd": "^0.13.0",
+    "@vicons/ionicons5": "^0.13.0",
+    "@vicons/tabler": "^0.13.0",
     "@vueuse/core": "latest",
     "antlr4": "4.13.2",
     "better-sqlite3": "^12.11.1",
