@@ -98,7 +98,7 @@ describe('home workspace', () => {
 
   it('visually offsets a week card without changing its occurrence', async () => {
     const wrapper = mount(WeekScheduleView, {
-      props: { items: [eventOccurrence], startDate: '2026-07-12', dayCount: 1 }
+      props: { items: [eventOccurrence], timeZone: 'UTC', startDate: '2026-07-12', dayCount: 1 }
     })
     const card = wrapper.get('[data-occurrence-id]')
     const originalStart = card.attributes('style')

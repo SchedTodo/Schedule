@@ -3,8 +3,9 @@ import { computed, ref } from 'vue'
 import { NEmpty } from 'naive-ui'
 
 import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
+import { formatInstant } from '../occurrence-time'
 
-const props = defineProps<{ items: readonly ScheduleOccurrenceDto[] }>()
+const props = defineProps<{ items: readonly ScheduleOccurrenceDto[]; timeZone: string }>()
 const emit = defineEmits<{
   select: [id: string]
   done: [id: string, done: boolean]
@@ -52,7 +53,7 @@ const visibleItems = computed(() => props.items.filter((item) => {
               {{ item.title }}
             </button>
           </td>
-          <td>{{ new Date(item.end).toLocaleString() }}</td>
+          <td>{{ formatInstant(item.end, timeZone) }}</td>
           <td>
             <button
               aria-label="Concentrate"

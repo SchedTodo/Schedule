@@ -5,6 +5,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { platformGatewayKey } from '../../app/injection-keys'
 import type { ScheduleOccurrenceDto } from '../../contracts/occurrence.contract'
 import type { ConcentrationRecordDto } from '../../contracts/record.contract'
+import { defaultSettings } from '../../contracts/settings.contract'
+import { formatInstant } from '../../features/schedule/occurrence-time'
 import { useScheduleDetail } from '../../features/schedule/use-schedule-detail'
 
 const gateway = inject(platformGatewayKey)
@@ -16,7 +18,8 @@ const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
 if (!id) throw new Error('Schedule id is required')
 const scheduleId = id
 const detail = useScheduleDetail(platform, scheduleId)
-const format = (value: string) => new Date(value).toLocaleString()
+const timeZone = ref(defaultSettings.timeZone)
+const format = (value: string) => formatInstant(value, timeZone.value)
 const occurrences = ref<ScheduleOccurrenceDto[]>([])
 const records = ref<ConcentrationRecordDto[]>([])
 const editing = ref(false)
@@ -32,6 +35,10 @@ async function refreshOccurrences() {
 async function refreshRecords() {
   const result = await platform.records.listBySchedule(scheduleId)
   if (result.ok) records.value = [...result.value]
+}
+async function refreshSettings() {
+  const result = await platform.settings.get()
+  if (result.ok) timeZone.value = result.value.timeZone
 }
 async function toggleStar() {
   const schedule = detail.schedule.value
@@ -71,6 +78,7 @@ async function excludeOccurrence(occurrenceId: string) {
 }
 void refreshOccurrences()
 void refreshRecords()
+void refreshSettings()
 </script>
 
 <template>

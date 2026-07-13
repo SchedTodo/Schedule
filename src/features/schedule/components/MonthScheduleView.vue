@@ -2,14 +2,15 @@
 import { computed } from 'vue'
 import { NCalendar } from 'naive-ui'
 import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
+import { formatWallClock, occurrenceWallTime } from '../occurrence-time'
 
-const props = defineProps<{ items: readonly ScheduleOccurrenceDto[] }>()
+const props = defineProps<{ items: readonly ScheduleOccurrenceDto[]; timeZone: string }>()
 const emit = defineEmits<{ select: [id: string] }>()
 const indexed = computed(() => {
   const result = new Map<string, ScheduleOccurrenceDto[]>()
   for (const item of props.items) {
     if (item.start === null) continue
-    const dateKey = item.start.slice(0, 10)
+    const dateKey = occurrenceWallTime(item.start, props.timeZone).date
     const group = result.get(dateKey) ?? []
     group.push(item)
     result.set(dateKey, group)
@@ -19,7 +20,8 @@ const indexed = computed(() => {
 
 function timeLabel(item: ScheduleOccurrenceDto): string {
   if (item.start === null) return ''
-  const [hour, minute] = item.start.slice(11, 16).split(':')
+  const value = occurrenceWallTime(item.start, props.timeZone)
+  const [hour, minute] = formatWallClock(value).split(':')
   return `${item.startMark[0] === '1' ? hour : '?'}:${item.startMark[1] === '1' ? minute : '?'}`
 }
 </script>

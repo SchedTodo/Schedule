@@ -36,13 +36,13 @@ const occurrences: readonly ScheduleOccurrenceDto[] = [
 
 describe('occurrence calendar views', () => {
   it('renders every occurrence from one recurring schedule in month view', () => {
-    const wrapper = mount(MonthScheduleView, { props: { items: occurrences } })
+    const wrapper = mount(MonthScheduleView, { props: { items: occurrences, timeZone: 'UTC' } })
     expect(wrapper.findAll('[data-occurrence-id]')).toHaveLength(2)
   })
 
   it('uses occurrence IDs for week cards and selects the owning schedule', async () => {
     const wrapper = mount(WeekScheduleView, {
-      props: { items: occurrences, startDate: '2026-07-12' }
+      props: { items: occurrences, timeZone: 'UTC', startDate: '2026-07-12' }
     })
     const cards = wrapper.findAll('[data-occurrence-id]')
     expect(cards.map((card) => card.attributes('data-occurrence-id'))).toEqual([
@@ -51,5 +51,27 @@ describe('occurrence calendar views', () => {
     ])
     await cards[0]!.trigger('click')
     expect(wrapper.emitted('select')).toEqual([[occurrences[0]!.scheduleId]])
+  })
+
+  it('groups and labels occurrences in the selected time zone', () => {
+    const crossing = [{
+      ...occurrences[0]!,
+      start: '2026-07-13T23:30:00Z',
+      end: '2026-07-14T00:30:00Z'
+    }]
+    const month = mount(MonthScheduleView, {
+      props: { items: crossing, timeZone: 'Asia/Shanghai' }
+    })
+    const week = mount(WeekScheduleView, {
+      props: {
+        items: crossing,
+        timeZone: 'Asia/Shanghai',
+        startDate: '2026-07-14',
+        dayCount: 1
+      }
+    })
+
+    expect(month.get('[data-occurrence-id]').text()).toContain('07:30')
+    expect(week.get('[data-occurrence-id]').text()).toContain('07:30–08:30')
   })
 })

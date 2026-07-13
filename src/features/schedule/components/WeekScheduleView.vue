@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
 import { NEmpty } from 'naive-ui'
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
+import { formatWallClock, occurrenceWallTime } from '../occurrence-time'
 
 const props = withDefaults(defineProps<{
   items: readonly ScheduleOccurrenceDto[]
+  timeZone: string
   startDate?: string
   dayCount?: number
   startHour?: number
@@ -12,26 +14,25 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ select: [id: string] }>()
 const dragStartOffsets = reactive(new Map<string, number>())
 const dragOffsets = reactive(new Map<string, number>())
-const days = Array.from({ length: props.dayCount }, (_, offset) => {
+const days = computed(() => Array.from({ length: props.dayCount }, (_, offset) => {
   const date = new Date(`${props.startDate}T00:00:00Z`)
   date.setUTCDate(date.getUTCDate() + offset)
   return date.toISOString().slice(0, 10)
-})
+}))
 
 function occursOn(item: ScheduleOccurrenceDto, day: string): boolean {
-  return item.start?.slice(0, 10) === day
+  return item.start !== null && occurrenceWallTime(item.start, props.timeZone).date === day
 }
 
 function timeLabel(item: ScheduleOccurrenceDto): string {
   if (item.start === null) return ''
-  return `${item.start.slice(11, 16)}–${item.end.slice(11, 16)}`
+  return `${formatWallClock(occurrenceWallTime(item.start, props.timeZone))}–${formatWallClock(occurrenceWallTime(item.end, props.timeZone))}`
 }
 function eventStyle(item: ScheduleOccurrenceDto) {
   if (item.start === null) return {}
-  const start = new Date(item.start)
-  const end = new Date(item.end)
-  const startMinutes = start.getUTCHours() * 60 + start.getUTCMinutes() - props.startHour * 60
-  const duration = Math.max(30, (end.getTime() - start.getTime()) / 60_000)
+  const start = occurrenceWallTime(item.start, props.timeZone)
+  const startMinutes = start.hour * 60 + start.minute - props.startHour * 60
+  const duration = Math.max(30, (Date.parse(item.end) - Date.parse(item.start)) / 60_000)
   return {
     insetBlockStart: `calc(3rem + ${(Math.max(0, startMinutes) / 1440) * 100}% + ${dragOffsets.get(item.id) ?? 0}px)`,
     blockSize: `${Math.max(2, (duration / 1440) * 100)}%`

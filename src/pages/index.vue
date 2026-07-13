@@ -13,6 +13,7 @@ import WeekScheduleView from '../features/schedule/components/WeekScheduleView.v
 import { useScheduleList } from '../features/schedule/use-schedule-list'
 import { useScheduleMutations } from '../features/schedule/use-schedule-mutations'
 import { useOccurrenceRange } from '../features/schedule/use-occurrence-range'
+import { todayInTimeZone } from '../features/schedule/occurrence-time'
 import { usePreferencesStore } from '../stores/preferences'
 
 const gateway = inject(platformGatewayKey)
@@ -81,6 +82,7 @@ void refreshTodos()
     >
       <TodoSidebar
         :items="todos"
+        :time-zone="appSettings.timeZone"
         @select="select"
         @done="setDone"
         @concentrate="concentrate"
@@ -123,11 +125,14 @@ void refreshTodos()
       <MonthScheduleView
         v-if="view === 'month'"
         :items="occurrenceRange.items.value"
+        :time-zone="appSettings.timeZone"
         @select="select"
       />
       <WeekScheduleView
         v-else
         :items="occurrenceRange.items.value"
+        :time-zone="appSettings.timeZone"
+        :start-date="todayInTimeZone(appSettings.timeZone)"
         :day-count="appSettings.weekViewDays"
         :start-hour="appSettings.logicalDayStartHour"
         @select="select"
