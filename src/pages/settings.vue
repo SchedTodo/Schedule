@@ -1,14 +1,25 @@
 <script setup lang="ts">
-import { inject, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { NCard, NInputNumber, NRadio, NRadioGroup, NSelect, NSwitch } from 'naive-ui'
 import { platformGatewayKey } from '../app/injection-keys'
 import { defaultSettings, type SettingsDto } from '../contracts/settings.contract'
+import { createTimeZoneOptions } from '../features/settings/time-zone-options'
 import type { Preferences } from '../stores/preferences'
 import { usePreferencesStore } from '../stores/preferences'
 
 const preferences = usePreferencesStore()
 const gateway = inject(platformGatewayKey)
 const settings = ref<SettingsDto>({ ...defaultSettings })
+const timeZoneOptions = computed(() => createTimeZoneOptions(settings.value.timeZone))
+const weekStarts = [
+  { label: 'MO', value: 1 },
+  { label: 'TU', value: 2 },
+  { label: 'WE', value: 3 },
+  { label: 'TH', value: 4 },
+  { label: 'FR', value: 5 },
+  { label: 'SA', value: 6 },
+  { label: 'SU', value: 7 }
+] as const
 if (gateway) {
   void gateway.settings.get().then((result) => {
     if (result.ok) settings.value = result.value
@@ -31,22 +42,28 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
         <b>RRule</b>
       </template>
       <div class="settings-group">
-        <label>Time Zone</label><NSelect
-          :value="settings.timeZone"
-          :options="[{ label: 'UTC', value: 'UTC' }, { label: Intl.DateTimeFormat().resolvedOptions().timeZone, value: Intl.DateTimeFormat().resolvedOptions().timeZone }]"
-          style="width: 15rem"
-          @update:value="updateSetting('timeZone', $event)"
-        />
-        <label>WKST</label><NRadioGroup
-          :value="settings.weekStart"
-          @update:value="updateSetting('weekStart', $event); update('weekStart', $event)"
-        >
-          <NRadio :value="1">
-            MO
-          </NRadio><NRadio :value="0">
-            SU
-          </NRadio>
-        </NRadioGroup>
+        <label>Time Zone</label><div class="setting-field setting-field--select">
+          <NSelect
+            :value="settings.timeZone"
+            :options="timeZoneOptions"
+            filterable
+            @update:value="updateSetting('timeZone', $event)"
+          />
+        </div>
+        <label>WKST</label><div class="setting-field">
+          <NRadioGroup
+            :value="settings.weekStart"
+            @update:value="updateSetting('weekStart', $event); update('weekStart', $event)"
+          >
+            <NRadio
+              v-for="day in weekStarts"
+              :key="day.value"
+              :value="day.value"
+            >
+              {{ day.label }}
+            </NRadio>
+          </NRadioGroup>
+        </div>
       </div>
     </NCard>
     <NCard segmented>
@@ -54,7 +71,7 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
         <b>Alarm</b>
       </template>
       <div class="settings-group">
-        <label>Todo</label><div>
+        <label>Todo</label><div class="setting-field">
           <NSwitch
             :value="settings.todoAlarmEnabled"
             @update:value="updateSetting('todoAlarmEnabled', $event)"
@@ -64,7 +81,7 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
             @update:value="updateSetting('todoAlarmBeforeMinutes', $event ?? 0)"
           /> minutes
         </div>
-        <label>Event</label><div>
+        <label>Event</label><div class="setting-field">
           <NSwitch
             :value="settings.eventAlarmEnabled"
             @update:value="updateSetting('eventAlarmEnabled', $event)"
@@ -81,21 +98,25 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
         <b>Preferences</b>
       </template>
       <div class="settings-group">
-        <label>Priority</label><NRadioGroup
-          :value="settings.calendarMode"
-          @update:value="updateSetting('calendarMode', $event); update('calendarMode', $event)"
-        >
-          <NRadio value="month">
-            MonthView
-          </NRadio><NRadio value="week">
-            WeekView
-          </NRadio>
-        </NRadioGroup>
-        <label>Week View Days</label><NInputNumber
-          :value="settings.weekViewDays"
-          @update:value="updateSetting('weekViewDays', $event ?? 5)"
-        />
-        <label>Week View Start Time</label><div>
+        <label>Priority</label><div class="setting-field">
+          <NRadioGroup
+            :value="settings.calendarMode"
+            @update:value="updateSetting('calendarMode', $event); update('calendarMode', $event)"
+          >
+            <NRadio value="month">
+              MonthView
+            </NRadio><NRadio value="week">
+              WeekView
+            </NRadio>
+          </NRadioGroup>
+        </div>
+        <label>Week View Days</label><div class="setting-field">
+          <NInputNumber
+            :value="settings.weekViewDays"
+            @update:value="updateSetting('weekViewDays', $event ?? 5)"
+          />
+        </div>
+        <label>Week View Start Time</label><div class="setting-field setting-field--time">
           <NInputNumber
             :value="settings.logicalDayStartHour"
             @update:value="updateSetting('logicalDayStartHour', $event ?? 0)"
@@ -104,10 +125,12 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
             @update:value="updateSetting('logicalDayStartMinute', $event ?? 0)"
           />
         </div>
-        <label>Open At Login</label><NSwitch
-          :value="settings.openAtLogin"
-          @update:value="updateSetting('openAtLogin', $event)"
-        />
+        <label>Open At Login</label><div class="setting-field">
+          <NSwitch
+            :value="settings.openAtLogin"
+            @update:value="updateSetting('openAtLogin', $event)"
+          />
+        </div>
       </div>
     </NCard>
     <NCard segmented>
@@ -115,19 +138,19 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
         <b>Pomodoro</b>
       </template>
       <div class="settings-group">
-        <label>Focus Time</label><div>
+        <label>Focus Time</label><div class="setting-field">
           <NInputNumber
             :value="settings.focusMinutes"
             @update:value="updateSetting('focusMinutes', $event ?? 25)"
           /> minutes
         </div>
-        <label>Small Break</label><div>
+        <label>Small Break</label><div class="setting-field">
           <NInputNumber
             :value="settings.smallBreakMinutes"
             @update:value="updateSetting('smallBreakMinutes', $event ?? 5)"
           /> minutes
         </div>
-        <label>Big Break</label><div>
+        <label>Big Break</label><div class="setting-field">
           <NInputNumber
             :value="settings.bigBreakMinutes"
             @update:value="updateSetting('bigBreakMinutes', $event ?? 20)"
@@ -140,21 +163,24 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
         <b>Appearance</b>
       </template>
       <div class="settings-group">
-        <label>Theme</label><NSelect
-          :value="preferences.themeMode"
-          :options="[{ label: 'System', value: 'system' }, { label: 'Light', value: 'light' }, { label: 'Dark', value: 'dark' }]"
-          style="width: 15rem"
-          @update:value="update('themeMode', $event)"
-        />
+        <label>Theme</label><div class="setting-field setting-field--select">
+          <NSelect
+            :value="preferences.themeMode"
+            :options="[{ label: 'System', value: 'system' }, { label: 'Light', value: 'light' }, { label: 'Dark', value: 'dark' }]"
+            @update:value="update('themeMode', $event)"
+          />
+        </div>
       </div>
     </NCard>
   </div>
 </template>
 
 <style scoped>
-.settings-page { display: flex; flex-direction: column; gap: 0.75rem; padding: 6vh 8vw; }
-.settings-group { display: grid; grid-template-columns: 12rem 1fr; align-items: center; gap: 0.8rem 2rem; }
+.settings-page { display: flex; flex-direction: column; gap: 1rem; padding: 6vh 8vw; }
+.settings-group { display: grid; grid-template-columns: 12rem minmax(0, 1fr); align-items: center; gap: 1rem 2rem; }
 .settings-group > label { font-weight: 700; }
-.settings-group > div { display: flex; align-items: center; gap: 0.5rem; }
-.settings-group :deep(.n-input-number) { inline-size: 5rem; }
+.setting-field { display: flex; align-items: center; justify-self: start; gap: 1rem; min-inline-size: 0; }
+.setting-field--select { inline-size: 15rem; }
+.setting-field :deep(.n-input-number) { inline-size: 8rem; }
+.setting-field--time :deep(.n-input-number) { inline-size: 6rem; }
 </style>

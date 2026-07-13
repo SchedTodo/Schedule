@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import { NRadio, NSelect, NSwitch } from 'naive-ui'
 import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -66,17 +67,28 @@ describe('secondary pages', () => {
     expect(wrapper.text()).toContain('Review notes')
   })
 
-  it('keeps Settings groups and adds theme controls', async () => {
+  it('restores complete settings choices and aligned controls', async () => {
     const router = await routerAt('/settings')
     const wrapper = mount(SettingsPage, { global: { plugins: [createPinia(), router] } })
-    expect(wrapper.text()).toContain('Appearance')
-    expect(wrapper.text()).toContain('RRule')
-    expect(wrapper.text()).toContain('Alarm')
-    expect(wrapper.text()).toContain('Preferences')
-    expect(wrapper.text()).toContain('Pomodoro')
-    expect(wrapper.text()).toContain('Theme')
-    expect(wrapper.text()).toContain('Priority')
+
+    for (const text of ['Appearance', 'RRule', 'Alarm', 'Preferences', 'Pomodoro', 'Theme']) {
+      expect(wrapper.text()).toContain(text)
+    }
     expect(wrapper.text()).not.toContain('Compact Density')
+
+    const labels = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
+    const weekStartRadios = wrapper.findAllComponents(NRadio).filter((radio) =>
+      labels.includes(radio.text().trim())
+    )
+    expect(weekStartRadios.map((radio) => radio.props('value'))).toEqual([1, 2, 3, 4, 5, 6, 7])
+
+    const timeZoneSelect = wrapper.findAllComponents(NSelect)[0]!
+    expect(timeZoneSelect.props('filterable')).toBe(true)
+    expect(timeZoneSelect.props('options')?.length ?? 0).toBeGreaterThan(100)
+    expect(wrapper.findAll('.setting-field')).toHaveLength(12)
+    expect(wrapper.findAllComponents(NSwitch).every(
+      (component) => component.element.parentElement?.classList.contains('setting-field') === true
+    )).toBe(true)
   })
 
   it('documents the shortcuts on Help', () => {
