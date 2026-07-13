@@ -70,9 +70,9 @@ describe('home workspace', () => {
   it('completes individual Todo occurrences and filters done rows', async () => {
     const wrapper = await mountHome([todo])
     await vi.waitFor(() => expect(wrapper.text()).toContain('Submit report'))
-    const checkbox = wrapper.get('input[aria-label="Done"]')
-    expect(checkbox.attributes('disabled')).toBeUndefined()
-    await checkbox.setValue(true)
+    const checkbox = wrapper.get('[role="checkbox"][aria-label="Done"]')
+    expect(checkbox.classes()).not.toContain('n-checkbox--disabled')
+    await checkbox.trigger('click')
     await wrapper.findAll('.todo-toolbar button')[1]!.trigger('click')
     await vi.waitFor(() => expect(wrapper.text()).not.toContain('Submit report'))
   })

@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { Play } from '@vicons/ionicons5'
 import { computed, ref } from 'vue'
-import { NEmpty, NIcon } from 'naive-ui'
+import { NButton, NButtonGroup, NCheckbox, NEmpty, NIcon, NTable } from 'naive-ui'
 
 import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
-import { formatInstant } from '../occurrence-time'
+import { Temporal } from '../../../domain/shared/temporal'
+import { formatTodoDeadline, todoTone } from '../todo-presentation'
 
-const props = defineProps<{ items: readonly ScheduleOccurrenceDto[]; timeZone: string }>()
+const props = defineProps<{
+  items: readonly ScheduleOccurrenceDto[]
+  timeZone: string
+  now?: string
+}>()
 const emit = defineEmits<{
   select: [id: string]
   done: [id: string, done: boolean]
@@ -14,30 +19,42 @@ const emit = defineEmits<{
 }>()
 const hideExpired = ref(false)
 const hideDone = ref(false)
+const nowInstant = computed(() => props.now === undefined
+  ? Temporal.Now.instant()
+  : Temporal.Instant.from(props.now))
 const visibleItems = computed(() => props.items.filter((item) => {
-  if (hideExpired.value && Date.parse(item.end) < Date.now()) return false
+  if (hideExpired.value && tone(item) === 'expired') return false
   if (hideDone.value && item.done) return false
   return true
 }))
+
+function tone(item: ScheduleOccurrenceDto) {
+  return todoTone(item.end, item.done, props.timeZone, nowInstant.value)
+}
 </script>
 
 <template>
   <section class="todo-sidebar">
-    <div class="todo-toolbar">
-      <button
+    <NButtonGroup class="todo-toolbar segmented-control">
+      <NButton
+        data-filter="expired"
         :class="{ active: hideExpired }"
         @click="hideExpired = !hideExpired"
       >
         Not Expired
-      </button>
-      <button
+      </NButton>
+      <NButton
+        data-filter="done"
         :class="{ active: hideDone }"
         @click="hideDone = !hideDone"
       >
         Not Done
-      </button>
-    </div>
-    <table>
+      </NButton>
+    </NButtonGroup>
+    <NTable
+      size="small"
+      :single-line="false"
+    >
       <thead>
         <tr><th>Name</th><th>Deadline</th><th>Action</th><th>Done</th></tr>
       </thead>
@@ -45,35 +62,49 @@ const visibleItems = computed(() => props.items.filter((item) => {
         <tr
           v-for="item in visibleItems"
           :key="item.id"
+          :data-todo-tone="tone(item)"
+          :class="`todo-${tone(item)}`"
         >
-          <td>
-            <button
-              class="cell-link"
+          <td class="todo-name-cell">
+            <NButton
+              text
+              data-action="name"
+              class="todo-content todo-name"
               @click="emit('select', item.scheduleId)"
             >
               {{ item.title }}
-            </button>
+            </NButton>
           </td>
-          <td>{{ formatInstant(item.end, timeZone) }}</td>
           <td>
-            <button
+            <NButton
+              text
+              data-action="deadline"
+              class="todo-content todo-deadline"
+              @click="emit('select', item.scheduleId)"
+            >
+              {{ formatTodoDeadline(item.end, timeZone) }}
+            </NButton>
+          </td>
+          <td>
+            <NButton
+              text
+              class="todo-content todo-action"
               aria-label="Concentrate"
               @click="emit('concentrate', item.id)"
             >
               <NIcon><Play /></NIcon>
-            </button>
+            </NButton>
           </td>
           <td>
-            <input
-              type="checkbox"
+            <NCheckbox
               :checked="item.done"
               aria-label="Done"
-              @change="emit('done', item.id, ($event.target as HTMLInputElement).checked)"
-            >
+              @update:checked="emit('done', item.id, Boolean($event))"
+            />
           </td>
         </tr>
       </tbody>
-    </table>
+    </NTable>
     <NEmpty
       v-if="visibleItems.length === 0"
       class="todo-empty"
@@ -85,10 +116,13 @@ const visibleItems = computed(() => props.items.filter((item) => {
 <style scoped>
 .todo-sidebar { position: relative; block-size: 100%; padding: 2vh 1vw; }
 .todo-toolbar { display: flex; padding-block-end: 1vh; }
-.todo-toolbar button { padding: 0.55rem 0.8rem; border: 1px solid var(--color-border); background: var(--color-surface); color: inherit; }
-.todo-toolbar button.active { box-shadow: 1px 1px 1px rgb(0 14 28 / 60%) inset; }
-table { inline-size: 100%; border-collapse: collapse; }
-th, td { padding: 0.7rem 0.4rem; border-block-end: 1px solid var(--color-border); text-align: start; }
-.cell-link { border: 0; background: transparent; color: inherit; cursor: pointer; }
+.todo-name-cell { max-inline-size: 0; }
+.todo-name { display: block; max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.todo-deadline { white-space: nowrap; }
+.todo-content { color: inherit; }
+.todo-expired { color: red !important; }
+.todo-today { color: #f90; }
+.todo-tomorrow { color: #000; }
+.todo-future, .todo-done { color: #999; }
 .todo-empty { position: absolute; inset-block-start: 50%; inset-inline: 0; transform: translateY(-50%); }
 </style>
