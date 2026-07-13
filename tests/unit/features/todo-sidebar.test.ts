@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import { NDataTable } from 'naive-ui'
 import { describe, expect, it } from 'vitest'
 
 import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
@@ -48,11 +49,22 @@ describe('Todo sidebar', () => {
   it('renders legacy deadline tones and format', () => {
     const wrapper = mountSidebar()
 
-    expect(wrapper.get('[data-todo-tone="expired"]').classes()).toContain('todo-expired')
-    expect(wrapper.get('[data-todo-tone="today"]').text()).toContain('07-13 23:30')
-    expect(wrapper.get('[data-todo-tone="tomorrow"]').classes()).toContain('todo-tomorrow')
-    expect(wrapper.get('[data-todo-tone="future"]').classes()).toContain('todo-future')
-    expect(wrapper.get('[data-todo-tone="done"]').classes()).toContain('todo-done')
+    const table = wrapper.findComponent(NDataTable)
+    expect(table.exists()).toBe(true)
+    expect(table.props('maxHeight')).toBe('76vh')
+    expect(table.props('minHeight')).toBe('76vh')
+    const columns = table.props('columns') ?? []
+    expect(columns.map((column) => 'key' in column ? String(column.key) : '')).toEqual([
+      'name', 'end', 'action', 'done'
+    ])
+    const rowClassName = table.props('rowClassName') as (row: ScheduleOccurrenceDto) => string
+    expect(rowClassName(items[0])).toContain('row-expired')
+    expect(rowClassName(items[1])).toContain('row-tdy')
+    expect(rowClassName(items[2])).toContain('row-tmr')
+    expect(rowClassName(items[3])).toContain('row-after-tmr')
+    expect(rowClassName(items[4])).toContain('row-done')
+
+    expect(wrapper.get('.row-tdy').text()).toContain('07-13 23:30')
   })
 
   it('opens details from both name and deadline', async () => {
