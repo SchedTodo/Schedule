@@ -87,6 +87,7 @@ function evaluateDate(
 function evaluateTime(source: string): EvaluatedTime {
   if (source === 's' || source === 'start') return { hour: 0, minute: 0 }
   if (source === 'e' || source === 'end') return { hour: 23, minute: 59 }
+  if (source === ':' || source === '.') return { hour: null, minute: null }
   if (source.startsWith('?')) return { hour: null, minute: null }
 
   const hasSeparator = /[:.]/u.test(source)
@@ -136,8 +137,8 @@ function validateRecurrence(statement: ScheduleStatementAst): void {
   if (frequency?.interval !== undefined && frequency.interval <= 0) {
     throw new Error('Invalid recurrence: interval must be positive')
   }
-  if (frequency?.count !== undefined && frequency.count <= 0) {
-    throw new Error('Invalid recurrence: count must be positive')
+  if (frequency?.count !== undefined && frequency.count < 0) {
+    throw new Error('Invalid recurrence: count must not be negative')
   }
 
   for (const [name, values] of Object.entries(statement.by)) {
@@ -166,6 +167,13 @@ function evaluateStatement(
   const firstTime = evaluateTime(statement.times[0])
   const secondTime =
     statement.times[1] === undefined ? undefined : evaluateTime(statement.times[1])
+  if (
+    secondTime !== undefined &&
+    firstTime.hour === null && firstTime.minute === null &&
+    secondTime.hour === null && secondTime.minute === null
+  ) {
+    throw new Error('Invalid time: both range endpoints are unknown')
+  }
 
   return {
     kind: secondTime === undefined ? 'todo' : 'event',

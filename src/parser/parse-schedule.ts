@@ -4,7 +4,7 @@ import ScheduleLexer from './generated/ScheduleLexer'
 import ScheduleParser from './generated/ScheduleParser'
 import { buildScheduleAst } from './ast-builder'
 import type { Diagnostic } from './diagnostics'
-import { SyntaxDiagnosticListener } from './diagnostics'
+import { semanticDiagnostic, SyntaxDiagnosticListener } from './diagnostics'
 import type { EvaluationContext, ScheduleSpec } from './evaluator'
 import { evaluateSchedule } from './evaluator'
 import type { ScheduleOccurrenceDraft } from '../contracts/occurrence.contract'
@@ -46,11 +46,19 @@ export function expandScheduleOccurrences(
 ): ParseResult<readonly ScheduleOccurrenceDraft[]> {
   const recurrence = parseSchedule(recurrenceCode, context)
   if (!recurrence.ok) return recurrence
+  const recurrenceKinds = new Set(recurrence.value.statements.map(({ kind }) => kind))
+  if (recurrenceKinds.size !== 1) {
+    return { ok: false, diagnostics: [semanticDiagnostic('INVALID_RECURRENCE', 'Recurrence statements must have one schedule kind')] }
+  }
   const recurrenceOccurrences = expandScheduleSpec(recurrence.value)
   if (exclusionCode.trim() === '') return { ok: true, value: recurrenceOccurrences }
 
   const exclusion = parseSchedule(exclusionCode, context)
   if (!exclusion.ok) return exclusion
+  const exclusionKinds = new Set(exclusion.value.statements.map(({ kind }) => kind))
+  if (exclusionKinds.size !== 1 || exclusionKinds.values().next().value !== recurrenceKinds.values().next().value) {
+    return { ok: false, diagnostics: [semanticDiagnostic('INVALID_RECURRENCE', 'Exclusion kind must match recurrence kind')] }
+  }
   const exclusionKeys = new Set(expandScheduleSpec(exclusion.value).map(occurrenceKey))
   const included = recurrenceOccurrences.filter((value) => !exclusionKeys.has(occurrenceKey(value)))
   const excluded = recurrenceOccurrences

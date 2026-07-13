@@ -27,9 +27,9 @@ describe('schedule semantic validation', () => {
     expect(event.ok && event.value.statements[0]?.kind).toBe('event')
   })
 
-  it('rejects non-positive and duplicate frequency options', () => {
+  it('rejects a non-positive interval and duplicate frequency options while preserving legacy count zero', () => {
     expectDiagnostic('2026/7/13-14 10:00 daily,i0;', 'INVALID_RECURRENCE')
-    expectDiagnostic('2026/7/13-14 10:00 daily,c0;', 'INVALID_RECURRENCE')
+    expect(parseSchedule('2026/7/13-14 10:00 daily,c0;', context).ok).toBe(true)
     expectDiagnostic('2026/7/13-14 10:00 daily,i2,i3;', 'INVALID_RECURRENCE')
   })
 
