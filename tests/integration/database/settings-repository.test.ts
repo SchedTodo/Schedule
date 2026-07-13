@@ -20,9 +20,9 @@ describe('DrizzleSettingsRepository', () => {
 
   it('initializes defaults and persists validated updates', async () => {
     await expect(repository.get()).resolves.toMatchObject({ ok: true, value: { weekViewDays: 5 } })
-    await repository.update({ timeZone: 'Asia/Shanghai', openAtLogin: true })
+    await repository.update({ timeZone: 'Asia/Shanghai', weekStart: 7, openAtLogin: true })
     await expect(repository.get()).resolves.toMatchObject({
-      ok: true, value: { timeZone: 'Asia/Shanghai', openAtLogin: true }
+      ok: true, value: { timeZone: 'Asia/Shanghai', weekStart: 7, openAtLogin: true }
     })
   })
 })

@@ -72,7 +72,7 @@ function registerSchedulePlatform(): void {
       clock: new SystemClock(),
       idGenerator: new CryptoIdGenerator(),
       defaultTimeZone: settings?.timeZone ?? 'UTC',
-      weekStartsOn: settings?.weekStart === 0 ? 7 : 1,
+      weekStartsOn: settings?.weekStart ?? 1,
       resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
     }, occurrenceRepository)
   }

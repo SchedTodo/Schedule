@@ -76,6 +76,7 @@ describe('secondary pages', () => {
     expect(wrapper.text()).toContain('Pomodoro')
     expect(wrapper.text()).toContain('Theme')
     expect(wrapper.text()).toContain('Priority')
+    expect(wrapper.text()).not.toContain('Compact Density')
   })
 
   it('documents the shortcuts on Help', () => {

@@ -46,7 +46,7 @@ export function createInMemoryGateway(
   for (const schedule of seed) {
     if (schedule.recurrenceCode.trim() === '') continue
     const expanded = expandScheduleOccurrences(schedule.recurrenceCode, schedule.exclusionCode, {
-      now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart === 1 ? 1 : 7,
+      now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
       resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
     })
     if (!expanded.ok) continue
@@ -73,7 +73,7 @@ export function createInMemoryGateway(
         let kind: ScheduleDto['kind'] = parsed.data.recurrenceCode === '' ? 'todo' : 'event'
         if (parsed.data.recurrenceCode !== '') {
           const specification = parseSchedule(parsed.data.recurrenceCode, {
-            now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart === 1 ? 1 : 7,
+            now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
             resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
           })
           if (!specification.ok || new Set(specification.value.statements.map((value) => value.kind)).size !== 1) {
@@ -100,7 +100,7 @@ export function createInMemoryGateway(
             {
               now: dependencies.clock.now(),
               defaultTimeZone: settings.timeZone,
-              weekStartsOn: settings.weekStart === 1 ? 1 : 7,
+              weekStartsOn: settings.weekStart,
               resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
             }
           )
@@ -150,7 +150,7 @@ export function createInMemoryGateway(
         let nextKind: ScheduleDto['kind'] = parsed.data.recurrenceCode === '' ? 'todo' : current.kind
         if (parsed.data.recurrenceCode !== '') {
           const specification = parseSchedule(parsed.data.recurrenceCode, {
-            now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart === 1 ? 1 : 7,
+            now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
             resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
           })
           if (!specification.ok) return { ok: false, error: validationError }
@@ -160,7 +160,7 @@ export function createInMemoryGateway(
         const expanded = parsed.data.recurrenceCode === ''
           ? { ok: true as const, value: [] }
           : expandScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
-              now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart === 1 ? 1 : 7,
+              now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
               resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
             })
         if (!expanded.ok) return { ok: false, error: validationError }

@@ -24,7 +24,7 @@ const usesDarkTheme = computed(
   >
     <main
       data-testid="app-shell"
-      :class="[{ 'theme-dark': usesDarkTheme, 'density-compact': preferences.compactDensity }]"
+      :class="{ 'theme-dark': usesDarkTheme }"
     >
       <AppShell />
     </main>

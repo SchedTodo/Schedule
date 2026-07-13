@@ -1,8 +1,20 @@
 import { z } from 'zod'
 
+export const WeekStartSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7)
+])
+
+export type WeekStart = z.infer<typeof WeekStartSchema>
+
 export const SettingsDtoSchema = z.object({
   timeZone: z.string().min(1).max(100),
-  weekStart: z.union([z.literal(0), z.literal(1)]),
+  weekStart: WeekStartSchema,
   todoAlarmEnabled: z.boolean(),
   todoAlarmBeforeMinutes: z.number().int().min(0).max(1440),
   eventAlarmEnabled: z.boolean(),

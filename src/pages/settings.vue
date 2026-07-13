@@ -146,10 +146,6 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
           style="width: 15rem"
           @update:value="update('themeMode', $event)"
         />
-        <label>Compact Density</label><NSwitch
-          :value="preferences.compactDensity"
-          @update:value="update('compactDensity', $event)"
-        />
       </div>
     </NCard>
   </div>

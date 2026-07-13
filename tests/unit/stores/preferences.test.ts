@@ -24,33 +24,23 @@ describe('preferences store', () => {
     expect(store.$state).toEqual({
       themeMode: 'system',
       calendarMode: 'month',
-      weekStart: 1,
-      compactDensity: false
+      weekStart: 1
     })
   })
 
-  it('updates preferences explicitly', () => {
-    const store = usePreferencesStore()
-
-    store.update({ themeMode: 'dark', calendarMode: 'week', compactDensity: true })
-
-    expect(store.themeMode).toBe('dark')
-    expect(store.calendarMode).toBe('week')
-    expect(store.weekStart).toBe(1)
-    expect(store.compactDensity).toBe(true)
-  })
-
-  it('round trips validated preferences through injected storage', () => {
+  it('updates ISO week starts and round trips them through storage', () => {
     const storage = memoryStorage()
     const first = usePreferencesStore()
-    first.update({ themeMode: 'light', weekStart: 0 }, storage)
+    first.update({ themeMode: 'light', calendarMode: 'week', weekStart: 7 }, storage)
 
     setActivePinia(createPinia())
     const restored = usePreferencesStore()
     restored.hydrate(storage)
 
-    expect(restored.themeMode).toBe('light')
-    expect(restored.weekStart).toBe(0)
-    expect(restored.calendarMode).toBe('month')
+    expect(restored.$state).toEqual({
+      themeMode: 'light',
+      calendarMode: 'week',
+      weekStart: 7
+    })
   })
 })

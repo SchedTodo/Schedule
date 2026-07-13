@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia'
 import { z } from 'zod'
 
+import { WeekStartSchema } from '../contracts/settings.contract'
+
 const PreferencesSchema = z
   .object({
     themeMode: z.enum(['system', 'light', 'dark']),
     calendarMode: z.enum(['month', 'week']),
-    weekStart: z.union([z.literal(0), z.literal(1)]),
-    compactDensity: z.boolean()
+    weekStart: WeekStartSchema
   })
   .strict()
 
@@ -22,8 +23,7 @@ const storageKey = 'schedule-v2-preferences'
 const defaults: Preferences = {
   themeMode: 'system',
   calendarMode: 'month',
-  weekStart: 1,
-  compactDensity: false
+  weekStart: 1
 }
 
 function browserStorage(): PreferencesStorage | undefined {
@@ -55,9 +55,6 @@ export const usePreferencesStore = defineStore('preferences', {
         this.calendarMode = parsed.data.calendarMode
       }
       if (parsed.data.weekStart !== undefined) this.weekStart = parsed.data.weekStart
-      if (parsed.data.compactDensity !== undefined) {
-        this.compactDensity = parsed.data.compactDensity
-      }
       storage?.setItem(storageKey, JSON.stringify(this.$state))
     }
   }

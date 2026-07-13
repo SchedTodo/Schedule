@@ -24,4 +24,13 @@ describe('settings contract', () => {
     expect(SettingsDtoSchema.safeParse({ ...defaultSettings, weekViewDays: 8 }).success).toBe(false)
     expect(SettingsDtoSchema.safeParse({ ...defaultSettings, extra: true }).success).toBe(false)
   })
+
+  it('accepts exactly the seven ISO week starts', () => {
+    for (const weekStart of [1, 2, 3, 4, 5, 6, 7]) {
+      expect(SettingsDtoSchema.safeParse({ ...defaultSettings, weekStart }).success).toBe(true)
+    }
+    for (const weekStart of [0, 8]) {
+      expect(SettingsDtoSchema.safeParse({ ...defaultSettings, weekStart }).success).toBe(false)
+    }
+  })
 })
