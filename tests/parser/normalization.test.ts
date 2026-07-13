@@ -48,4 +48,17 @@ describe('normalizeSchedule', () => {
     const second = normalizeSchedule(first.value.code, utcContext)
     expect(second.ok && second.value.code).toBe(first.value.code)
   })
+
+  it('round trips valid IANA identifiers containing digits and plus signs', () => {
+    const fixedZoneContext: EvaluationContext = {
+      ...context,
+      defaultTimeZone: 'Etc/GMT+8'
+    }
+    const first = normalizeSchedule('2026/7/13 10:00;', fixedZoneContext)
+    expect(first.ok && first.value.code).toBe('2026/7/13 10:00 Etc/GMT+8;')
+    if (!first.ok) return
+
+    const second = normalizeSchedule(first.value.code, fixedZoneContext)
+    expect(second.ok && second.value.code).toBe(first.value.code)
+  })
 })

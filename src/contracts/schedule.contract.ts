@@ -10,6 +10,10 @@ export const CreateScheduleInputSchema = z
     comment: z.string().max(20_000).default('')
   })
   .strict()
+  .refine((value) => value.recurrenceCode.trim() !== '' || value.exclusionCode.trim() === '', {
+    message: 'Exclusion rules require a recurrence rule',
+    path: ['exclusionCode']
+  })
 
 export const ScheduleDtoSchema = z
   .object({
@@ -34,7 +38,7 @@ export const ScheduleListQuerySchema = z
   })
   .strict()
 
-export const UpdateScheduleInputSchema = CreateScheduleInputSchema.extend({
+export const UpdateScheduleInputSchema = CreateScheduleInputSchema.safeExtend({
   id: z.uuid()
 }).strict()
 

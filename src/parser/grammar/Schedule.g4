@@ -69,7 +69,7 @@ BY: 'by';
 BY_TYPE: 'month' | 'weekno' | 'yearday' | 'monthday' | 'day' | 'setpos';
 INTERVAL: 'i';
 COUNT: 'c';
-IANA_ZONE: [A-Za-z_]+ ('-' [A-Za-z_]+)* '/' [A-Za-z_]+ ('-' [A-Za-z_]+)* ('/' [A-Za-z_]+ ('-' [A-Za-z_]+)*)*;
+IANA_ZONE: [A-Za-z_] [A-Za-z0-9_+-]* ('/' [A-Za-z0-9_+-]+)+;
 ZONE_ABBR: [A-Z] [A-Z] [A-Z] [A-Z]? [A-Z]?;
 INTEGER: [0-9]+;
 QUESTION: '?';

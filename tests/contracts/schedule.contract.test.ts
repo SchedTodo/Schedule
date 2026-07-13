@@ -39,6 +39,15 @@ describe('CreateScheduleInputSchema', () => {
 
     expect(result.success).toBe(false)
   })
+
+  it('rejects exclusions when there is no recurrence rule', () => {
+    expect(CreateScheduleInputSchema.safeParse({
+      title: 'Todo',
+      recurrenceCode: '',
+      exclusionCode: '2026/7/13 10:00 UTC;',
+      comment: ''
+    }).success).toBe(false)
+  })
 })
 
 describe('ScheduleDtoSchema', () => {

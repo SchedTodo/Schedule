@@ -25,6 +25,9 @@ describe('schedule management contracts', () => {
     expect(UpdateScheduleInputSchema.safeParse({
       id, title: 'Review', recurrenceCode: '', exclusionCode: '', comment: '', extra: true
     }).success).toBe(false)
+    expect(UpdateScheduleInputSchema.safeParse({
+      id, title: 'Review', recurrenceCode: '', exclusionCode: '2026/7/13 10:00 UTC;', comment: ''
+    }).success).toBe(false)
   })
 
   it('validates database filters and paging', () => {
