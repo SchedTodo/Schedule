@@ -74,12 +74,18 @@ describe('ScheduleService', () => {
 
     expect(result.ok).toBe(true)
     expect(repository.saveWithOccurrences).toHaveBeenCalledWith(
-      expect.objectContaining({ title: '周会' }),
+      expect.objectContaining({
+        title: '周会',
+        recurrenceCode: '2026/7/13 10:00-11:00 Asia/Shanghai;'
+      }),
       [expect.objectContaining({
         scheduleId: '10000000-0000-4000-8000-000000000001',
         start: '2026-07-13T02:00:00Z',
         end: '2026-07-13T03:00:00Z'
       })]
+    )
+    expect(result.ok && result.value.recurrenceCode).toBe(
+      '2026/7/13 10:00-11:00 Asia/Shanghai;'
     )
   })
 

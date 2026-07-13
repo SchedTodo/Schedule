@@ -9,6 +9,7 @@ import type { EvaluationContext, ScheduleSpec } from './evaluator'
 import { evaluateSchedule } from './evaluator'
 import type { ScheduleOccurrenceDraft } from '../contracts/occurrence.contract'
 import { expandScheduleSpec, occurrenceKey } from '../domain/schedule/occurrence'
+import { serializeScheduleSpec } from './serialize-schedule'
 
 export type ParseResult<T> =
   | { readonly ok: true; readonly value: T }
@@ -39,30 +40,73 @@ export function parseSchedule(
   return evaluateSchedule(buildScheduleAst(tree), context)
 }
 
+export function normalizeSchedule(
+  source: string,
+  context: EvaluationContext
+): ParseResult<{ readonly code: string; readonly spec: ScheduleSpec }> {
+  const result = parseSchedule(source, context)
+  return result.ok
+    ? { ok: true, value: { code: serializeScheduleSpec(result.value), spec: result.value } }
+    : result
+}
+
+export interface NormalizedScheduleOccurrences {
+  readonly recurrenceCode: string
+  readonly exclusionCode: string
+  readonly occurrences: readonly ScheduleOccurrenceDraft[]
+  readonly kind: 'event' | 'todo'
+}
+
+export function normalizeScheduleOccurrences(
+  recurrenceCode: string,
+  exclusionCode: string,
+  context: EvaluationContext
+): ParseResult<NormalizedScheduleOccurrences> {
+  const recurrence = normalizeSchedule(recurrenceCode, context)
+  if (!recurrence.ok) return recurrence
+  const recurrenceKinds = new Set(recurrence.value.spec.statements.map(({ kind }) => kind))
+  if (recurrenceKinds.size !== 1) {
+    return { ok: false, diagnostics: [semanticDiagnostic('INVALID_RECURRENCE', 'Recurrence statements must have one schedule kind')] }
+  }
+  const kind = recurrenceKinds.values().next().value!
+  const recurrenceOccurrences = expandScheduleSpec(recurrence.value.spec)
+  if (exclusionCode.trim() === '') {
+    return {
+      ok: true,
+      value: {
+        recurrenceCode: recurrence.value.code,
+        exclusionCode: '',
+        occurrences: recurrenceOccurrences,
+        kind
+      }
+    }
+  }
+
+  const exclusion = normalizeSchedule(exclusionCode, context)
+  if (!exclusion.ok) return exclusion
+  const exclusionKinds = new Set(exclusion.value.spec.statements.map(({ kind: value }) => value))
+  if (exclusionKinds.size !== 1 || exclusionKinds.values().next().value !== kind) {
+    return { ok: false, diagnostics: [semanticDiagnostic('INVALID_RECURRENCE', 'Exclusion kind must match recurrence kind')] }
+  }
+  const exclusionKeys = new Set(expandScheduleSpec(exclusion.value.spec).map(occurrenceKey))
+  return {
+    ok: true,
+    value: {
+      recurrenceCode: recurrence.value.code,
+      exclusionCode: exclusion.value.code,
+      occurrences: recurrenceOccurrences.map((value) => exclusionKeys.has(occurrenceKey(value))
+        ? { ...value, excluded: true }
+        : value),
+      kind
+    }
+  }
+}
+
 export function expandScheduleOccurrences(
   recurrenceCode: string,
   exclusionCode: string,
   context: EvaluationContext
 ): ParseResult<readonly ScheduleOccurrenceDraft[]> {
-  const recurrence = parseSchedule(recurrenceCode, context)
-  if (!recurrence.ok) return recurrence
-  const recurrenceKinds = new Set(recurrence.value.statements.map(({ kind }) => kind))
-  if (recurrenceKinds.size !== 1) {
-    return { ok: false, diagnostics: [semanticDiagnostic('INVALID_RECURRENCE', 'Recurrence statements must have one schedule kind')] }
-  }
-  const recurrenceOccurrences = expandScheduleSpec(recurrence.value)
-  if (exclusionCode.trim() === '') return { ok: true, value: recurrenceOccurrences }
-
-  const exclusion = parseSchedule(exclusionCode, context)
-  if (!exclusion.ok) return exclusion
-  const exclusionKinds = new Set(exclusion.value.statements.map(({ kind }) => kind))
-  if (exclusionKinds.size !== 1 || exclusionKinds.values().next().value !== recurrenceKinds.values().next().value) {
-    return { ok: false, diagnostics: [semanticDiagnostic('INVALID_RECURRENCE', 'Exclusion kind must match recurrence kind')] }
-  }
-  const exclusionKeys = new Set(expandScheduleSpec(exclusion.value).map(occurrenceKey))
-  const included = recurrenceOccurrences.filter((value) => !exclusionKeys.has(occurrenceKey(value)))
-  const excluded = recurrenceOccurrences
-    .filter((value) => exclusionKeys.has(occurrenceKey(value)))
-    .map((value) => ({ ...value, excluded: true }))
-  return { ok: true, value: [...included, ...excluded] }
+  const result = normalizeScheduleOccurrences(recurrenceCode, exclusionCode, context)
+  return result.ok ? { ok: true, value: result.value.occurrences } : result
 }

@@ -1,0 +1,37 @@
+import { Temporal } from '@js-temporal/polyfill'
+import { describe, expect, it } from 'vitest'
+
+import { expandScheduleSpec } from '../../src/domain/schedule/occurrence'
+import type { EvaluationContext } from '../../src/parser/evaluator'
+import { normalizeSchedule } from '../../src/parser/parse-schedule'
+
+const context: EvaluationContext = {
+  now: Temporal.Instant.from('2026-07-12T16:30:00Z'),
+  defaultTimeZone: 'Asia/Shanghai',
+  weekStartsOn: 1,
+  resolveTimeZoneAbbreviation: (value) => value === 'CST'
+    ? { kind: 'resolved', timeZone: 'America/Chicago' }
+    : { kind: 'unknown' }
+}
+
+describe('normalizeSchedule', () => {
+  it('embeds the configured time zone while expanding UTC instants', () => {
+    const result = normalizeSchedule('tdy 10:00-11:00;', context)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value.code).toBe('2026/7/13 10:00-11:00 Asia/Shanghai;')
+    expect(expandScheduleSpec(result.value.spec)[0]).toMatchObject({
+      start: '2026-07-13T02:00:00Z',
+      end: '2026-07-13T03:00:00Z'
+    })
+  })
+
+  it('keeps explicit zones and resolves abbreviations to full identifiers', () => {
+    const explicit = normalizeSchedule('2026/7/13 10:00 America/Chicago;', context)
+    const abbreviated = normalizeSchedule('2026/7/13 10:00 CST;', context)
+
+    expect(explicit.ok && explicit.value.code).toBe('2026/7/13 10:00 America/Chicago;')
+    expect(abbreviated.ok && abbreviated.value.code).toBe('2026/7/13 10:00 America/Chicago;')
+  })
+})

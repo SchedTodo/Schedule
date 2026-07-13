@@ -11,7 +11,10 @@ import { Schedule } from '../domain/schedule/schedule'
 import type { Clock } from '../domain/shared/clock'
 import type { IdGenerator } from '../domain/shared/id-generator'
 import type { OccurrenceRepository, ScheduleRepository } from '../platform/ports'
-import { expandScheduleOccurrences, parseSchedule } from '../parser/parse-schedule'
+import {
+  normalizeScheduleOccurrences,
+  type NormalizedScheduleOccurrences
+} from '../parser/parse-schedule'
 import type { TimeZoneResolution } from '../parser/evaluator'
 
 export interface ScheduleServiceDependencies {
@@ -39,22 +42,24 @@ export class ScheduleService implements ScheduleGateway {
     }
 
     let kind: 'event' | 'todo' = parsed.data.recurrenceCode === '' ? 'todo' : 'event'
+    let normalized: NormalizedScheduleOccurrences | undefined
     if (
       parsed.data.recurrenceCode !== '' &&
       this.dependencies.defaultTimeZone !== undefined &&
       this.dependencies.weekStartsOn !== undefined &&
       this.dependencies.resolveTimeZoneAbbreviation !== undefined
     ) {
-      const specification = parseSchedule(parsed.data.recurrenceCode, {
+      const result = normalizeScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
         now: this.dependencies.clock.now(),
         defaultTimeZone: this.dependencies.defaultTimeZone,
         weekStartsOn: this.dependencies.weekStartsOn,
         resolveTimeZoneAbbreviation: this.dependencies.resolveTimeZoneAbbreviation
       })
-      if (!specification.ok || new Set(specification.value.statements.map((value) => value.kind)).size !== 1) {
+      if (!result.ok) {
         return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程时间规则无效' } }
       }
-      kind = specification.value.statements[0]?.kind ?? 'todo'
+      normalized = result.value
+      kind = result.value.kind
     }
 
     const schedule = Schedule.create(
@@ -71,46 +76,19 @@ export class ScheduleService implements ScheduleGateway {
       id: schedule.id,
       kind: schedule.kind,
       title: schedule.title,
-      recurrenceCode: schedule.recurrence.recurrenceCode,
-      exclusionCode: schedule.recurrence.exclusionCode,
+      recurrenceCode: normalized?.recurrenceCode ?? schedule.recurrence.recurrenceCode,
+      exclusionCode: normalized?.exclusionCode ?? schedule.recurrence.exclusionCode,
       comment: schedule.comment,
       starred: schedule.starred,
       createdAt: schedule.createdAt.toString(),
       updatedAt: schedule.updatedAt.toString()
     }
-    const {
-      defaultTimeZone,
-      weekStartsOn,
-      resolveTimeZoneAbbreviation
-    } = this.dependencies
-    if (
-      parsed.data.recurrenceCode.trim() === '' ||
-      defaultTimeZone === undefined ||
-      weekStartsOn === undefined ||
-      resolveTimeZoneAbbreviation === undefined
-    ) {
+    if (normalized === undefined) {
       return this.repository.save(dto)
-    }
-
-    const expanded = expandScheduleOccurrences(
-      parsed.data.recurrenceCode,
-      parsed.data.exclusionCode,
-      {
-        now: this.dependencies.clock.now(),
-        defaultTimeZone,
-        weekStartsOn,
-        resolveTimeZoneAbbreviation
-      }
-    )
-    if (!expanded.ok) {
-      return {
-        ok: false as const,
-        error: { code: 'VALIDATION_FAILED' as const, message: '日程时间规则无效' }
-      }
     }
     return this.repository.saveWithOccurrences(
       dto,
-      expanded.value.map((occurrence) => ({
+      normalized.occurrences.map((occurrence) => ({
         ...occurrence,
         id: this.dependencies.idGenerator.next(),
         scheduleId: dto.id,
@@ -135,34 +113,36 @@ export class ScheduleService implements ScheduleGateway {
     if (!found.ok) return found
     if (found.value === null) return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: '日程不存在' } }
     let kind: 'event' | 'todo' = parsed.data.recurrenceCode === '' ? 'todo' : found.value.kind
+    let normalized: NormalizedScheduleOccurrences | undefined
     if (parsed.data.recurrenceCode !== '' && this.dependencies.defaultTimeZone !== undefined && this.dependencies.weekStartsOn !== undefined && this.dependencies.resolveTimeZoneAbbreviation !== undefined) {
-      const specification = parseSchedule(parsed.data.recurrenceCode, {
+      const result = normalizeScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
         now: this.dependencies.clock.now(), defaultTimeZone: this.dependencies.defaultTimeZone,
         weekStartsOn: this.dependencies.weekStartsOn,
         resolveTimeZoneAbbreviation: this.dependencies.resolveTimeZoneAbbreviation
       })
-      if (!specification.ok) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程时间规则无效' } }
-      kind = specification.value.statements[0]?.kind ?? 'todo'
+      if (!result.ok) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程时间规则无效' } }
+      normalized = result.value
+      kind = result.value.kind
     }
     if (kind !== found.value.kind) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能更改日程类型' } }
     const now = this.dependencies.clock.now().toString()
-    const updated: ScheduleDto = { ...found.value, ...parsed.data, kind, updatedAt: now }
-    if (parsed.data.recurrenceCode === '' || this.dependencies.defaultTimeZone === undefined || this.dependencies.weekStartsOn === undefined || this.dependencies.resolveTimeZoneAbbreviation === undefined) {
+    const updated: ScheduleDto = {
+      ...found.value,
+      ...parsed.data,
+      recurrenceCode: normalized?.recurrenceCode ?? parsed.data.recurrenceCode,
+      exclusionCode: normalized?.exclusionCode ?? parsed.data.exclusionCode,
+      kind,
+      updatedAt: now
+    }
+    if (normalized === undefined) {
       return this.repository.save(updated)
     }
-    const expanded = expandScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
-      now: this.dependencies.clock.now(),
-      defaultTimeZone: this.dependencies.defaultTimeZone,
-      weekStartsOn: this.dependencies.weekStartsOn,
-      resolveTimeZoneAbbreviation: this.dependencies.resolveTimeZoneAbbreviation
-    })
-    if (!expanded.ok) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程时间规则无效' } }
     const existingResult = this.occurrenceRepository === undefined
       ? { ok: true as const, value: [] }
       : await this.occurrenceRepository.listBySchedule(parsed.data.id)
     if (!existingResult.ok) return existingResult
     const existing = new Map(existingResult.value.map((value) => [JSON.stringify([value.start, value.end, value.startMark, value.endMark]), value]))
-    return this.repository.saveWithOccurrences(updated, expanded.value.map((value) => {
+    return this.repository.saveWithOccurrences(updated, normalized.occurrences.map((value) => {
       const previous = existing.get(JSON.stringify([value.start, value.end, value.startMark, value.endMark]))
       return {
         ...value,

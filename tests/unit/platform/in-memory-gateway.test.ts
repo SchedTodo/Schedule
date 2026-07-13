@@ -45,7 +45,7 @@ describe('createInMemoryGateway', () => {
         id: '0198f0de-8f7f-7000-8000-000000000003',
         kind: 'todo',
         title: '周会',
-        recurrenceCode: '2026/7/12 10:00',
+        recurrenceCode: '2026/7/12 10:00 UTC;',
         exclusionCode: '',
         comment: '',
         starred: false,
@@ -78,6 +78,10 @@ describe('createInMemoryGateway', () => {
       '2026-07-12T10:00:00Z',
       '2026-07-13T10:00:00Z'
     ])
+    const schedules = await gateway.schedules.list({ offset: 0, limit: 10 })
+    expect(schedules.ok && schedules.value[0]?.recurrenceCode).toBe(
+      '2026/7/12-2026/7/13 10:00-11:00 UTC;'
+    )
   })
 
   it('filters deterministically before applying pagination', async () => {

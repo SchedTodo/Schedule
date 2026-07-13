@@ -18,7 +18,10 @@ import { CreateConcentrationRecordInputSchema, type ConcentrationRecordDto } fro
 import { SystemClock } from '../../domain/shared/clock'
 import type { IdGenerator } from '../../domain/shared/id-generator'
 import { CryptoIdGenerator } from '../../domain/shared/id-generator'
-import { expandScheduleOccurrences, parseSchedule } from '../../parser/parse-schedule'
+import {
+  expandScheduleOccurrences,
+  normalizeScheduleOccurrences
+} from '../../parser/parse-schedule'
 
 export interface InMemoryGatewayDependencies {
   readonly clock: Clock
@@ -70,42 +73,28 @@ export function createInMemoryGateway(
         if (!parsed.success) return { ok: false, error: validationError }
 
         const now = dependencies.clock.now().toString()
-        let kind: ScheduleDto['kind'] = parsed.data.recurrenceCode === '' ? 'todo' : 'event'
-        if (parsed.data.recurrenceCode !== '') {
-          const specification = parseSchedule(parsed.data.recurrenceCode, {
+        const normalized = parsed.data.recurrenceCode === ''
+          ? undefined
+          : normalizeScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
             now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
             resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
           })
-          if (!specification.ok || new Set(specification.value.statements.map((value) => value.kind)).size !== 1) {
-            return { ok: false, error: validationError }
-          }
-          kind = specification.value.statements[0]?.kind ?? 'todo'
-        }
+        if (normalized !== undefined && !normalized.ok) return { ok: false, error: validationError }
+        const normalizedValue = normalized?.ok === true ? normalized.value : undefined
         const schedule: ScheduleDto = {
           id: dependencies.idGenerator.next(),
-          kind,
+          kind: normalizedValue?.kind ?? 'todo',
           title: parsed.data.title,
-          recurrenceCode: parsed.data.recurrenceCode,
-          exclusionCode: parsed.data.exclusionCode,
+          recurrenceCode: normalizedValue?.recurrenceCode ?? '',
+          exclusionCode: normalizedValue?.exclusionCode ?? '',
           comment: parsed.data.comment,
           starred: false,
           createdAt: now,
           updatedAt: now
         }
         schedules.push(schedule)
-        if (parsed.data.recurrenceCode.trim() !== '') {
-          const expanded = expandScheduleOccurrences(
-            parsed.data.recurrenceCode,
-            parsed.data.exclusionCode,
-            {
-              now: dependencies.clock.now(),
-              defaultTimeZone: settings.timeZone,
-              weekStartsOn: settings.weekStart,
-              resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
-            }
-          )
-          if (!expanded.ok) return { ok: false, error: validationError }
-          occurrences.push(...expanded.value.map((value) => ({
+        if (normalizedValue !== undefined) {
+          occurrences.push(...normalizedValue.occurrences.map((value) => ({
             ...value,
             id: dependencies.idGenerator.next(),
             scheduleId: schedule.id,
@@ -147,28 +136,21 @@ export function createInMemoryGateway(
         const index = schedules.findIndex(({ id }) => id === parsed.data.id)
         const current = schedules[index]
         if (current === undefined || deletedScheduleIds.has(current.id)) return missing()
-        let nextKind: ScheduleDto['kind'] = parsed.data.recurrenceCode === '' ? 'todo' : current.kind
-        if (parsed.data.recurrenceCode !== '') {
-          const specification = parseSchedule(parsed.data.recurrenceCode, {
+        const normalized = parsed.data.recurrenceCode === ''
+          ? undefined
+          : normalizeScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
             now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
             resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
           })
-          if (!specification.ok) return { ok: false, error: validationError }
-          nextKind = specification.value.statements[0]?.kind ?? 'todo'
-        }
+        if (normalized !== undefined && !normalized.ok) return { ok: false, error: validationError }
+        const normalizedValue = normalized?.ok === true ? normalized.value : undefined
+        const nextKind: ScheduleDto['kind'] = normalizedValue?.kind ?? 'todo'
         if (nextKind !== current.kind) return { ok: false, error: validationError }
-        const expanded = parsed.data.recurrenceCode === ''
-          ? { ok: true as const, value: [] }
-          : expandScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
-              now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
-              resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
-            })
-        if (!expanded.ok) return { ok: false, error: validationError }
         const existing = occurrences.filter(({ scheduleId }) => scheduleId === current.id)
         const byKey = new Map(existing.map((value) => [
           JSON.stringify([value.start, value.end, value.startMark, value.endMark]), value
         ]))
-        const nextOccurrences = expanded.value.map((value) => {
+        const nextOccurrences = (normalizedValue?.occurrences ?? []).map((value) => {
           const previous = byKey.get(JSON.stringify([value.start, value.end, value.startMark, value.endMark]))
           return {
             ...value,
@@ -185,8 +167,8 @@ export function createInMemoryGateway(
         const updated: ScheduleDto = {
           ...current,
           title: parsed.data.title,
-          recurrenceCode: parsed.data.recurrenceCode,
-          exclusionCode: parsed.data.exclusionCode,
+          recurrenceCode: normalizedValue?.recurrenceCode ?? '',
+          exclusionCode: normalizedValue?.exclusionCode ?? '',
           comment: parsed.data.comment,
           updatedAt: dependencies.clock.now().toString()
         }
