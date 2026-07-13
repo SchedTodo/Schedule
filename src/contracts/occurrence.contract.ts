@@ -31,6 +31,10 @@ export const ScheduleOccurrenceDtoSchema = z
     }
   })
 
+export const CalendarOccurrenceDtoSchema = ScheduleOccurrenceDtoSchema.safeExtend({
+  scheduleComment: z.string().max(20_000)
+})
+
 export const ScheduleOccurrenceDraftSchema = z
   .object({
     excluded: occurrenceFields.excluded,
@@ -71,6 +75,7 @@ export const SetOccurrenceDoneInputSchema = z.object({ id: z.uuid(), done: z.boo
 
 export type KnownTimeMark = z.infer<typeof KnownTimeMarkSchema>
 export type ScheduleOccurrenceDto = z.infer<typeof ScheduleOccurrenceDtoSchema>
+export type CalendarOccurrenceDto = z.infer<typeof CalendarOccurrenceDtoSchema>
 export type ScheduleOccurrenceDraft = z.infer<typeof ScheduleOccurrenceDraftSchema>
 export type OccurrenceRangeQuery = z.infer<typeof OccurrenceRangeQuerySchema>
 export type ScheduleOccurrenceListInput = z.infer<typeof ScheduleOccurrenceListInputSchema>

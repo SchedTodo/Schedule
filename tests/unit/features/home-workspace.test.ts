@@ -5,7 +5,7 @@ import { NLayoutSider } from 'naive-ui'
 import { describe, expect, it, vi } from 'vitest'
 
 import { platformGatewayKey } from '../../../src/app/injection-keys'
-import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
+import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import type { ScheduleDto } from '../../../src/contracts/schedule.contract'
 import ScheduleModal from '../../../src/features/schedule/components/ScheduleModal.vue'
 import WeekScheduleView from '../../../src/features/schedule/components/WeekScheduleView.vue'
@@ -24,7 +24,7 @@ const todo: ScheduleDto = {
   updatedAt: '2026-07-11T08:00:00Z'
 }
 
-const eventOccurrence: ScheduleOccurrenceDto = {
+const eventOccurrence: CalendarOccurrenceDto = {
   id: '0198f0de-8f7f-7000-8000-000000000002',
   scheduleId: '0198f0de-8f7f-7000-8000-000000000003',
   title: 'Overlapping event',
@@ -34,6 +34,7 @@ const eventOccurrence: ScheduleOccurrenceDto = {
   startMark: '11',
   endMark: '11',
   comment: '',
+  scheduleComment: '',
   done: false,
   excluded: false
 }

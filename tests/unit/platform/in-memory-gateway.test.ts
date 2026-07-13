@@ -65,7 +65,7 @@ describe('createInMemoryGateway', () => {
       title: '周会',
       recurrenceCode: '2026/7/12-13 10:00-11:00 daily;',
       exclusionCode: '',
-      comment: ''
+      comment: '整个日程备注'
     })
 
     const result = await gateway.occurrences.listRange({
@@ -78,6 +78,11 @@ describe('createInMemoryGateway', () => {
       '2026-07-12T10:00:00Z',
       '2026-07-13T10:00:00Z'
     ])
+    expect(result.ok && result.value[0]?.scheduleComment).toBe('整个日程备注')
+    const scheduleId = result.ok ? result.value[0]?.scheduleId : undefined
+    expect(scheduleId).toBeDefined()
+    const details = await gateway.occurrences.listBySchedule(scheduleId!)
+    expect(details.ok && details.value[0]?.comment).toBe('')
     const schedules = await gateway.schedules.list({ offset: 0, limit: 10 })
     expect(schedules.ok && schedules.value[0]?.recurrenceCode).toBe(
       '2026/7/12-2026/7/13 10:00-11:00 UTC;'

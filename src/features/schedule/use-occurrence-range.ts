@@ -2,8 +2,8 @@ import { readonly, ref } from 'vue'
 
 import type { PlatformGateway } from '../../contracts/platform.contract'
 import type {
+  CalendarOccurrenceDto,
   OccurrenceRangeQuery,
-  ScheduleOccurrenceDto
 } from '../../contracts/occurrence.contract'
 import type { AppErrorDto } from '../../contracts/result'
 
@@ -11,7 +11,7 @@ export function useOccurrenceRange(
   gateway: PlatformGateway,
   initialQuery: OccurrenceRangeQuery
 ) {
-  const items = ref<readonly ScheduleOccurrenceDto[]>([])
+  const items = ref<readonly CalendarOccurrenceDto[]>([])
   const loading = ref(false)
   const error = ref<AppErrorDto | null>(null)
   let request = 0

@@ -1,12 +1,12 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
+import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import MonthScheduleView from '../../../src/features/schedule/components/MonthScheduleView.vue'
 import OccurrenceTooltip from '../../../src/features/schedule/components/OccurrenceTooltip.vue'
 import WeekScheduleView from '../../../src/features/schedule/components/WeekScheduleView.vue'
 
-const occurrences: readonly ScheduleOccurrenceDto[] = [
+const occurrences: readonly CalendarOccurrenceDto[] = [
   {
     id: '20000000-0000-4000-8000-000000000001',
     scheduleId: '10000000-0000-4000-8000-000000000001',
@@ -18,6 +18,7 @@ const occurrences: readonly ScheduleOccurrenceDto[] = [
     startMark: '11',
     endMark: '11',
     comment: '',
+    scheduleComment: 'Schedule comment',
     done: false
   },
   {
@@ -31,6 +32,7 @@ const occurrences: readonly ScheduleOccurrenceDto[] = [
     startMark: '11',
     endMark: '11',
     comment: '',
+    scheduleComment: 'Schedule comment',
     done: false
   }
 ]
@@ -80,7 +82,7 @@ describe('occurrence calendar views', () => {
   })
 
   it('assigns an all-day event to the prior logical date when the day starts at 06:00', () => {
-    const allDay: ScheduleOccurrenceDto = {
+    const allDay: CalendarOccurrenceDto = {
       ...occurrences[0]!,
       id: '20000000-0000-4000-8000-000000000010',
       title: '09-全天值班',

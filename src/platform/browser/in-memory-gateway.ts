@@ -234,6 +234,10 @@ export function createInMemoryGateway(
             )
             .sort((left, right) => Date.parse(left.start!) - Date.parse(right.start!))
             .slice(0, parsed.data.limit)
+            .map((value) => ({
+              ...value,
+              scheduleComment: schedules.find(({ id }) => id === value.scheduleId)?.comment ?? ''
+            }))
         }
       },
       async listBySchedule(scheduleId) {

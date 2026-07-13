@@ -4,6 +4,7 @@ import type { AppResult } from '../../contracts/result'
 import type { SettingsDto, UpdateSettingsInput } from '../../contracts/settings.contract'
 import type { ConcentrationRecordDto, CreateConcentrationRecordInput } from '../../contracts/record.contract'
 import type {
+  CalendarOccurrenceDto,
   OccurrenceRangeQuery,
   ScheduleOccurrenceDto,
   TodoOccurrenceQuery
@@ -27,7 +28,7 @@ export interface HostScheduleApi {
   setScheduleStarred(input: SetScheduleStarredInput): Promise<AppResult<ScheduleDto>>
   setScheduleDeleted(input: SetScheduleDeletedInput): Promise<AppResult<void>>
   searchSchedules(query: ScheduleSearchQuery): Promise<AppResult<SchedulePageDto>>
-  listOccurrences(query: OccurrenceRangeQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
+  listOccurrences(query: OccurrenceRangeQuery): Promise<AppResult<readonly CalendarOccurrenceDto[]>>
   listScheduleOccurrences(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   updateOccurrenceComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
   excludeOccurrence(id: string): Promise<AppResult<void>>

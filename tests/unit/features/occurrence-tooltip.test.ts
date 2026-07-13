@@ -1,10 +1,10 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
+import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import OccurrenceTooltip from '../../../src/features/schedule/components/OccurrenceTooltip.vue'
 
-const occurrence: ScheduleOccurrenceDto = {
+const occurrence: CalendarOccurrenceDto = {
   id: '20000000-0000-4000-8000-000000000001',
   scheduleId: '10000000-0000-4000-8000-000000000001',
   kind: 'event',
@@ -14,7 +14,8 @@ const occurrence: ScheduleOccurrenceDto = {
   end: '2026-07-13T03:30:00Z',
   startMark: '11',
   endMark: '11',
-  comment: '与晨会重叠；这是一段较长的备注。',
+  comment: '单次时间片备注',
+  scheduleComment: '与晨会重叠；这是一段较长的备注。',
   done: false
 }
 
@@ -41,6 +42,6 @@ describe('occurrence tooltip', () => {
 
     expect(wrapper.get('.tooltip-header').text()).toBe(occurrence.title)
     expect(wrapper.get('.tooltip-content').text()).toContain('7/13 09:30–11:30')
-    expect(wrapper.get('.tooltip-footer').text()).toBe(occurrence.comment)
+    expect(wrapper.get('.tooltip-footer').text()).toBe(occurrence.scheduleComment)
   })
 })

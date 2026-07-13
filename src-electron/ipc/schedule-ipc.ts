@@ -4,6 +4,7 @@ import { AppErrorDtoSchema } from '../../src/contracts/result'
 import { SettingsDtoSchema, UpdateSettingsInputSchema } from '../../src/contracts/settings.contract'
 import { ConcentrationRecordDtoSchema, CreateConcentrationRecordInputSchema } from '../../src/contracts/record.contract'
 import {
+  CalendarOccurrenceDtoSchema,
   OccurrenceRangeQuerySchema,
   ScheduleOccurrenceDtoSchema,
   ScheduleOccurrenceListInputSchema,
@@ -84,7 +85,7 @@ export const scheduleIpcContracts = {
   },
   [scheduleIpcChannels.listOccurrences]: {
     input: OccurrenceRangeQuerySchema,
-    output: appResultSchema(z.array(ScheduleOccurrenceDtoSchema))
+    output: appResultSchema(z.array(CalendarOccurrenceDtoSchema))
   },
   [scheduleIpcChannels.listScheduleOccurrences]: {
     input: ScheduleOccurrenceListInputSchema,

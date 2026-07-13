@@ -18,7 +18,7 @@ describe('DrizzleOccurrenceRepository', () => {
     sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/migrations/0002_occurrence.sql', import.meta.url), 'utf8'))
     sqlite.prepare(`INSERT INTO schedule
       (id, kind, title, recurrence_code, exclusion_code, comment, starred, created_at, updated_at)
-      VALUES (?, ?, ?, ?, '', '', 0, ?, ?)`)
+      VALUES (?, ?, ?, ?, '', '整个日程备注', 0, ?, ?)`)
       .run('10000000-0000-4000-8000-000000000001', 'event', 'Review', '2026/7/13 10:00-11:00', 1, 1)
     repository = new DrizzleOccurrenceRepository(drizzle(sqlite))
   })
@@ -30,7 +30,7 @@ describe('DrizzleOccurrenceRepository', () => {
       '10000000-0000-4000-8000-000000000001',
       [
         { id: '20000000-0000-4000-8000-000000000002', excluded: false, start: '2026-07-14T02:00:00Z', end: '2026-07-14T03:00:00Z', startMark: '11', endMark: '11', comment: '', done: false },
-        { id: '20000000-0000-4000-8000-000000000001', excluded: false, start: '2026-07-13T02:00:00Z', end: '2026-07-13T03:00:00Z', startMark: '11', endMark: '11', comment: '', done: false }
+        { id: '20000000-0000-4000-8000-000000000001', excluded: false, start: '2026-07-13T02:00:00Z', end: '2026-07-13T03:00:00Z', startMark: '11', endMark: '11', comment: '单次时间片备注', done: false }
       ]
     )
 
@@ -46,7 +46,14 @@ describe('DrizzleOccurrenceRepository', () => {
       '20000000-0000-4000-8000-000000000001',
       '20000000-0000-4000-8000-000000000002'
     ])
-    expect(result.value[0]).toMatchObject({ title: 'Review', kind: 'event' })
+    expect(result.value[0]).toMatchObject({
+      title: 'Review',
+      kind: 'event',
+      comment: '单次时间片备注',
+      scheduleComment: '整个日程备注'
+    })
+    const details = await repository.listBySchedule('10000000-0000-4000-8000-000000000001')
+    expect(details.ok && details.value[0]?.comment).toBe('单次时间片备注')
   })
 
   it('hides excluded, completed, and soft-deleted occurrences', async () => {

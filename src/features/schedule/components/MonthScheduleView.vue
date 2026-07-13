@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { NCalendar } from 'naive-ui'
-import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
+import type { CalendarOccurrenceDto } from '../../../contracts/occurrence.contract'
 import { formatMarkedWallClock, occurrenceWallTime } from '../occurrence-time'
 import OccurrenceTooltip from './OccurrenceTooltip.vue'
 
-const props = defineProps<{ items: readonly ScheduleOccurrenceDto[]; timeZone: string }>()
+const props = defineProps<{ items: readonly CalendarOccurrenceDto[]; timeZone: string }>()
 const emit = defineEmits<{ select: [id: string] }>()
 const indexed = computed(() => {
-  const result = new Map<string, ScheduleOccurrenceDto[]>()
+  const result = new Map<string, CalendarOccurrenceDto[]>()
   for (const item of props.items) {
     if (item.start === null) continue
     const dateKey = occurrenceWallTime(item.start, props.timeZone).date
@@ -19,7 +19,7 @@ const indexed = computed(() => {
   return result
 })
 
-function timeLabel(item: ScheduleOccurrenceDto): string {
+function timeLabel(item: CalendarOccurrenceDto): string {
   if (item.start === null) return ''
   return formatMarkedWallClock(item.start, item.startMark, props.timeZone)
 }

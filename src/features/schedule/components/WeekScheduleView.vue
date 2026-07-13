@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
+import type { CalendarOccurrenceDto } from '../../../contracts/occurrence.contract'
 import { NEmpty } from 'naive-ui'
 import { computed, reactive } from 'vue'
 import { formatOccurrenceRange, occurrenceWallTime } from '../occurrence-time'
@@ -7,7 +7,7 @@ import { logicalDateForInstant, scheduleColor } from '../week-presentation'
 import OccurrenceTooltip from './OccurrenceTooltip.vue'
 
 const props = withDefaults(defineProps<{
-  items: readonly ScheduleOccurrenceDto[]
+  items: readonly CalendarOccurrenceDto[]
   timeZone: string
   startDate?: string
   dayCount?: number
@@ -29,7 +29,7 @@ const days = computed(() => Array.from({ length: props.dayCount }, (_, offset) =
   return date.toISOString().slice(0, 10)
 }))
 
-function occursOn(item: ScheduleOccurrenceDto, day: string): boolean {
+function occursOn(item: CalendarOccurrenceDto, day: string): boolean {
   return item.start !== null && logicalDateForInstant(
     item.start,
     props.timeZone,
@@ -38,10 +38,10 @@ function occursOn(item: ScheduleOccurrenceDto, day: string): boolean {
   ) === day
 }
 
-function timeLabel(item: ScheduleOccurrenceDto): string {
+function timeLabel(item: CalendarOccurrenceDto): string {
   return formatOccurrenceRange(item, props.timeZone)
 }
-function eventStyle(item: ScheduleOccurrenceDto) {
+function eventStyle(item: CalendarOccurrenceDto) {
   if (item.start === null) return {}
   const start = occurrenceWallTime(item.start, props.timeZone)
   const wallMinutes = start.hour * 60 + start.minute
@@ -61,11 +61,11 @@ function eventStyle(item: ScheduleOccurrenceDto) {
   }
 }
 
-function handleDragStart(event: DragEvent, item: ScheduleOccurrenceDto): void {
+function handleDragStart(event: DragEvent, item: CalendarOccurrenceDto): void {
   dragStartOffsets.set(item.id, event.offsetY)
 }
 
-function handleDragEnd(event: DragEvent, item: ScheduleOccurrenceDto): void {
+function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
   const startOffset = dragStartOffsets.get(item.id) ?? event.offsetY
   dragOffsets.set(item.id, (dragOffsets.get(item.id) ?? 0) + event.offsetY - startOffset)
   dragStartOffsets.delete(item.id)

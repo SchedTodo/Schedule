@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { NTooltip } from 'naive-ui'
 
-import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
+import type { CalendarOccurrenceDto } from '../../../contracts/occurrence.contract'
 import {
   formatOccurrenceRange,
   occurrenceWallTime
 } from '../occurrence-time'
 
 const props = defineProps<{
-  item: ScheduleOccurrenceDto
+  item: CalendarOccurrenceDto
   timeZone: string
 }>()
 
@@ -30,7 +30,7 @@ function dateLabel(): string {
     {{ dateLabel() }} {{ formatOccurrenceRange(item, timeZone) }}
     <template #footer>
       <div class="occurrence-comment">
-        {{ item.comment }}
+        {{ item.scheduleComment }}
       </div>
     </template>
   </NTooltip>

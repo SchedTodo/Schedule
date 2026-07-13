@@ -2,6 +2,7 @@ import { and, asc, eq, gte, isNull, lt } from 'drizzle-orm'
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 
 import type {
+  CalendarOccurrenceDto,
   KnownTimeMark,
   OccurrenceRangeQuery,
   ScheduleOccurrenceDto
@@ -66,7 +67,7 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
     }
   }
 
-  async listRange(query: OccurrenceRangeQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>> {
+  async listRange(query: OccurrenceRangeQuery): Promise<AppResult<readonly CalendarOccurrenceDto[]>> {
     try {
       const rows = this.database
         .select({ occurrence: scheduleOccurrences, schedule: schedules })
@@ -96,6 +97,7 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
           startMark: occurrence.startMark,
           endMark: occurrence.endMark,
           comment: occurrence.comment,
+          scheduleComment: schedule.comment,
           done: occurrence.done
         }))
       }

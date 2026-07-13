@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  CalendarOccurrenceDtoSchema,
   OccurrenceRangeQuerySchema,
   ScheduleOccurrenceDtoSchema,
   TodoOccurrenceQuerySchema
@@ -23,6 +24,15 @@ const baseOccurrence = {
 describe('schedule occurrence contracts', () => {
   it('accepts an event occurrence with a concrete start and end', () => {
     expect(ScheduleOccurrenceDtoSchema.safeParse(baseOccurrence).success).toBe(true)
+  })
+
+  it('keeps the schedule comment separate in calendar occurrences', () => {
+    expect(CalendarOccurrenceDtoSchema.safeParse({
+      ...baseOccurrence,
+      comment: '单次时间片备注',
+      scheduleComment: '整个日程备注'
+    }).success).toBe(true)
+    expect(CalendarOccurrenceDtoSchema.safeParse(baseOccurrence).success).toBe(false)
   })
 
   it('accepts a Todo occurrence without a start', () => {
