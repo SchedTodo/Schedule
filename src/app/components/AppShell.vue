@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
-import { NAvatar, NLayout, NLayoutContent, NLayoutFooter, NLayoutHeader } from 'naive-ui'
+import { NAvatar, NLayoutContent, NLayoutFooter, NLayoutHeader } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 
 import IdeaPane from '../../features/ideas/IdeaPane.vue'
@@ -31,10 +31,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
 </script>
 
 <template>
-  <NLayout
-    class="application-layout"
-    position="absolute"
-  >
+  <div class="application-layout">
     <NLayoutHeader
       class="application-header"
       bordered
@@ -70,7 +67,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
 
     <NLayoutContent
       class="application-content"
-      :native-scrollbar="false"
+      :native-scrollbar="true"
     >
       <RouterView />
     </NLayoutContent>
@@ -85,6 +82,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
     >
       © 2023
     </NLayoutFooter>
-  </NLayout>
+  </div>
   <IdeaPane />
 </template>

@@ -1,10 +1,17 @@
+/// <reference types="node" />
+
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
+import { NLayoutContent } from 'naive-ui'
 import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { describe, expect, it, vi } from 'vitest'
 
 import App from '../../src/App.vue'
 import { usePreferencesStore } from '../../src/stores/preferences'
+
+const applicationStyles = readFileSync(resolve('src/assets/styles/main.css'), 'utf8')
 
 const routes = [
   { path: '/', component: { template: '<div>Home page</div>' } },
@@ -41,6 +48,20 @@ describe('App shell', () => {
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/database'))
     window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'ArrowLeft' }))
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/'))
+  })
+
+  it('keeps chrome outside the only scrollable content row', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes })
+    await router.push('/settings')
+    const wrapper = mount(App, { global: { plugins: [createPinia(), router] } })
+
+    expect(wrapper.get('.application-layout').element.tagName).toBe('DIV')
+    expect(wrapper.findComponent(NLayoutContent).props('nativeScrollbar')).toBe(true)
+    expect(applicationStyles).toContain('grid-template-rows: 53px minmax(0, 1fr) 48px')
+    expect(applicationStyles).toContain('.application-content > .n-layout-scroll-container')
+    expect(applicationStyles).toContain('scrollbar-width: none')
+    expect(applicationStyles).toContain('::-webkit-scrollbar')
+    expect(applicationStyles).not.toContain('inset-block: 53px 5vh')
   })
 
   it.each(['light', 'dark'] as const)('keeps navigation contrast in %s mode', async (mode) => {

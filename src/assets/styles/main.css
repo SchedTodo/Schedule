@@ -12,8 +12,10 @@
   html,
   body,
   #app {
+    block-size: 100%;
     min-block-size: 100%;
     margin: 0;
+    overflow: hidden;
   }
 }
 
@@ -37,16 +39,23 @@
   }
 
   [data-testid='app-shell'] {
+    block-size: 100vh;
     min-block-size: 100vh;
+    overflow: hidden;
     background: var(--color-canvas);
     color: var(--color-text);
   }
 
   .application-layout {
-    min-block-size: 100vh;
+    display: grid;
+    grid-template-rows: 53px minmax(0, 1fr) 48px;
+    block-size: 100vh;
+    overflow: hidden;
   }
 
   .application-header {
+    position: relative;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -85,15 +94,23 @@
   }
 
   .application-content {
-    position: absolute;
-    inset-block: 53px 5vh;
-    inset-inline: 0;
+    min-block-size: 0;
+  }
+
+  .application-content > .n-layout-scroll-container {
+    block-size: 100%;
+    overflow: auto;
+    scrollbar-width: none;
+  }
+
+  .application-content > .n-layout-scroll-container::-webkit-scrollbar {
+    display: none;
   }
 
   .application-footer {
-    position: absolute;
-    inset-block-end: 0;
-    block-size: 5vh;
+    position: relative;
+    z-index: 10;
+    block-size: 48px;
     padding-block: 0.75rem;
     background: var(--color-navigation) !important;
     color: var(--color-navigation-text) !important;
