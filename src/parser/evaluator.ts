@@ -104,6 +104,7 @@ function evaluateTime(source: string): EvaluatedTime {
 
 function resolveTimeZone(value: string | undefined, context: EvaluationContext): string {
   if (value === undefined) return context.defaultTimeZone
+  if (value === 'UTC') return value
   if (value.includes('/')) {
     Temporal.ZonedDateTime.from({
       timeZone: value,

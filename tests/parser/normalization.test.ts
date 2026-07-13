@@ -34,4 +34,18 @@ describe('normalizeSchedule', () => {
     expect(explicit.ok && explicit.value.code).toBe('2026/7/13 10:00 America/Chicago;')
     expect(abbreviated.ok && abbreviated.value.code).toBe('2026/7/13 10:00 America/Chicago;')
   })
+
+  it('round trips normalized UTC rules without abbreviation resolution', () => {
+    const utcContext: EvaluationContext = {
+      ...context,
+      defaultTimeZone: 'UTC',
+      resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
+    }
+    const first = normalizeSchedule('2026/7/13 10:00;', utcContext)
+    expect(first.ok && first.value.code).toBe('2026/7/13 10:00 UTC;')
+    if (!first.ok) return
+
+    const second = normalizeSchedule(first.value.code, utcContext)
+    expect(second.ok && second.value.code).toBe(first.value.code)
+  })
 })
