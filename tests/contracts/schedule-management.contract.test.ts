@@ -40,7 +40,11 @@ describe('schedule management contracts', () => {
   })
 
   it('validates logical-day Todo queries and completion updates', () => {
-    expect(TodoOccurrenceQuerySchema.parse({ now: '2026-07-12T02:00:00Z' })).toMatchObject({
+    expect(TodoOccurrenceQuerySchema.parse({
+      now: '2026-07-12T02:00:00Z',
+      timeZone: 'UTC'
+    })).toMatchObject({
+      timeZone: 'UTC',
       logicalDayStartHour: 0,
       logicalDayStartMinute: 0
     })

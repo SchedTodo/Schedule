@@ -89,14 +89,16 @@ export function normalizeScheduleOccurrences(
     return { ok: false, diagnostics: [semanticDiagnostic('INVALID_RECURRENCE', 'Exclusion kind must match recurrence kind')] }
   }
   const exclusionKeys = new Set(expandScheduleSpec(exclusion.value.spec).map(occurrenceKey))
+  const included = recurrenceOccurrences.filter((value) => !exclusionKeys.has(occurrenceKey(value)))
+  const excluded = recurrenceOccurrences
+    .filter((value) => exclusionKeys.has(occurrenceKey(value)))
+    .map((value) => ({ ...value, excluded: true }))
   return {
     ok: true,
     value: {
       recurrenceCode: recurrence.value.code,
       exclusionCode: exclusion.value.code,
-      occurrences: recurrenceOccurrences.map((value) => exclusionKeys.has(occurrenceKey(value))
-        ? { ...value, excluded: true }
-        : value),
+      occurrences: [...included, ...excluded],
       kind
     }
   }
