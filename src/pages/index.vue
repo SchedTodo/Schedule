@@ -124,6 +124,7 @@ void refreshTodos()
           :start-date="todayInTimeZone(appSettings.timeZone)"
           :day-count="appSettings.weekViewDays"
           :start-hour="appSettings.logicalDayStartHour"
+          :start-minute="appSettings.logicalDayStartMinute"
           @select="select"
         />
       </div>

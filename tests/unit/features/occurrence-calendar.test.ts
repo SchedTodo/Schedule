@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import MonthScheduleView from '../../../src/features/schedule/components/MonthScheduleView.vue'
+import OccurrenceTooltip from '../../../src/features/schedule/components/OccurrenceTooltip.vue'
 import WeekScheduleView from '../../../src/features/schedule/components/WeekScheduleView.vue'
 
 const occurrences: readonly ScheduleOccurrenceDto[] = [
@@ -53,6 +54,7 @@ describe('occurrence calendar views', () => {
     ])
     await cards[0]!.trigger('click')
     expect(wrapper.emitted('select')).toEqual([[occurrences[0]!.scheduleId]])
+    expect(wrapper.findAllComponents(OccurrenceTooltip)).toHaveLength(2)
   })
 
   it('groups and labels occurrences in the selected time zone', () => {
@@ -75,5 +77,41 @@ describe('occurrence calendar views', () => {
 
     expect(month.get('[data-occurrence-id]').text()).toContain('07:30')
     expect(week.get('[data-occurrence-id]').text()).toContain('07:30–08:30')
+  })
+
+  it('assigns an all-day event to the prior logical date when the day starts at 06:00', () => {
+    const allDay: ScheduleOccurrenceDto = {
+      ...occurrences[0]!,
+      id: '20000000-0000-4000-8000-000000000010',
+      title: '09-全天值班',
+      start: '2026-07-17T16:00:00Z',
+      end: '2026-07-18T15:59:00Z'
+    }
+    const wrapper = mount(WeekScheduleView, {
+      props: {
+        items: [allDay],
+        timeZone: 'Asia/Shanghai',
+        startDate: '2026-07-17',
+        dayCount: 1,
+        startHour: 6
+      }
+    })
+
+    expect(wrapper.get('[data-occurrence-id]').text()).toContain('09-全天值班')
+  })
+
+  it('uses a translucent schedule color and strengthens it on hover', async () => {
+    const wrapper = mount(WeekScheduleView, {
+      props: { items: [occurrences[0]!], timeZone: 'UTC', startDate: '2026-07-13', dayCount: 1 }
+    })
+    const card = wrapper.get('[data-occurrence-id]')
+
+    expect(card.attributes('style')).toMatch(/background-color: rgba\(\d+, \d+, \d+, 0\.396\)/)
+    expect(card.attributes('style')).toMatch(/border: 1\.5px solid rgb\(\d+, \d+, \d+\)/)
+    await card.trigger('mouseenter')
+    expect(card.attributes('style')).toMatch(/background-color: rgba\(\d+, \d+, \d+, 0\.565\)/)
+    expect(card.attributes('style')).toContain('z-index: 999')
+    await card.trigger('mouseleave')
+    expect(card.attributes('style')).not.toContain('z-index: 999')
   })
 })
