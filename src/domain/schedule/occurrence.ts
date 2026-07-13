@@ -63,11 +63,65 @@ function matchesFrequency(
   }
 }
 
+function selectPositions(
+  values: readonly Temporal.PlainDate[],
+  positions: readonly number[] | undefined
+): readonly Temporal.PlainDate[] {
+  if (positions === undefined) return values
+  const selected = new Map<string, Temporal.PlainDate>()
+  for (const position of positions) {
+    const index = position > 0 ? position - 1 : values.length + position
+    const value = values[index]
+    if (value !== undefined) selected.set(value.toString(), value)
+  }
+  return [...selected.values()].sort(Temporal.PlainDate.compare)
+}
+
+function monthlyDates(
+  statement: EvaluatedStatement,
+  start: Temporal.PlainDate,
+  end: Temporal.PlainDate
+): readonly Temporal.PlainDate[] {
+  const values: Temporal.PlainDate[] = []
+  let month = start.with({ day: 1 })
+  const lastMonth = end.with({ day: 1 })
+
+  while (Temporal.PlainDate.compare(month, lastMonth) <= 0) {
+    const monthOffset = (month.year - start.year) * 12 + month.month - start.month
+    if (monthOffset % statement.frequency.interval === 0) {
+      const candidates: Temporal.PlainDate[] = []
+      for (let day = 1; day <= month.daysInMonth; day += 1) {
+        const candidate = month.with({ day })
+        if (matchesBy(candidate, statement.by)) candidates.push(candidate)
+      }
+      for (const candidate of selectPositions(candidates, statement.by.setpos)) {
+        if (
+          Temporal.PlainDate.compare(candidate, start) >= 0 &&
+          Temporal.PlainDate.compare(candidate, end) <= 0
+        ) {
+          values.push(candidate)
+          if (
+            statement.frequency.count !== undefined &&
+            values.length >= statement.frequency.count
+          ) {
+            return values
+          }
+        }
+      }
+    }
+    month = month.add({ months: 1 })
+  }
+  return values
+}
+
 function dates(statement: EvaluatedStatement): readonly Temporal.PlainDate[] {
   const start = Temporal.PlainDate.from(statement.startDate)
   if (statement.endDate === undefined) return [start]
 
   const end = Temporal.PlainDate.from(statement.endDate)
+  if (statement.frequency.unit === 'monthly' && statement.by.setpos !== undefined) {
+    return monthlyDates(statement, start, end)
+  }
   const values: Temporal.PlainDate[] = []
   let current = start
   while (Temporal.PlainDate.compare(current, end) <= 0) {

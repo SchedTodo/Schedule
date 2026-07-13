@@ -60,6 +60,28 @@ describe('legacy-compatible occurrence expansion', () => {
     ])
   })
 
+  it('applies setpos after collecting each monthly weekday candidate set', () => {
+    const values = expand(
+      '2026/7/1-8/31 17:00-18:00 monthly by[day[1,2,3,4,5],setpos[-1]];'
+    )
+
+    expect(values.map(({ start }) => start)).toEqual([
+      '2026-07-31T09:00:00Z',
+      '2026-08-31T09:00:00Z'
+    ])
+  })
+
+  it('supports positive setpos values without duplicating candidates', () => {
+    const values = expand(
+      '2026/7/1-8/31 17:00-18:00 monthly by[day[1,2,3,4,5],setpos[1,1]];'
+    )
+
+    expect(values.map(({ start }) => start)).toEqual([
+      '2026-07-01T09:00:00Z',
+      '2026-08-03T09:00:00Z'
+    ])
+  })
+
   it('marks recurrence/exclusion intersections as excluded', () => {
     const values = expand('2026/7/13-15 10:00 daily;', '2026/7/14 10:00;')
     expect(values.map(({ end, excluded }) => [end, excluded])).toEqual([
