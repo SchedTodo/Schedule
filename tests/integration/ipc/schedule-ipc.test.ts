@@ -29,6 +29,7 @@ const occurrence = {
   startMark: '11' as const,
   endMark: '11' as const,
   comment: '',
+  scheduleComment: '',
   done: false
 }
 

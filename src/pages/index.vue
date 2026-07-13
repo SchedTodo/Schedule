@@ -139,6 +139,7 @@ void refreshTodos()
 <style scoped>
 .home-workspace { block-size: 100%; }
 .schedule-workspace { block-size: 100%; overflow: hidden; }
+.schedule-workspace :deep(.n-scrollbar-content) { block-size: 100%; }
 .workspace-content { display: flex; flex-direction: column; block-size: 100%; padding: 2vh 3vw; overflow: hidden; }
 .home-toolbar { display: flex; flex: none; gap: 1vw; padding-block-end: 1vh; }
 </style>
