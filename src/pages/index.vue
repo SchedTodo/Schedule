@@ -24,6 +24,10 @@ const preferences = usePreferencesStore()
 const list = useScheduleList(gateway, { offset: 0, limit: 200 })
 const mutations = useScheduleMutations(gateway, list.refresh)
 const view = ref(preferences.calendarMode)
+const activeButtonStyle = {
+  backgroundColor: 'rgba(0, 14, 28, 0.1)',
+  boxShadow: '1px 1px 1px 1px rgba(0, 14, 28, 0.6) inset'
+}
 const sidebarCollapsed = ref(false)
 const todos = ref<readonly ScheduleOccurrenceDto[]>([])
 const appSettings = ref({ ...defaultSettings })
@@ -93,14 +97,14 @@ void refreshTodos()
           <NButtonGroup class="segmented-control">
             <NButton
               data-view="month"
-              :class="{ active: view === 'month' }"
+              :style="view === 'month' ? activeButtonStyle : undefined"
               @click="view = 'month'"
             >
               month
             </NButton>
             <NButton
               data-view="week"
-              :class="{ active: view === 'week' }"
+              :style="view === 'week' ? activeButtonStyle : undefined"
               @click="view = 'week'"
             >
               week

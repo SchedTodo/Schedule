@@ -64,8 +64,13 @@ describe('home workspace', () => {
     expect(wrapper.get('[data-testid="month-view"]')).toBeTruthy()
     expect(wrapper.find('[aria-label="Sync"]').exists()).toBe(false)
     expect(wrapper.get('.workspace-content').classes()).toContain('workspace-content')
+    expect(wrapper.get('button[data-view="month"]').attributes('style'))
+      .toContain('background-color: rgba(0, 14, 28, 0.1)')
     await wrapper.get('button[data-view="week"]').trigger('click')
     expect(wrapper.get('[data-testid="week-view"]')).toBeTruthy()
+    const weekStyle = wrapper.get('button[data-view="week"]').attributes('style')
+    expect(weekStyle).toContain('background-color: rgba(0, 14, 28, 0.1)')
+    expect(weekStyle).toContain('box-shadow: 1px 1px 1px 1px rgba(0, 14, 28, 0.6) inset')
   })
 
   it('completes individual Todo occurrences and filters done rows', async () => {

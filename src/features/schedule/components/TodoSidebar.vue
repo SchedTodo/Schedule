@@ -26,6 +26,10 @@ const emit = defineEmits<{
 }>()
 const hideExpired = ref(false)
 const hideDone = ref(false)
+const activeButtonStyle = {
+  backgroundColor: 'rgba(0, 14, 28, 0.1)',
+  boxShadow: '1px 1px 1px 1px rgba(0, 14, 28, 0.6) inset'
+}
 const nowInstant = computed(() => props.now === undefined
   ? Temporal.Now.instant()
   : Temporal.Instant.from(props.now))
@@ -105,14 +109,14 @@ const columns: DataTableColumns<ScheduleOccurrenceDto> = [
     <NButtonGroup class="todo-toolbar segmented-control">
       <NButton
         data-filter="expired"
-        :class="{ active: hideExpired }"
+        :style="hideExpired ? activeButtonStyle : undefined"
         @click="hideExpired = !hideExpired"
       >
         Not Expired
       </NButton>
       <NButton
         data-filter="done"
-        :class="{ active: hideDone }"
+        :style="hideDone ? activeButtonStyle : undefined"
         @click="hideDone = !hideDone"
       >
         Not Done

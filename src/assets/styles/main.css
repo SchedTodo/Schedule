@@ -137,8 +137,4 @@
     font-size: 4vh;
   }
 
-  .segmented-control .n-button.active {
-    background: rgb(0 14 28 / 10%);
-    box-shadow: 1px 1px 1px 1px rgb(0 14 28 / 60%) inset;
-  }
 }

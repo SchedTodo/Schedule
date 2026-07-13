@@ -96,8 +96,11 @@ describe('Todo sidebar', () => {
     await wrapper.get('[data-filter="expired"]').trigger('click')
     await wrapper.get('[data-filter="done"]').trigger('click')
 
-    expect(wrapper.get('[data-filter="expired"]').classes()).toContain('active')
-    expect(wrapper.get('[data-filter="done"]').classes()).toContain('active')
+    for (const selector of ['[data-filter="expired"]', '[data-filter="done"]']) {
+      const style = wrapper.get(selector).attributes('style')
+      expect(style).toContain('background-color: rgba(0, 14, 28, 0.1)')
+      expect(style).toContain('box-shadow: 1px 1px 1px 1px rgba(0, 14, 28, 0.6) inset')
+    }
     expect(wrapper.text()).not.toContain('Expired task')
     expect(wrapper.text()).not.toContain('Completed task')
   })

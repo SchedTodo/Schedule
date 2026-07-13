@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 const currentUiModules = import.meta.glob(
   [
     '../../src/App.vue',
+    '../../src/assets/styles/main.css',
     '../../src/app/components/*.vue',
     '../../src/features/ideas/*.vue',
     '../../src/features/schedule/components/*.vue',
@@ -31,5 +32,12 @@ describe('current UI source conventions', () => {
       .map(([path]) => path)
 
     expect(violations).toEqual([])
+  })
+
+  it('does not depend on a global active class for grouped button state', () => {
+    const globalStyles = Object.entries(currentUiModules)
+      .find(([path]) => path.endsWith('/src/assets/styles/main.css'))?.[1]
+
+    expect(globalStyles).not.toContain('.segmented-control .n-button.active')
   })
 })
