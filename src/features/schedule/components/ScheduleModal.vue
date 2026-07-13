@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import type { FormInst, FormRules } from 'naive-ui'
+import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { NButton, NCard, NForm, NFormItem, NInput, NModal } from 'naive-ui'
 
 import type { CreateScheduleInput } from '../../../contracts/schedule.contract'
@@ -10,23 +11,29 @@ withDefaults(defineProps<{ loading?: boolean; error?: string | null }>(), {
 })
 const emit = defineEmits<{ submit: [input: CreateScheduleInput] }>()
 const show = ref(false)
-const name = ref('')
-const recurrenceCode = ref('')
-const exclusionCode = ref('')
-const comment = ref('')
-const validation = ref('')
+const formRef = ref<FormInst | null>(null)
+const model = reactive({
+  title: '',
+  recurrenceCode: '',
+  exclusionCode: '',
+  comment: ''
+})
+const rules: FormRules = {
+  title: [{ required: true, message: 'Please input name', trigger: ['input', 'blur'] }],
+  recurrenceCode: [{ required: true, message: 'Please input rTime', trigger: ['input', 'blur'] }]
+}
 
-function submit() {
-  if (!name.value.trim() || !recurrenceCode.value.trim()) {
-    validation.value = 'Please input name and time'
+async function submit() {
+  try {
+    await formRef.value?.validate()
+  } catch {
     return
   }
-  validation.value = ''
   emit('submit', {
-    title: name.value.trim(),
-    recurrenceCode: recurrenceCode.value,
-    exclusionCode: exclusionCode.value,
-    comment: comment.value
+    title: model.title.trim(),
+    recurrenceCode: model.recurrenceCode,
+    exclusionCode: model.exclusionCode,
+    comment: model.comment
   })
   show.value = false
 }
@@ -35,7 +42,7 @@ function handleKeyboard(event: KeyboardEvent) {
   if (!event.ctrlKey) return
   if (!show.value && event.key === 'ArrowUp') show.value = true
   else if (show.value && event.key === 'ArrowDown') show.value = false
-  else if (show.value && event.key === 'Enter') submit()
+  else if (show.value && event.key === 'Enter') void submit()
 }
 
 onMounted(() => window.addEventListener('keydown', handleKeyboard))
@@ -57,53 +64,63 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
       role="dialog"
     >
       <NForm
+        ref="formRef"
+        :model="model"
+        :rules="rules"
         label-placement="left"
         label-align="right"
         label-width="auto"
         size="large"
       >
-        <NFormItem label="Name">
+        <NFormItem
+          label="Name"
+          path="title"
+        >
           <NInput
-            v-model:value="name"
+            v-model:value="model.title"
             :input-props="{ 'aria-label': 'Name' }"
           />
         </NFormItem>
-        <NFormItem label="rTime">
+        <NFormItem
+          label="rTime"
+          path="recurrenceCode"
+        >
           <NInput
-            v-model:value="recurrenceCode"
+            v-model:value="model.recurrenceCode"
             type="textarea"
             :input-props="{ 'aria-label': 'rTime' }"
             :autosize="{ minRows: 4, maxRows: 8 }"
           />
         </NFormItem>
-        <NFormItem label="exTime">
+        <NFormItem
+          label="exTime"
+          path="exclusionCode"
+        >
           <NInput
-            v-model:value="exclusionCode"
+            v-model:value="model.exclusionCode"
             type="textarea"
             :input-props="{ 'aria-label': 'exTime' }"
             :autosize="{ minRows: 4, maxRows: 8 }"
           />
         </NFormItem>
-        <NFormItem label="Comment">
+        <NFormItem
+          label="Comment"
+          path="comment"
+        >
           <NInput
-            v-model:value="comment"
+            v-model:value="model.comment"
             type="textarea"
             :input-props="{ 'aria-label': 'Comment' }"
             :autosize="{ minRows: 3, maxRows: 5 }"
           />
         </NFormItem>
       </NForm>
-      <p
-        v-if="validation"
-        role="alert"
-      >
-        {{ validation }}
-      </p>
       <template #footer>
         <NButton
           type="primary"
+          attr-type="button"
           :loading="loading"
-          @click="submit"
+          @click="void submit()"
         >
           Confirm
         </NButton>

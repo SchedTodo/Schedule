@@ -142,4 +142,21 @@ describe('home workspace', () => {
       }
     ])
   })
+
+  it('marks Name and rTime required and shows field errors before submitting', async () => {
+    const wrapper = mount(ScheduleModal, {
+      global: { stubs: { teleport: true } }
+    })
+
+    await wrapper.get('button').trigger('click')
+    await wrapper.get('[role="dialog"] button').trigger('click')
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('Please input name')
+      expect(wrapper.text()).toContain('Please input rTime')
+    })
+
+    expect(wrapper.findAll('.n-input--error-status')).toHaveLength(2)
+    expect(wrapper.findAll('.n-form-item-label__asterisk')).toHaveLength(2)
+    expect(wrapper.emitted('submit')).toBeUndefined()
+  })
 })
