@@ -38,6 +38,8 @@ describe('occurrence calendar views', () => {
   it('renders every occurrence from one recurring schedule in month view', () => {
     const wrapper = mount(MonthScheduleView, { props: { items: occurrences, timeZone: 'UTC' } })
     expect(wrapper.findAll('[data-occurrence-id]')).toHaveLength(2)
+    expect(wrapper.get('.schedule-name').text()).toBe('Recurring review')
+    expect(wrapper.get('.schedule-time').text()).toBe('10:00')
   })
 
   it('uses occurrence IDs for week cards and selects the owning schedule', async () => {

@@ -1,4 +1,8 @@
-import type { OccurrenceRangeQuery } from '../../contracts/occurrence.contract'
+import type {
+  KnownTimeMark,
+  OccurrenceRangeQuery,
+  ScheduleOccurrenceDto
+} from '../../contracts/occurrence.contract'
 import { Temporal } from '../../domain/shared/temporal'
 
 export interface OccurrenceWallTime {
@@ -53,4 +57,22 @@ export function formatInstant(instant: string, timeZone: string): string {
 
 export function formatWallClock(value: OccurrenceWallTime): string {
   return `${String(value.hour).padStart(2, '0')}:${String(value.minute).padStart(2, '0')}`
+}
+
+export function formatMarkedWallClock(
+  instant: string,
+  mark: KnownTimeMark,
+  timeZone: string
+): string {
+  const value = occurrenceWallTime(instant, timeZone)
+  const [hour, minute] = formatWallClock(value).split(':')
+  return `${mark[0] === '1' ? hour : '?'}:${mark[1] === '1' ? minute : '?'}`
+}
+
+export function formatOccurrenceRange(
+  item: ScheduleOccurrenceDto,
+  timeZone: string
+): string {
+  if (item.start === null) return formatMarkedWallClock(item.end, item.endMark, timeZone)
+  return `${formatMarkedWallClock(item.start, item.startMark, timeZone)}–${formatMarkedWallClock(item.end, item.endMark, timeZone)}`
 }

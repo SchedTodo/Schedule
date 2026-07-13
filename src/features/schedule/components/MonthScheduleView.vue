@@ -2,7 +2,8 @@
 import { computed } from 'vue'
 import { NCalendar } from 'naive-ui'
 import type { ScheduleOccurrenceDto } from '../../../contracts/occurrence.contract'
-import { formatWallClock, occurrenceWallTime } from '../occurrence-time'
+import { formatMarkedWallClock, occurrenceWallTime } from '../occurrence-time'
+import OccurrenceTooltip from './OccurrenceTooltip.vue'
 
 const props = defineProps<{ items: readonly ScheduleOccurrenceDto[]; timeZone: string }>()
 const emit = defineEmits<{ select: [id: string] }>()
@@ -20,9 +21,7 @@ const indexed = computed(() => {
 
 function timeLabel(item: ScheduleOccurrenceDto): string {
   if (item.start === null) return ''
-  const value = occurrenceWallTime(item.start, props.timeZone)
-  const [hour, minute] = formatWallClock(value).split(':')
-  return `${item.startMark[0] === '1' ? hour : '?'}:${item.startMark[1] === '1' ? minute : '?'}`
+  return formatMarkedWallClock(item.start, item.startMark, props.timeZone)
 }
 </script>
 
@@ -32,22 +31,30 @@ function timeLabel(item: ScheduleOccurrenceDto): string {
     class="month-view"
   >
     <NCalendar #="{ year, month, date }">
-      <button
+      <OccurrenceTooltip
         v-for="item in indexed.get(`${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`)"
         :key="item.id"
-        :data-occurrence-id="item.id"
-        class="schedule-card"
-        @click="emit('select', item.scheduleId)"
+        :item="item"
+        :time-zone="timeZone"
       >
-        <span>{{ item.title }}</span>
-        <span>{{ timeLabel(item) }}</span>
-      </button>
+        <button
+          :data-occurrence-id="item.id"
+          class="schedule-card"
+          @click="emit('select', item.scheduleId)"
+        >
+          <span class="schedule-name">{{ item.title }}</span>
+          <span class="schedule-time">{{ timeLabel(item) }}</span>
+        </button>
+      </OccurrenceTooltip>
     </NCalendar>
   </div>
 </template>
 
 <style scoped>
-.month-view { block-size: calc(100% - 3rem); min-block-size: 70vh; }
-.schedule-card { display: flex; justify-content: space-between; inline-size: 100%; padding: 4px; border: 1.5px solid #eee; border-radius: 4px; background: var(--color-surface); color: inherit; cursor: pointer; }
-.schedule-card:hover { border-color: #18a058; }
+.month-view { flex: 1; block-size: 100%; min-block-size: 0; overflow: hidden; }
+.month-view :deep(.n-calendar) { block-size: 100%; }
+.schedule-card { display: flex; flex-wrap: nowrap; justify-content: space-between; inline-size: 100%; padding: 4px; overflow: hidden; border: 1.5px solid #eee; border-radius: 4px; box-shadow: 0 0 4px #eee; background: var(--color-surface); color: inherit; cursor: pointer; }
+.schedule-name { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.schedule-time { flex: none; white-space: nowrap; }
+.schedule-card:hover { inline-size: auto; border-color: #18a058; background: var(--color-surface); transition: all 0.2s ease-in-out; }
 </style>

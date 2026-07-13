@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import { Temporal } from '@js-temporal/polyfill'
 
-import { calendarRange, occurrenceWallTime } from '../../../src/features/schedule/occurrence-time'
+import {
+  calendarRange,
+  formatMarkedWallClock,
+  occurrenceWallTime
+} from '../../../src/features/schedule/occurrence-time'
 
 describe('occurrenceWallTime', () => {
   it('converts one UTC instant into the selected wall-clock time', () => {
@@ -23,5 +27,9 @@ describe('occurrenceWallTime', () => {
       end: '2026-09-07T16:00:00Z',
       limit: 5000
     })
+  })
+
+  it('preserves unknown minute marks in wall-clock labels', () => {
+    expect(formatMarkedWallClock('2026-07-15T02:00:00Z', '10', 'Asia/Shanghai')).toBe('10:?')
   })
 })
