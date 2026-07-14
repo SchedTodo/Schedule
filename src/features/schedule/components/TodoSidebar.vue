@@ -27,8 +27,8 @@ const emit = defineEmits<{
 const hideExpired = ref(false)
 const hideDone = ref(false)
 const activeButtonStyle = {
-  backgroundColor: 'rgba(0, 14, 28, 0.1)',
-  boxShadow: '1px 1px 1px 1px rgba(0, 14, 28, 0.6) inset'
+  backgroundColor: 'var(--color-control-pressed-background)',
+  boxShadow: 'var(--shadow-control-pressed)'
 }
 const nowInstant = computed(() => props.now === undefined
   ? Temporal.Now.instant()

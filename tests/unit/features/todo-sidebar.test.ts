@@ -98,8 +98,8 @@ describe('Todo sidebar', () => {
 
     for (const selector of ['[data-filter="expired"]', '[data-filter="done"]']) {
       const style = wrapper.get(selector).attributes('style')
-      expect(style).toContain('background-color: rgba(0, 14, 28, 0.1)')
-      expect(style).toContain('box-shadow: 1px 1px 1px 1px rgba(0, 14, 28, 0.6) inset')
+      expect(style).toContain('background-color: var(--color-control-pressed-background)')
+      expect(style).toContain('box-shadow: var(--shadow-control-pressed)')
     }
     expect(wrapper.text()).not.toContain('Expired task')
     expect(wrapper.text()).not.toContain('Completed task')

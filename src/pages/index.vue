@@ -24,8 +24,8 @@ const runtimeStore = useRuntimeStore()
 const list = useScheduleList(gateway, { offset: 0, limit: 200 })
 const mutations = useScheduleMutations(gateway, list.refresh)
 const activeButtonStyle = {
-  backgroundColor: 'rgba(0, 14, 28, 0.1)',
-  boxShadow: '1px 1px 1px 1px rgba(0, 14, 28, 0.6) inset'
+  backgroundColor: 'var(--color-control-pressed-background)',
+  boxShadow: 'var(--shadow-control-pressed)'
 }
 const sidebarCollapsed = ref(false)
 const todos = ref<readonly ScheduleOccurrenceDto[]>([])

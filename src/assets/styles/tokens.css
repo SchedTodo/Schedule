@@ -10,6 +10,8 @@
     --color-navigation: #001428;
     --color-navigation-text: rgb(255 255 255 / 82%);
     --color-navigation-active: #ffffff;
+    --color-control-pressed-background: rgb(0 14 28 / 10%);
+    --shadow-control-pressed: inset 1px 1px 1px 1px rgb(0 14 28 / 60%);
     --radius-small: 0.5rem;
     --radius-medium: 0.875rem;
     --space-1: 0.25rem;
@@ -28,5 +30,9 @@
     --color-accent: #60a5fa;
     --color-danger: #f87171;
     --color-border: #374151;
+    --color-control-pressed-background: rgb(255 255 255 / 12%);
+    --shadow-control-pressed:
+      inset 2px 2px 3px rgb(0 0 0 / 75%),
+      inset -1px -1px 2px rgb(255 255 255 / 25%);
   }
 }
