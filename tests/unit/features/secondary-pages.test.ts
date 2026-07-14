@@ -28,8 +28,8 @@ function routerAt(path: string) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/database', component: DatabasePage },
-      { path: '/schedule/:id', component: ScheduleDetailPage },
+      { path: '/database', name: 'database', component: DatabasePage },
+      { path: '/schedule/:id', name: 'schedule-detail', component: ScheduleDetailPage },
       { path: '/settings', component: SettingsPage },
       { path: '/help', component: HelpPage }
     ]
@@ -65,6 +65,27 @@ describe('secondary pages', () => {
     expect(wrapper.text()).toContain('Info')
     expect(wrapper.text()).toContain('Times')
     expect(wrapper.text()).toContain('Review notes')
+  })
+
+  it('opens deleted schedules from Database for read-only detail', async () => {
+    const platform = createInMemoryGateway([schedule])
+    await platform.schedules.setDeleted({ id: schedule.id, deleted: true })
+    const router = await routerAt('/database')
+    const wrapper = mount(DatabasePage, {
+      global: {
+        plugins: [router],
+        provide: { [platformGatewayKey as symbol]: platform }
+      }
+    })
+
+    wrapper.findAllComponents(NSelect)[2]!.vm.$emit('update:value', 'deleted')
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Weekly review'))
+    await wrapper.get('tbody tr').trigger('click')
+
+    await vi.waitFor(() => expect(router.currentRoute.value).toMatchObject({
+        name: 'schedule-detail',
+        params: { id: schedule.id }
+      }))
   })
 
   it('restores complete settings choices and aligned controls', async () => {

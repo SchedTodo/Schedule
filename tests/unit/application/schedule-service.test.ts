@@ -199,4 +199,29 @@ describe('ScheduleService', () => {
     expect(repository.findById).toHaveBeenCalledOnce()
     expect(repository.list).toHaveBeenCalledWith({ offset: 0, limit: 50 })
   })
+
+  it('rejects updates and starring for deleted schedules', async () => {
+    const deleted = {
+      id: '10000000-0000-4000-8000-000000000001', kind: 'event' as const,
+      title: 'Review', recurrenceCode: '2026/7/13 10:00-11:00 UTC;', exclusionCode: '',
+      comment: '', starred: false, deleted: true,
+      createdAt: '2026-07-11T08:00:00Z', updatedAt: '2026-07-11T08:00:00Z'
+    }
+    const repository = repositoryWith({
+      findById: vi.fn(async () => ({ ok: true as const, value: deleted }))
+    })
+    const service = new ScheduleService(repository, {
+      clock: new FixedClock('2026-07-12T08:00:00Z'),
+      idGenerator: { next: () => '20000000-0000-4000-8000-000000000001' }
+    })
+
+    await expect(service.update({
+      id: deleted.id, title: deleted.title, recurrenceCode: deleted.recurrenceCode,
+      exclusionCode: '', comment: ''
+    })).resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
+    await expect(service.setStarred({ id: deleted.id, starred: true }))
+      .resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
+    expect(repository.saveWithOccurrences).not.toHaveBeenCalled()
+    expect(repository.setStarred).not.toHaveBeenCalled()
+  })
 })

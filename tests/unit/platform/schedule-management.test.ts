@@ -40,7 +40,10 @@ describe('in-memory schedule management', () => {
     const { gateway, schedule } = await createEvent()
     await gateway.schedules.setStarred({ id: schedule.id, starred: true })
     await gateway.schedules.setDeleted({ id: schedule.id, deleted: true })
-    await expect(gateway.schedules.findById(schedule.id)).resolves.toEqual({ ok: true, value: null })
+    await expect(gateway.schedules.findById(schedule.id)).resolves.toEqual({
+      ok: true,
+      value: expect.objectContaining({ id: schedule.id, deleted: true })
+    })
     const deleted = await gateway.schedules.searchPage({ deleted: true, page: 1, pageSize: 20, search: '' })
     expect(deleted.ok && deleted.value.total).toBe(1)
     await gateway.schedules.setDeleted({ id: schedule.id, deleted: false })

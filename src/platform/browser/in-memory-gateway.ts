@@ -112,9 +112,9 @@ export function createInMemoryGateway(
         const schedule = schedules.find((value) => value.id === id)
         return {
           ok: true,
-          value: schedule === undefined || deletedScheduleIds.has(id)
+          value: schedule === undefined
             ? null
-            : { ...schedule, deleted: false }
+            : { ...schedule, deleted: deletedScheduleIds.has(id) }
         }
       },
 

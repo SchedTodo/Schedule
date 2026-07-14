@@ -112,6 +112,9 @@ export class ScheduleService implements ScheduleGateway {
     const found = await this.repository.findById(parsed.data.id)
     if (!found.ok) return found
     if (found.value === null) return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: '日程不存在' } }
+    if (found.value.deleted) {
+      return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能修改已删除的日程' } }
+    }
     let kind: 'event' | 'todo' = parsed.data.recurrenceCode === '' ? 'todo' : found.value.kind
     let normalized: NormalizedScheduleOccurrences | undefined
     if (parsed.data.recurrenceCode !== '' && this.dependencies.defaultTimeZone !== undefined && this.dependencies.weekStartsOn !== undefined && this.dependencies.resolveTimeZoneAbbreviation !== undefined) {
@@ -160,6 +163,12 @@ export class ScheduleService implements ScheduleGateway {
   async setStarred(input: Parameters<ScheduleGateway['setStarred']>[0]) {
     const parsed = SetScheduleStarredInputSchema.safeParse(input)
     if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '收藏状态无效' } }
+    const found = await this.repository.findById(parsed.data.id)
+    if (!found.ok) return found
+    if (found.value === null) return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: '日程不存在' } }
+    if (found.value.deleted) {
+      return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能收藏已删除的日程' } }
+    }
     return this.repository.setStarred(parsed.data.id, parsed.data.starred, this.dependencies.clock.now().toString())
   }
 

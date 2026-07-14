@@ -15,6 +15,7 @@ describe('Drizzle schedule management', () => {
     sqlite = new Database(':memory:')
     sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/migrations/0001_v2_schema.sql', import.meta.url), 'utf8'))
     sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/migrations/0002_occurrence.sql', import.meta.url), 'utf8'))
+    sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/migrations/0004_concentration_record.sql', import.meta.url), 'utf8'))
     repository = new DrizzleScheduleRepository(drizzle(sqlite))
   })
   afterEach(() => sqlite.close())
@@ -26,15 +27,37 @@ describe('Drizzle schedule management', () => {
       comment: '', starred: false, createdAt: '2026-07-11T08:00:00Z', updatedAt: '2026-07-11T08:00:00Z'
     }
     await repository.save(schedule)
+    sqlite.prepare(`INSERT INTO schedule_occurrence
+      (id, schedule_id, excluded, start, end, start_mark, end_mark, comment, done, created_at, updated_at)
+      VALUES (?, ?, 0, ?, ?, '11', '11', '', 0, ?, ?)`)
+      .run('20000000-0000-4000-8000-000000000001', schedule.id, 1, 2, 1, 1)
+    sqlite.prepare(`INSERT INTO concentration_record (id, schedule_id, start, end)
+      VALUES (?, ?, ?, ?)`)
+      .run('30000000-0000-4000-8000-000000000001', schedule.id, 1, 2)
     await repository.setStarred(schedule.id, true, '2026-07-11T09:00:00Z')
     let page = await repository.searchPage({ search: '', starred: true, deleted: false, page: 1, pageSize: 20 })
     expect(page.ok && page.value.items[0]).toMatchObject({ starred: true, deleted: false })
 
     await repository.setDeleted(schedule.id, true, '2026-07-11T10:00:00Z')
+    await expect(repository.findById(schedule.id)).resolves.toMatchObject({
+      ok: true,
+      value: { id: schedule.id, deleted: true }
+    })
+    expect(sqlite.prepare('SELECT deleted_at FROM schedule_occurrence').get())
+      .toEqual({ deleted_at: Date.parse('2026-07-11T10:00:00Z') })
+    expect(sqlite.prepare('SELECT deleted_at FROM concentration_record').get())
+      .toEqual({ deleted_at: Date.parse('2026-07-11T10:00:00Z') })
     page = await repository.searchPage({ search: '', deleted: true, page: 1, pageSize: 20 })
     expect(page.ok && page.value.total).toBe(1)
     await repository.setDeleted(schedule.id, false, '2026-07-11T11:00:00Z')
-    await expect(repository.findById(schedule.id)).resolves.toMatchObject({ ok: true, value: { id: schedule.id } })
+    await expect(repository.findById(schedule.id)).resolves.toMatchObject({
+      ok: true,
+      value: { id: schedule.id, deleted: false }
+    })
+    expect(sqlite.prepare('SELECT deleted_at FROM schedule_occurrence').get())
+      .toEqual({ deleted_at: null })
+    expect(sqlite.prepare('SELECT deleted_at FROM concentration_record').get())
+      .toEqual({ deleted_at: null })
   })
 
   it('restores desired rows and soft deletes occurrences no longer generated', async () => {

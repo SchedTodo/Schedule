@@ -139,9 +139,7 @@ watch(
             <tr
               v-for="item in items"
               :key="item.id"
-              @click="
-                !item.deleted && router.push({ name: 'schedule-detail', params: { id: item.id } })
-              "
+              @click="router.push({ name: 'schedule-detail', params: { id: item.id } })"
             >
               <td>{{ item.id }}</td>
               <td>{{ item.title }}</td>

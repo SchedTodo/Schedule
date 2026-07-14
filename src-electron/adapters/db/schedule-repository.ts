@@ -11,7 +11,7 @@ import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
 import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import type { ScheduleRepository } from '../../../src/platform/ports'
 import { scheduleDtoToRow, scheduleRowToDetailDto, scheduleRowToDto } from './schedule-mapper'
-import { databaseSchema, scheduleOccurrences, schedules } from './schema'
+import { concentrationRecords, databaseSchema, scheduleOccurrences, schedules } from './schema'
 
 type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
 
@@ -128,7 +128,7 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
       const row = this.database
         .select()
         .from(schedules)
-        .where(and(eq(schedules.id, id), isNull(schedules.deletedAt)))
+        .where(eq(schedules.id, id))
         .get()
       return { ok: true, value: row === undefined ? null : scheduleRowToDetailDto(row) }
     } catch (error) {
@@ -194,6 +194,9 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
         transaction.update(scheduleOccurrences)
           .set({ deletedAt: deleted ? timestamp : null, updatedAt: timestamp })
           .where(eq(scheduleOccurrences.scheduleId, id)).run()
+        transaction.update(concentrationRecords)
+          .set({ deletedAt: deleted ? timestamp : null })
+          .where(eq(concentrationRecords.scheduleId, id)).run()
         return result.changes
       })
       return changed === 0
