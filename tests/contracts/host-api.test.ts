@@ -47,7 +47,7 @@ describe('createHostGateway', () => {
     const searchSchedules = vi.fn(async () => ({ ok: true as const, value: { items: [], total: 0 } }))
     const listScheduleOccurrences = vi.fn(async () => ({ ok: true as const, value: [] }))
     const updateOccurrenceComment = vi.fn()
-    const excludeOccurrence = vi.fn()
+    const excludeOccurrences = vi.fn()
     const listTodos = vi.fn(async () => ({ ok: true as const, value: [] }))
     const setOccurrenceDone = vi.fn()
     const getSettings = vi.fn()
@@ -66,7 +66,7 @@ describe('createHostGateway', () => {
       listOccurrences,
       listScheduleOccurrences,
       updateOccurrenceComment,
-      excludeOccurrence,
+      excludeOccurrences,
       listTodos,
       setOccurrenceDone,
       getSettings,

@@ -69,6 +69,9 @@ export const UpdateOccurrenceCommentInputSchema = z.object({
   comment: z.string().max(20_000)
 }).strict()
 export const ExcludeOccurrenceInputSchema = z.object({ id: z.uuid() }).strict()
+export const ExcludeOccurrencesInputSchema = z.object({
+  ids: z.array(z.uuid()).min(1).max(200)
+}).strict()
 export const TodoOccurrenceQuerySchema = z.object({
   now: z.iso.datetime({ offset: true }),
   timeZone: z.string().min(1).max(100),
@@ -86,5 +89,6 @@ export type OccurrenceRangeQuery = z.infer<typeof OccurrenceRangeQuerySchema>
 export type ScheduleOccurrenceListInput = z.infer<typeof ScheduleOccurrenceListInputSchema>
 export type UpdateOccurrenceCommentInput = z.infer<typeof UpdateOccurrenceCommentInputSchema>
 export type ExcludeOccurrenceInput = z.infer<typeof ExcludeOccurrenceInputSchema>
+export type ExcludeOccurrencesInput = z.infer<typeof ExcludeOccurrencesInputSchema>
 export type TodoOccurrenceQuery = z.infer<typeof TodoOccurrenceQuerySchema>
 export type SetOccurrenceDoneInput = z.infer<typeof SetOccurrenceDoneInputSchema>

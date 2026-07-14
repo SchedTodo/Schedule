@@ -14,6 +14,7 @@ import type { SettingsDto, UpdateSettingsInput } from './settings.contract'
 import type { ConcentrationRecordDto, CreateConcentrationRecordInput } from './record.contract'
 import type {
   CalendarOccurrenceDto,
+  ExcludeOccurrencesInput,
   OccurrenceRangeQuery,
   ScheduleOccurrenceDto,
   TodoOccurrenceQuery
@@ -33,7 +34,7 @@ export interface OccurrenceGateway {
   listRange(query: OccurrenceRangeQuery): Promise<AppResult<readonly CalendarOccurrenceDto[]>>
   listVisibleBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   updateComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
-  exclude(id: string): Promise<AppResult<void>>
+  excludeMany(input: ExcludeOccurrencesInput): Promise<AppResult<void>>
   listTodos(query: TodoOccurrenceQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   setDone(id: string, done: boolean): Promise<AppResult<ScheduleOccurrenceDto>>
 }

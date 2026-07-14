@@ -30,7 +30,7 @@ function occurrenceRepositoryWith(
     listVisibleBySchedule: vi.fn(async () => ({ ok: true as const, value: [] })),
     listAllBySchedule: vi.fn(async () => ({ ok: true as const, value: [] })),
     updateComment: vi.fn(),
-    exclude: vi.fn(async () => ({ ok: true as const, value: undefined })),
+    excludeMany: vi.fn(async () => ({ ok: true as const, value: undefined })),
     listTodos: vi.fn(async () => ({ ok: true as const, value: [] })),
     setDone: vi.fn(),
     ...overrides

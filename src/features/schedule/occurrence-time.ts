@@ -76,3 +76,19 @@ export function formatOccurrenceRange(
   if (item.start === null) return formatMarkedWallClock(item.end, item.endMark, timeZone)
   return `${formatMarkedWallClock(item.start, item.startMark, timeZone)}–${formatMarkedWallClock(item.end, item.endMark, timeZone)}`
 }
+
+function formatUtcDateTime(instant: string, mark: KnownTimeMark): string {
+  const value = Temporal.Instant.from(instant).toZonedDateTimeISO('UTC')
+  const hour = mark[0] === '1' ? String(value.hour) : '?'
+  const minute = mark[1] === '1' ? String(value.minute).padStart(2, '0') : '?'
+  return `${value.year}/${value.month}/${value.day} ${hour}:${minute}`
+}
+
+export function serializeOccurrenceExclusion(item: ScheduleOccurrenceDto): string {
+  const end = formatUtcDateTime(item.end, item.endMark)
+  if (item.start === null) return `${end} UTC`
+  const start = formatUtcDateTime(item.start, item.startMark)
+  const [date, startTime] = start.split(' ')
+  const endTime = end.split(' ')[1]
+  return `${date} ${startTime}-${endTime} UTC`
+}

@@ -5,6 +5,7 @@ import type { SettingsDto, UpdateSettingsInput } from '../../src/contracts/setti
 import type { ConcentrationRecordDto, CreateConcentrationRecordInput } from '../../src/contracts/record.contract'
 import type {
   CalendarOccurrenceDto,
+  ExcludeOccurrencesInput,
   OccurrenceRangeQuery,
   ScheduleOccurrenceDto,
   TodoOccurrenceQuery
@@ -39,7 +40,7 @@ export interface ScheduleHostApi {
   listOccurrences(query: OccurrenceRangeQuery): Promise<AppResult<CalendarOccurrenceDto[]>>
   listScheduleOccurrences(scheduleId: string): Promise<AppResult<ScheduleOccurrenceDto[]>>
   updateOccurrenceComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
-  excludeOccurrence(id: string): Promise<AppResult<void>>
+  excludeOccurrences(input: ExcludeOccurrencesInput): Promise<AppResult<void>>
   listTodos(query: TodoOccurrenceQuery): Promise<AppResult<ScheduleOccurrenceDto[]>>
   setOccurrenceDone(id: string, done: boolean): Promise<AppResult<ScheduleOccurrenceDto>>
   getSettings(): Promise<AppResult<SettingsDto>>
@@ -97,9 +98,9 @@ export function createScheduleHostApi(invoke: IpcInvoke): ScheduleHostApi {
         await invoke(scheduleIpcChannels.updateOccurrenceComment, { id, comment })
       )
     },
-    async excludeOccurrence(id) {
-      return scheduleIpcContracts[scheduleIpcChannels.excludeOccurrence].output.parse(
-        await invoke(scheduleIpcChannels.excludeOccurrence, { id })
+    async excludeOccurrences(input) {
+      return scheduleIpcContracts[scheduleIpcChannels.excludeOccurrences].output.parse(
+        await invoke(scheduleIpcChannels.excludeOccurrences, input)
       )
     },
     async listTodos(query) {

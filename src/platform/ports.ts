@@ -8,6 +8,7 @@ import type {
 import type { AppResult } from '../contracts/result'
 import type {
   CalendarOccurrenceDto,
+  ExcludeOccurrencesInput,
   OccurrenceRangeQuery,
   ScheduleOccurrenceDto,
   StoredScheduleOccurrenceDto
@@ -32,7 +33,7 @@ export interface OccurrenceRepository {
   listVisibleBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   listAllBySchedule(scheduleId: string): Promise<AppResult<readonly StoredScheduleOccurrenceDto[]>>
   updateComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
-  exclude(id: string): Promise<AppResult<void>>
+  excludeMany(input: ExcludeOccurrencesInput): Promise<AppResult<void>>
   listTodos(query: import('../contracts/occurrence.contract').TodoOccurrenceQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   setDone(id: string, done: boolean): Promise<AppResult<ScheduleOccurrenceDto>>
 }

@@ -117,10 +117,10 @@ export function registerScheduleIpcHandlers(
     ({ id, comment }) => gateway.occurrences.updateComment(id, comment),
     (value) => commentContract.output.parse(value)
   ))
-  const excludeContract = scheduleIpcContracts[scheduleIpcChannels.excludeOccurrence]
-  ipcMain.handle(scheduleIpcChannels.excludeOccurrence, (_event, input) => execute(
+  const excludeContract = scheduleIpcContracts[scheduleIpcChannels.excludeOccurrences]
+  ipcMain.handle(scheduleIpcChannels.excludeOccurrences, (_event, input) => execute(
     input, (value) => excludeContract.input.parse(value),
-    ({ id }) => gateway.occurrences.exclude(id),
+    (value) => gateway.occurrences.excludeMany(value),
     (value) => excludeContract.output.parse(value)
   ))
   const todoContract = scheduleIpcContracts[scheduleIpcChannels.listTodos]

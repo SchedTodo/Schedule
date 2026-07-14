@@ -5,6 +5,7 @@ import type { SettingsDto, UpdateSettingsInput } from '../../contracts/settings.
 import type { ConcentrationRecordDto, CreateConcentrationRecordInput } from '../../contracts/record.contract'
 import type {
   CalendarOccurrenceDto,
+  ExcludeOccurrencesInput,
   OccurrenceRangeQuery,
   ScheduleOccurrenceDto,
   TodoOccurrenceQuery
@@ -32,7 +33,7 @@ export interface HostScheduleApi {
   listOccurrences(query: OccurrenceRangeQuery): Promise<AppResult<readonly CalendarOccurrenceDto[]>>
   listScheduleOccurrences(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   updateOccurrenceComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
-  excludeOccurrence(id: string): Promise<AppResult<void>>
+  excludeOccurrences(input: ExcludeOccurrencesInput): Promise<AppResult<void>>
   listTodos(query: TodoOccurrenceQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   setOccurrenceDone(id: string, done: boolean): Promise<AppResult<ScheduleOccurrenceDto>>
   getSettings(): Promise<AppResult<SettingsDto>>
@@ -58,7 +59,7 @@ export const HostScheduleApiSchema = z
     listOccurrences: method<HostScheduleApi['listOccurrences']>(),
     listScheduleOccurrences: method<HostScheduleApi['listScheduleOccurrences']>(),
     updateOccurrenceComment: method<HostScheduleApi['updateOccurrenceComment']>(),
-    excludeOccurrence: method<HostScheduleApi['excludeOccurrence']>()
+    excludeOccurrences: method<HostScheduleApi['excludeOccurrences']>()
     ,listTodos: method<HostScheduleApi['listTodos']>()
     ,setOccurrenceDone: method<HostScheduleApi['setOccurrenceDone']>()
     ,getSettings: method<HostScheduleApi['getSettings']>()

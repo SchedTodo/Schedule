@@ -112,4 +112,43 @@ describe('DrizzleOccurrenceRepository', () => {
       '20000000-0000-4000-8000-000000000002'
     ])
   })
+
+  it('atomically excludes selected occurrences and appends concrete exTime rules', async () => {
+    const first = '20000000-0000-4000-8000-000000000001'
+    const second = '20000000-0000-4000-8000-000000000002'
+    await repository.replaceForSchedule('10000000-0000-4000-8000-000000000001', [
+      { id: first, excluded: false, start: '2026-07-13T10:00:00Z', end: '2026-07-13T11:00:00Z', startMark: '11', endMark: '11', comment: '', done: false },
+      { id: second, excluded: false, start: '2026-07-14T10:00:00Z', end: '2026-07-14T11:00:00Z', startMark: '11', endMark: '11', comment: '', done: false }
+    ])
+
+    await expect(repository.excludeMany({ ids: [first, second] })).resolves.toEqual({
+      ok: true,
+      value: undefined
+    })
+
+    const rows = sqlite.prepare(`SELECT excluded, deleted_at FROM schedule_occurrence
+      ORDER BY id`).all()
+    expect(rows).toEqual([
+      { excluded: 1, deleted_at: null },
+      { excluded: 1, deleted_at: null }
+    ])
+    expect(sqlite.prepare('SELECT exclusion_code FROM schedule').get()).toEqual({
+      exclusion_code: '2026/7/13 10:00-11:00 UTC;2026/7/14 10:00-11:00 UTC'
+    })
+  })
+
+  it('rolls back a batch when any occurrence is missing', async () => {
+    const id = '20000000-0000-4000-8000-000000000001'
+    await repository.replaceForSchedule('10000000-0000-4000-8000-000000000001', [
+      { id, excluded: false, start: '2026-07-13T10:00:00Z', end: '2026-07-13T11:00:00Z', startMark: '11', endMark: '11', comment: '', done: false }
+    ])
+
+    await expect(repository.excludeMany({
+      ids: [id, '20000000-0000-4000-8000-000000000099']
+    })).resolves.toMatchObject({ ok: false, error: { code: 'NOT_FOUND' } })
+    expect(sqlite.prepare('SELECT excluded FROM schedule_occurrence WHERE id = ?').get(id))
+      .toEqual({ excluded: 0 })
+    expect(sqlite.prepare('SELECT exclusion_code FROM schedule').get())
+      .toEqual({ exclusion_code: '' })
+  })
 })

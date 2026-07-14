@@ -5,6 +5,7 @@ import { SettingsDtoSchema, UpdateSettingsInputSchema } from '../../src/contract
 import { ConcentrationRecordDtoSchema, CreateConcentrationRecordInputSchema } from '../../src/contracts/record.contract'
 import {
   CalendarOccurrenceDtoSchema,
+  ExcludeOccurrencesInputSchema,
   OccurrenceRangeQuerySchema,
   ScheduleOccurrenceDtoSchema,
   ScheduleOccurrenceListInputSchema,
@@ -36,7 +37,7 @@ export const scheduleIpcChannels = {
   listOccurrences: 'occurrence:list-range',
   listScheduleOccurrences: 'occurrence:list-by-schedule',
   updateOccurrenceComment: 'occurrence:update-comment',
-  excludeOccurrence: 'occurrence:exclude',
+  excludeOccurrences: 'occurrence:exclude-many',
   listTodos: 'occurrence:list-todos',
   setOccurrenceDone: 'occurrence:set-done',
   getSettings: 'settings:get',
@@ -96,8 +97,8 @@ export const scheduleIpcContracts = {
     input: UpdateOccurrenceCommentInputSchema,
     output: appResultSchema(ScheduleOccurrenceDtoSchema)
   },
-  [scheduleIpcChannels.excludeOccurrence]: {
-    input: ExcludeOccurrenceInputSchema,
+  [scheduleIpcChannels.excludeOccurrences]: {
+    input: ExcludeOccurrencesInputSchema,
     output: appResultSchema(z.void())
   },
   [scheduleIpcChannels.listTodos]: {

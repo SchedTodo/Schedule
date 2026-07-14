@@ -6,7 +6,7 @@ import {
   UpdateScheduleInputSchema
 } from '../../src/contracts/schedule.contract'
 import {
-  ExcludeOccurrenceInputSchema,
+  ExcludeOccurrencesInputSchema,
   TodoOccurrenceQuerySchema,
   SetOccurrenceDoneInputSchema,
   UpdateOccurrenceCommentInputSchema
@@ -54,8 +54,9 @@ describe('schedule management contracts', () => {
 
   it('validates occurrence comment and exclusion inputs', () => {
     expect(UpdateOccurrenceCommentInputSchema.safeParse({ id, comment: 'Moved' }).success).toBe(true)
-    expect(ExcludeOccurrenceInputSchema.safeParse({ id }).success).toBe(true)
-    expect(ExcludeOccurrenceInputSchema.safeParse({ id: 'invalid' }).success).toBe(false)
+    expect(ExcludeOccurrencesInputSchema.safeParse({ ids: [id] }).success).toBe(true)
+    expect(ExcludeOccurrencesInputSchema.safeParse({ ids: [] }).success).toBe(false)
+    expect(ExcludeOccurrencesInputSchema.safeParse({ ids: ['invalid'] }).success).toBe(false)
   })
 
   it('validates logical-day Todo queries and completion updates', () => {

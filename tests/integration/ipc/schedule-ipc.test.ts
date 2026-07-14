@@ -58,7 +58,7 @@ function createHarness(
         listRange: gateway.occurrences?.listRange ?? vi.fn(async () => ({ ok: true as const, value: [] })),
         listVisibleBySchedule: gateway.occurrences?.listVisibleBySchedule ?? vi.fn(async () => ({ ok: true as const, value: [] })),
         updateComment: gateway.occurrences?.updateComment ?? vi.fn(),
-        exclude: gateway.occurrences?.exclude ?? vi.fn(),
+        excludeMany: gateway.occurrences?.excludeMany ?? vi.fn(),
         listTodos: gateway.occurrences?.listTodos ?? vi.fn(async () => ({ ok: true as const, value: [] })),
         setDone: gateway.occurrences?.setDone ?? vi.fn()
       },
@@ -187,6 +187,25 @@ describe('typed schedule IPC', () => {
     await expect(handlers.get('occurrence:list-range')?.({}, { ...query, extra: true }))
       .resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
     expect(listRange).toHaveBeenCalledWith(query)
+  })
+
+  it('validates and round trips batch occurrence exclusion', async () => {
+    const excludeMany = vi.fn(async () => ({ ok: true as const, value: undefined }))
+    const { api, handlers } = createHarness({
+      schedules: { create: vi.fn(), findById: vi.fn(), list: vi.fn() },
+      occurrences: { excludeMany }
+    })
+    const input = { ids: [occurrence.id] }
+
+    await expect(api.excludeOccurrences(input)).resolves.toEqual({
+      ok: true,
+      value: undefined
+    })
+    await expect(handlers.get('occurrence:exclude-many')?.({}, { ids: [] }))
+      .resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
+    await expect(handlers.get('occurrence:exclude-many')?.({}, { ids: ['invalid'] }))
+      .resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
+    expect(excludeMany).toHaveBeenCalledWith(input)
   })
 })
 

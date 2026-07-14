@@ -1,8 +1,9 @@
-import { and, asc, eq, gte, isNull, lt } from 'drizzle-orm'
+import { and, asc, eq, gte, inArray, isNull, lt } from 'drizzle-orm'
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 
 import type {
   CalendarOccurrenceDto,
+  ExcludeOccurrencesInput,
   KnownTimeMark,
   OccurrenceRangeQuery,
   ScheduleOccurrenceDto,
@@ -11,6 +12,7 @@ import type {
 import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
 import type { OccurrenceRepository } from '../../../src/platform/ports'
 import { todoLogicalDayRange } from '../../../src/domain/schedule/logical-day'
+import { serializeOccurrenceExclusion } from '../../../src/features/schedule/occurrence-time'
 import { databaseSchema, scheduleOccurrences, schedules } from './schema'
 
 type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
@@ -200,13 +202,48 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
     }
   }
 
-  async exclude(id: string): Promise<AppResult<void>> {
+  async excludeMany(input: ExcludeOccurrencesInput): Promise<AppResult<void>> {
     try {
-      const result = this.database.update(scheduleOccurrences)
-        .set({ excluded: true, updatedAt: new Date() })
-        .where(eq(scheduleOccurrences.id, id)).run()
-      if (result.changes === 0) return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
-      return { ok: true, value: undefined }
+      return this.database.transaction((transaction): AppResult<void> => {
+        const rows = transaction
+          .select({ occurrence: scheduleOccurrences, schedule: schedules })
+          .from(scheduleOccurrences)
+          .innerJoin(schedules, eq(scheduleOccurrences.scheduleId, schedules.id))
+          .where(inArray(scheduleOccurrences.id, input.ids))
+          .all()
+        if (rows.length !== input.ids.length) {
+          return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+        }
+        if (new Set(rows.map(({ occurrence }) => occurrence.scheduleId)).size !== 1) {
+          return { ok: false, error: { code: 'VALIDATION_FAILED', message: '所选时间不属于同一日程' } }
+        }
+        const now = new Date()
+        transaction.update(scheduleOccurrences)
+          .set({ excluded: true, updatedAt: now })
+          .where(inArray(scheduleOccurrences.id, input.ids))
+          .run()
+        const schedule = rows[0]!.schedule
+        const concrete = rows.map(({ occurrence }) => serializeOccurrenceExclusion({
+          id: occurrence.id,
+          scheduleId: occurrence.scheduleId,
+          kind: schedule.kind,
+          title: schedule.title,
+          excluded: occurrence.excluded,
+          start: occurrence.start?.toISOString() ?? null,
+          end: occurrence.end.toISOString(),
+          startMark: occurrence.startMark,
+          endMark: occurrence.endMark,
+          comment: occurrence.comment,
+          done: occurrence.done
+        })).join(';')
+        transaction.update(schedules).set({
+          exclusionCode: schedule.exclusionCode === ''
+            ? concrete
+            : `${schedule.exclusionCode};${concrete}`,
+          updatedAt: now
+        }).where(eq(schedules.id, schedule.id)).run()
+        return { ok: true, value: undefined }
+      })
     } catch (error) {
       return { ok: false, error: persistenceError(error) }
     }

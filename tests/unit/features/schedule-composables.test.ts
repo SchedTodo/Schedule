@@ -46,7 +46,7 @@ function gatewayWith(
       listRange: vi.fn(async () => ({ ok: true as const, value: [] }))
       ,listVisibleBySchedule: vi.fn(async () => ({ ok: true as const, value: [] }))
       ,updateComment: vi.fn()
-      ,exclude: vi.fn()
+      ,excludeMany: vi.fn()
       ,listTodos: vi.fn(async () => ({ ok: true as const, value: [] }))
       ,setDone: vi.fn()
     },

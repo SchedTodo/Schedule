@@ -73,7 +73,7 @@ async function removeSchedule() {
   if (result.ok) await router.push({ name: 'database' })
 }
 async function excludeOccurrence(occurrenceId: string) {
-  await platform.occurrences.exclude(occurrenceId)
+  await platform.occurrences.excludeMany({ ids: [occurrenceId] })
   await refreshOccurrences()
 }
 void refreshOccurrences()

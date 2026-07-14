@@ -1,5 +1,6 @@
 import type { PlatformGateway } from '../../contracts/platform.contract'
 import {
+  ExcludeOccurrencesInputSchema,
   OccurrenceRangeQuerySchema,
   type ScheduleOccurrenceDto
 } from '../../contracts/occurrence.contract'
@@ -19,6 +20,7 @@ import { SystemClock } from '../../domain/shared/clock'
 import type { IdGenerator } from '../../domain/shared/id-generator'
 import { CryptoIdGenerator } from '../../domain/shared/id-generator'
 import { todoLogicalDayRange } from '../../domain/schedule/logical-day'
+import { serializeOccurrenceExclusion } from '../../features/schedule/occurrence-time'
 import {
   expandScheduleOccurrences,
   normalizeScheduleOccurrences
@@ -256,15 +258,25 @@ export function createInMemoryGateway(
         occurrences[index] = updated
         return { ok: true, value: updated }
       },
-      async exclude(id) {
-        const index = occurrences.findIndex((value) => value.id === id)
-        const current = occurrences[index]
-        if (current === undefined) return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
-        occurrences[index] = { ...current, excluded: true }
-        const scheduleIndex = schedules.findIndex((value) => value.id === current.scheduleId)
+      async excludeMany(input) {
+        const parsed = ExcludeOccurrencesInputSchema.safeParse(input)
+        if (!parsed.success) return { ok: false, error: validationError }
+        const selected = parsed.data.ids.map((id) => occurrences.find((value) => value.id === id))
+        if (selected.some((value) => value === undefined)) {
+          return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+        }
+        const values = selected as ScheduleOccurrenceDto[]
+        if (new Set(values.map(({ scheduleId }) => scheduleId)).size !== 1) {
+          return { ok: false, error: validationError }
+        }
+        for (const current of values) {
+          const index = occurrences.findIndex(({ id }) => id === current.id)
+          occurrences[index] = { ...current, excluded: true }
+        }
+        const scheduleIndex = schedules.findIndex((value) => value.id === values[0]!.scheduleId)
         const schedule = schedules[scheduleIndex]
         if (schedule !== undefined) {
-          const concrete = `${current.start ?? current.end}-${current.end} UTC`
+          const concrete = values.map(serializeOccurrenceExclusion).join(';')
           schedules[scheduleIndex] = {
             ...schedule,
             exclusionCode: schedule.exclusionCode === '' ? concrete : `${schedule.exclusionCode};${concrete}`,
