@@ -24,9 +24,12 @@ test('creates and restores a schedule through the isolated host gateway', async 
   let application = await launch()
   try {
     let window = await application.firstWindow()
+    const deadline = new Date()
+    deadline.setUTCDate(deadline.getUTCDate() + 1)
+    const dateCode = `${deadline.getUTCFullYear()}/${deadline.getUTCMonth() + 1}/${deadline.getUTCDate()}`
     await window.getByRole('button', { name: 'Add' }).click()
     await window.getByLabel('Name').fill('持久化周会')
-    await window.getByLabel('rTime').fill('2026/7/12 10:00')
+    await window.getByLabel('rTime').fill(`${dateCode} 10:00`)
     await window.getByRole('button', { name: 'Confirm' }).click()
     await expect(window.getByRole('row', { name: /持久化周会/ })).toBeVisible()
     expect(await window.evaluate(() => typeof process)).toBe('undefined')
@@ -82,6 +85,20 @@ test('renders a visible week grid and the schedule comment tooltip', async () =>
     expect((await card.boundingBox())?.height).toBeGreaterThan(0)
     await card.hover()
     await expect(window.getByText('周视图备注')).toBeVisible()
+
+    await card.click()
+    await expect(window.locator('.n-page-header__title')).toHaveText('Schedule')
+    await window.locator('.n-page-header__back').click()
+    await expect(window.getByTestId('week-view')).toBeVisible()
+
+    await window.getByRole('button', { name: 'month', exact: true }).click()
+    const monthCard = window
+      .getByTestId('month-view')
+      .getByRole('button', { name: /周视图回归/ })
+    await monthCard.click()
+    await expect(window.locator('.n-page-header__title')).toHaveText('Schedule')
+    await window.locator('.n-page-header__back').click()
+    await expect(window.getByTestId('month-view')).toBeVisible()
   } finally {
     await application.close()
     rmSync(directory, { recursive: true, force: true })
