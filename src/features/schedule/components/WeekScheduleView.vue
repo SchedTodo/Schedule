@@ -117,8 +117,8 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
 
 <style scoped>
 .week-view { display: grid; flex: 1 1 0; min-block-size: 0; }
-.day-card { position: relative; min-block-size: 0; overflow: hidden; border: 1px solid #eee; border-radius: 4px; text-align: center; word-break: break-word; }
-.day-card header { block-size: 4.8vh; line-height: 4.8vh; padding: 0; border-block-end: 1px solid #eee; background: #fafafc; }
+.day-card { position: relative; min-block-size: 0; overflow: hidden; border: 1px solid var(--color-border); border-radius: 4px; text-align: center; word-break: break-word; }
+.day-card header { block-size: 4.8vh; line-height: 4.8vh; padding: 0; border-block-end: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); }
 .event-card { position: absolute; inset-inline: 0; display: flex; align-items: center; justify-content: space-between; inline-size: 100%; padding-inline: 10px; overflow: hidden; border-radius: 4px; box-sizing: border-box; color: inherit; cursor: pointer; }
 .event-card span:first-child { min-inline-size: 50%; overflow: hidden; text-align: start; text-overflow: ellipsis; white-space: nowrap; }
 .event-card span:last-child { min-inline-size: 40px; max-inline-size: 50%; text-align: end; white-space: nowrap; }

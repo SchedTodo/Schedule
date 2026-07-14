@@ -54,4 +54,25 @@ describe('current UI source conventions', () => {
     expect(tokensCss).toContain('inset 2px 2px 3px rgb(0 0 0 / 75%)')
     expect(tokensCss).toContain('inset -1px -1px 2px rgb(255 255 255 / 25%)')
   })
+
+  it('keeps month cards fixed-width while hovering', () => {
+    const month = Object.entries(currentUiModules)
+      .find(([path]) => path.endsWith('/MonthScheduleView.vue'))?.[1] ?? ''
+
+    expect(month).toContain('.schedule-card {')
+    expect(month).toContain('inline-size: 100%')
+    expect(month).not.toContain('inline-size: auto')
+  })
+
+  it('uses theme colors for the week header and day borders', () => {
+    const week = Object.entries(currentUiModules)
+      .find(([path]) => path.endsWith('/WeekScheduleView.vue'))?.[1] ?? ''
+
+    expect(week).not.toContain('#fafafc')
+    expect(week).not.toContain('border: 1px solid #eee')
+    expect(week).toContain('background: var(--color-surface)')
+    expect(week).toContain('color: var(--color-text)')
+    expect(week).toContain('border: 1px solid var(--color-border)')
+    expect(week).toContain('border-block-end: 1px solid var(--color-border)')
+  })
 })

@@ -56,5 +56,5 @@ function timeLabel(item: CalendarOccurrenceDto): string {
 .schedule-card { display: flex; flex-wrap: nowrap; justify-content: space-between; inline-size: 100%; padding: 4px; overflow: hidden; border: 1.5px solid #eee; border-radius: 4px; box-shadow: 0 0 4px #eee; background: var(--color-surface); color: inherit; cursor: pointer; }
 .schedule-name { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .schedule-time { flex: none; white-space: nowrap; }
-.schedule-card:hover { inline-size: auto; border-color: #18a058; background: var(--color-surface); transition: all 0.2s ease-in-out; }
+.schedule-card:hover { border-color: #18a058; background: var(--color-surface); transition: border-color 0.2s ease-in-out; }
 </style>
