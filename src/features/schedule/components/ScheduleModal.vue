@@ -5,9 +5,15 @@ import { NButton, NCard, NForm, NFormItem, NInput, NModal } from 'naive-ui'
 
 import type { CreateScheduleInput } from '../../../contracts/schedule.contract'
 
-withDefaults(defineProps<{ loading?: boolean; error?: string | null }>(), {
+const props = withDefaults(defineProps<{
+  loading?: boolean
+  error?: string | null
+  mode?: 'add' | 'edit'
+  initialValue?: CreateScheduleInput
+}>(), {
   loading: false,
-  error: null
+  error: null,
+  mode: 'add'
 })
 const emit = defineEmits<{ submit: [input: CreateScheduleInput] }>()
 const show = ref(false)
@@ -21,6 +27,20 @@ const model = reactive({
 const rules: FormRules = {
   title: [{ required: true, message: 'Please input name', trigger: ['input', 'blur'] }],
   recurrenceCode: [{ required: true, message: 'Please input rTime', trigger: ['input', 'blur'] }]
+}
+
+function resetDraft() {
+  Object.assign(model, props.initialValue ?? {
+    title: '',
+    recurrenceCode: '',
+    exclusionCode: '',
+    comment: ''
+  })
+}
+
+function open() {
+  resetDraft()
+  show.value = true
 }
 
 async function submit() {
@@ -40,7 +60,7 @@ async function submit() {
 
 function handleKeyboard(event: KeyboardEvent) {
   if (!event.ctrlKey) return
-  if (!show.value && event.key === 'ArrowUp') show.value = true
+  if (!show.value && props.mode === 'add' && event.key === 'ArrowUp') open()
   else if (show.value && event.key === 'ArrowDown') show.value = false
   else if (show.value && event.key === 'Enter') void submit()
 }
@@ -51,15 +71,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
 
 <template>
   <NButton
-    type="primary"
-    @click="show = true"
+    :type="mode === 'add' ? 'primary' : 'default'"
+    @click="open"
   >
-    Add
+    {{ mode === 'add' ? 'Add' : 'Edit' }}
   </NButton>
   <NModal v-model:show="show">
     <NCard
       class="schedule-modal"
-      title="Add"
+      :title="mode === 'add' ? 'Add' : 'Edit'"
       :bordered="false"
       role="dialog"
     >

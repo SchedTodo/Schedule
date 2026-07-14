@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { inject, ref } from 'vue'
-import { NAlert, NButton, NCard, NEmpty, NInput, NPageHeader, NSpin, NTag } from 'naive-ui'
+import { computed, inject, ref } from 'vue'
+import { NAlert, NButton, NCard, NEmpty, NPageHeader, NSpin, NTag } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import { platformGatewayKey } from '../../app/injection-keys'
 import type { ScheduleOccurrenceDto } from '../../contracts/occurrence.contract'
 import type { ConcentrationRecordDto } from '../../contracts/record.contract'
+import type { CreateScheduleInput } from '../../contracts/schedule.contract'
 import { defaultSettings } from '../../contracts/settings.contract'
+import ScheduleModal from '../../features/schedule/components/ScheduleModal.vue'
 import { formatInstant } from '../../features/schedule/occurrence-time'
 import { useScheduleDetail } from '../../features/schedule/use-schedule-detail'
 
@@ -22,11 +24,17 @@ const timeZone = ref(defaultSettings.timeZone)
 const format = (value: string) => formatInstant(value, timeZone.value)
 const occurrences = ref<ScheduleOccurrenceDto[]>([])
 const records = ref<ConcentrationRecordDto[]>([])
-const editing = ref(false)
-const title = ref('')
-const recurrenceCode = ref('')
-const exclusionCode = ref('')
-const comment = ref('')
+const editValue = computed<CreateScheduleInput>(() => {
+  const schedule = detail.schedule.value
+  return schedule === null ? {
+    title: '', recurrenceCode: '', exclusionCode: '', comment: ''
+  } : {
+    title: schedule.title,
+    recurrenceCode: schedule.recurrenceCode,
+    exclusionCode: schedule.exclusionCode,
+    comment: schedule.comment
+  }
+})
 
 async function refreshOccurrences() {
   const result = await platform.occurrences.listVisibleBySchedule(scheduleId)
@@ -46,25 +54,12 @@ async function toggleStar() {
   await platform.schedules.setStarred({ id: scheduleId, starred: !schedule.starred })
   await detail.refresh()
 }
-function beginEdit() {
-  const schedule = detail.schedule.value
-  if (!schedule) return
-  title.value = schedule.title
-  recurrenceCode.value = schedule.recurrenceCode
-  exclusionCode.value = schedule.exclusionCode
-  comment.value = schedule.comment
-  editing.value = true
-}
-async function saveEdit() {
+async function saveEdit(input: CreateScheduleInput) {
   const result = await platform.schedules.update({
     id: scheduleId,
-    title: title.value,
-    recurrenceCode: recurrenceCode.value,
-    exclusionCode: exclusionCode.value,
-    comment: comment.value
+    ...input
   })
   if (result.ok) {
-    editing.value = false
     await Promise.all([detail.refresh(), refreshOccurrences()])
   }
 }
@@ -111,9 +106,11 @@ void refreshSettings()
           >
             {{ detail.schedule.value.starred ? '★' : '☆' }}
           </NButton>
-          <NButton @click="beginEdit">
-            Edit
-          </NButton><NButton @click="removeSchedule">
+          <ScheduleModal
+            mode="edit"
+            :initial-value="editValue"
+            @submit="saveEdit"
+          /><NButton @click="removeSchedule">
             Delete
           </NButton>
         </template>
@@ -126,37 +123,6 @@ void refreshSettings()
           <b>exTime</b><span class="pre-line">{{ detail.schedule.value.exclusionCode }}</span>
           <b>Star</b><span>{{ detail.schedule.value.starred }}</span> <b>Created</b><span>{{ format(detail.schedule.value.createdAt) }}</span> <b>Updated</b><span>{{ format(detail.schedule.value.updatedAt) }}</span>
         </div>
-        <form
-          v-if="editing"
-          class="edit-form"
-          @submit.prevent="saveEdit"
-        >
-          <NInput
-            v-model:value="title"
-            aria-label="Edit name"
-          />
-          <NInput
-            v-model:value="recurrenceCode"
-            type="textarea"
-            aria-label="Edit recurrence"
-          />
-          <NInput
-            v-model:value="exclusionCode"
-            type="textarea"
-            aria-label="Edit exclusion"
-          />
-          <NInput
-            v-model:value="comment"
-            type="textarea"
-            aria-label="Edit comment"
-          />
-          <NButton attr-type="submit">
-            Save
-          </NButton>
-          <NButton @click="editing = false">
-            Cancel
-          </NButton>
-        </form>
       </NCard>
       <NCard segmented>
         <template #header>
@@ -238,11 +204,6 @@ void refreshSettings()
 }
 .pre-line {
   white-space: pre-line;
-}
-.edit-form {
-  display: grid;
-  gap: 0.75rem;
-  margin-block-start: 1rem;
 }
 table {
   inline-size: 100%;

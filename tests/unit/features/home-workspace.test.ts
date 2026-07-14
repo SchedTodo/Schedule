@@ -179,4 +179,35 @@ describe('home workspace', () => {
     expect(wrapper.findAll('.n-form-item-label__asterisk')).toHaveLength(2)
     expect(wrapper.emitted('submit')).toBeUndefined()
   })
+
+  it('reuses the modal with initial values for Edit', async () => {
+    const initialValue = {
+      title: 'Weekly review',
+      recurrenceCode: '2026/7/13-17 13:00-14:00 daily;',
+      exclusionCode: '',
+      comment: 'Every day'
+    }
+    const wrapper = mount(ScheduleModal, {
+      props: { mode: 'edit', initialValue },
+      global: { stubs: { teleport: true } }
+    })
+
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.text()).toContain('Edit')
+    expect(wrapper.get('input[aria-label="Name"]').element).toHaveProperty(
+      'value',
+      initialValue.title
+    )
+    expect(wrapper.get('textarea[aria-label="rTime"]').element).toHaveProperty(
+      'value',
+      initialValue.recurrenceCode
+    )
+    await wrapper.get('input[aria-label="Name"]').setValue('Changed')
+    await wrapper.get('[role="dialog"] button').trigger('click')
+
+    await vi.waitFor(() => expect(wrapper.emitted('submit')?.[0]).toEqual([{
+        ...initialValue,
+        title: 'Changed'
+      }]))
+  })
 })
