@@ -1,0 +1,54 @@
+import type { KnownTimeMark, ScheduleOccurrenceDto } from '../../contracts/occurrence.contract'
+import { Temporal } from '../../domain/shared/temporal'
+
+function effectiveInstant(value: ScheduleOccurrenceDto): string {
+  return value.start ?? value.end
+}
+
+export function formatOccurrenceDateTime(
+  instant: string,
+  mark: KnownTimeMark,
+  timeZone: string
+): string {
+  const value = Temporal.Instant.from(instant).toZonedDateTimeISO(timeZone)
+  const hour = mark[0] === '1' ? String(value.hour).padStart(2, '0') : '?'
+  const minute = mark[1] === '1' ? String(value.minute).padStart(2, '0') : '?'
+  return `${value.year}/${value.month}/${value.day} ${hour}:${minute}`
+}
+
+export function occurrenceWeekday(
+  value: ScheduleOccurrenceDto,
+  timeZone: string,
+  locale?: string
+): string {
+  return new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone })
+    .format(new Date(effectiveInstant(value)))
+}
+
+export function isPastOccurrence(
+  value: ScheduleOccurrenceDto,
+  timeZone: string,
+  now: Temporal.Instant = Temporal.Now.instant()
+): boolean {
+  const date = Temporal.Instant.from(effectiveInstant(value))
+    .toZonedDateTimeISO(timeZone)
+    .toPlainDate()
+  const today = now.toZonedDateTimeISO(timeZone).toPlainDate()
+  return Temporal.PlainDate.compare(date, today) < 0
+}
+
+export function sortDetailOccurrences(
+  values: readonly ScheduleOccurrenceDto[],
+  timeZone: string,
+  now: Temporal.Instant = Temporal.Now.instant()
+): ScheduleOccurrenceDto[] {
+  return [...values].sort((left, right) => {
+    const group = Number(isPastOccurrence(left, timeZone, now)) -
+      Number(isPastOccurrence(right, timeZone, now))
+    if (group !== 0) return group
+    return Temporal.Instant.compare(
+      Temporal.Instant.from(effectiveInstant(left)),
+      Temporal.Instant.from(effectiveInstant(right))
+    )
+  })
+}

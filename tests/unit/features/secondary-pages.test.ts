@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { NRadio, NSelect, NSwitch } from 'naive-ui'
+import { NDataTable, NPopconfirm, NRadio, NSelect, NSwitch } from 'naive-ui'
 import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -54,10 +54,13 @@ describe('secondary pages', () => {
 
   it('restores the Schedule header with Info and Times cards', async () => {
     const router = await routerAt(`/schedule/${schedule.id}`)
+    const platform = createInMemoryGateway([schedule])
+    const excludeMany = vi.spyOn(platform.occurrences, 'excludeMany')
+      .mockResolvedValue({ ok: true, value: undefined })
     const wrapper = mount(ScheduleDetailPage, {
       global: {
         plugins: [router],
-        provide: { [platformGatewayKey as symbol]: createInMemoryGateway([schedule]) }
+        provide: { [platformGatewayKey as symbol]: platform }
       }
     })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Weekly review'))
@@ -65,6 +68,29 @@ describe('secondary pages', () => {
     expect(wrapper.text()).toContain('Info')
     expect(wrapper.text()).toContain('Times')
     expect(wrapper.text()).toContain('Review notes')
+    expect(wrapper.text()).toContain('Deleted')
+    expect(wrapper.text()).not.toContain('Starfalse')
+    expect(wrapper.text()).not.toContain('Records')
+    expect(wrapper.find('.star-icon').exists()).toBe(true)
+    expect(wrapper.find('.schedule-actions').exists()).toBe(true)
+    expect(wrapper.find('.schedule-type').exists()).toBe(true)
+    expect(wrapper.findAllComponents(NPopconfirm)).toHaveLength(2)
+    const table = wrapper.getComponent(NDataTable)
+    const columns = table.props('columns') as Array<{ title?: unknown }>
+    expect(columns.map((column) => column.title).filter((title) => typeof title === 'string'))
+      .toEqual(['Start', 'End', 'Weekday', 'Comment'])
+    expect(table.props('pagination')).toMatchObject({
+      pageSize: 5,
+      showSizePicker: true,
+      pageSizes: [5, 10, 15, 20]
+    })
+    table.vm.$emit('update:checked-row-keys', ['20000000-0000-4000-8000-000000000001'])
+    await wrapper.vm.$nextTick()
+    expect(excludeMany).not.toHaveBeenCalled()
+    wrapper.findAllComponents(NPopconfirm)[1]!.vm.$emit('positive-click')
+    await vi.waitFor(() => expect(excludeMany).toHaveBeenCalledWith({
+        ids: ['20000000-0000-4000-8000-000000000001']
+      }))
   })
 
   it('opens deleted schedules from Database for read-only detail', async () => {
