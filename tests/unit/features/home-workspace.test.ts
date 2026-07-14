@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { createPinia } from 'pinia'
+import { createPinia, type Pinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { NLayoutSider } from 'naive-ui'
 import { describe, expect, it, vi } from 'vitest'
@@ -11,6 +11,7 @@ import ScheduleModal from '../../../src/features/schedule/components/ScheduleMod
 import WeekScheduleView from '../../../src/features/schedule/components/WeekScheduleView.vue'
 import { createInMemoryGateway } from '../../../src/platform/browser/in-memory-gateway'
 import HomePage from '../../../src/pages/index.vue'
+import { useRuntimeStore } from '../../../src/stores/runtime'
 
 const todo: ScheduleDto = {
   id: '0198f0de-8f7f-7000-8000-000000000001',
@@ -40,7 +41,7 @@ const eventOccurrence: CalendarOccurrenceDto = {
 }
 
 describe('home workspace', () => {
-  async function mountHome(seed: readonly ScheduleDto[] = []) {
+  async function mountHome(seed: readonly ScheduleDto[] = [], pinia: Pinia = createPinia()) {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [{ path: '/', component: HomePage }]
@@ -48,11 +49,24 @@ describe('home workspace', () => {
     await router.push('/')
     return mount(HomePage, {
       global: {
-        plugins: [createPinia(), router],
+        plugins: [pinia, router],
         provide: { [platformGatewayKey as symbol]: createInMemoryGateway(seed) }
       }
     })
   }
+
+  it('restores the runtime calendar view after the homepage remounts', async () => {
+    const pinia = createPinia()
+    const first = await mountHome([], pinia)
+    await first.get('button[data-view="week"]').trigger('click')
+    expect(useRuntimeStore(pinia).homepage.priority).toBe('week')
+    first.unmount()
+
+    const restored = await mountHome([], pinia)
+    expect(restored.find('[data-testid="week-view"]').exists()).toBe(true)
+    await restored.get('button[data-view="month"]').trigger('click')
+    expect(useRuntimeStore(pinia).homepage.priority).toBe('month')
+  })
 
   it('renders the todo sidebar and month/week workspace', async () => {
     const wrapper = await mountHome([todo])

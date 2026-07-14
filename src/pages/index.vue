@@ -14,16 +14,15 @@ import { useScheduleList } from '../features/schedule/use-schedule-list'
 import { useScheduleMutations } from '../features/schedule/use-schedule-mutations'
 import { useOccurrenceRange } from '../features/schedule/use-occurrence-range'
 import { calendarRange, todayInTimeZone } from '../features/schedule/occurrence-time'
-import { usePreferencesStore } from '../stores/preferences'
+import { useRuntimeStore } from '../stores/runtime'
 
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
 const platform = gateway
 const router = useRouter()
-const preferences = usePreferencesStore()
+const runtimeStore = useRuntimeStore()
 const list = useScheduleList(gateway, { offset: 0, limit: 200 })
 const mutations = useScheduleMutations(gateway, list.refresh)
-const view = ref(preferences.calendarMode)
 const activeButtonStyle = {
   backgroundColor: 'rgba(0, 14, 28, 0.1)',
   boxShadow: '1px 1px 1px 1px rgba(0, 14, 28, 0.6) inset'
@@ -97,15 +96,15 @@ void refreshTodos()
           <NButtonGroup class="segmented-control">
             <NButton
               data-view="month"
-              :style="view === 'month' ? activeButtonStyle : undefined"
-              @click="view = 'month'"
+              :style="runtimeStore.homepage.priority === 'month' ? activeButtonStyle : undefined"
+              @click="runtimeStore.homepage.priority = 'month'"
             >
               month
             </NButton>
             <NButton
               data-view="week"
-              :style="view === 'week' ? activeButtonStyle : undefined"
-              @click="view = 'week'"
+              :style="runtimeStore.homepage.priority === 'week' ? activeButtonStyle : undefined"
+              @click="runtimeStore.homepage.priority = 'week'"
             >
               week
             </NButton>
@@ -116,7 +115,7 @@ void refreshTodos()
           />
         </div>
         <MonthScheduleView
-          v-if="view === 'month'"
+          v-if="runtimeStore.homepage.priority === 'month'"
           :items="occurrenceRange.items.value"
           :time-zone="appSettings.timeZone"
           @select="select"
