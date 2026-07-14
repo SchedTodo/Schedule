@@ -1,4 +1,5 @@
 import type {
+  ScheduleDetailDto,
   ScheduleDto,
   ScheduleListQuery,
   SchedulePageDto,
@@ -8,11 +9,12 @@ import type { AppResult } from '../contracts/result'
 import type {
   CalendarOccurrenceDto,
   OccurrenceRangeQuery,
-  ScheduleOccurrenceDto
+  ScheduleOccurrenceDto,
+  StoredScheduleOccurrenceDto
 } from '../contracts/occurrence.contract'
 
 export interface ScheduleRepository {
-  findById(id: string): Promise<AppResult<ScheduleDto | null>>
+  findById(id: string): Promise<AppResult<ScheduleDetailDto | null>>
   list(query: ScheduleListQuery): Promise<AppResult<readonly ScheduleDto[]>>
   save(schedule: ScheduleDto): Promise<AppResult<ScheduleDto>>
   saveWithOccurrences(
@@ -27,7 +29,8 @@ export interface ScheduleRepository {
 
 export interface OccurrenceRepository {
   listRange(query: OccurrenceRangeQuery): Promise<AppResult<readonly CalendarOccurrenceDto[]>>
-  listBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
+  listVisibleBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
+  listAllBySchedule(scheduleId: string): Promise<AppResult<readonly StoredScheduleOccurrenceDto[]>>
   updateComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
   exclude(id: string): Promise<AppResult<void>>
   listTodos(query: import('../contracts/occurrence.contract').TodoOccurrenceQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>

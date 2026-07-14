@@ -15,6 +15,7 @@ import {
 } from '../../src/contracts/occurrence.contract'
 import {
   CreateScheduleInputSchema,
+  ScheduleDetailDtoSchema,
   ScheduleDtoSchema,
   ScheduleListQuerySchema,
   SchedulePageDtoSchema,
@@ -61,7 +62,7 @@ export const scheduleIpcContracts = {
   },
   [scheduleIpcChannels.findById]: {
     input: FindScheduleByIdInputSchema,
-    output: appResultSchema(ScheduleDtoSchema.nullable())
+    output: appResultSchema(ScheduleDetailDtoSchema.nullable())
   },
   [scheduleIpcChannels.list]: {
     input: ScheduleListQuerySchema,

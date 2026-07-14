@@ -11,6 +11,7 @@ import type {
 } from '../../contracts/occurrence.contract'
 import type {
   CreateScheduleInput,
+  ScheduleDetailDto,
   ScheduleDto,
   ScheduleListQuery,
   SchedulePageDto,
@@ -22,7 +23,7 @@ import type {
 
 export interface HostScheduleApi {
   createSchedule(input: CreateScheduleInput): Promise<AppResult<ScheduleDto>>
-  findScheduleById(id: string): Promise<AppResult<ScheduleDto | null>>
+  findScheduleById(id: string): Promise<AppResult<ScheduleDetailDto | null>>
   listSchedules(query: ScheduleListQuery): Promise<AppResult<readonly ScheduleDto[]>>
   updateSchedule(input: UpdateScheduleInput): Promise<AppResult<ScheduleDto>>
   setScheduleStarred(input: SetScheduleStarredInput): Promise<AppResult<ScheduleDto>>

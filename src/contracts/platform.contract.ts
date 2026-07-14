@@ -1,5 +1,6 @@
 import type {
   CreateScheduleInput,
+  ScheduleDetailDto,
   ScheduleDto,
   ScheduleListQuery,
   SchedulePageDto,
@@ -20,7 +21,7 @@ import type {
 
 export interface ScheduleGateway {
   create(input: CreateScheduleInput): Promise<AppResult<ScheduleDto>>
-  findById(id: string): Promise<AppResult<ScheduleDto | null>>
+  findById(id: string): Promise<AppResult<ScheduleDetailDto | null>>
   list(query: ScheduleListQuery): Promise<AppResult<readonly ScheduleDto[]>>
   update(input: UpdateScheduleInput): Promise<AppResult<ScheduleDto>>
   setStarred(input: SetScheduleStarredInput): Promise<AppResult<ScheduleDto>>
@@ -30,7 +31,7 @@ export interface ScheduleGateway {
 
 export interface OccurrenceGateway {
   listRange(query: OccurrenceRangeQuery): Promise<AppResult<readonly CalendarOccurrenceDto[]>>
-  listBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
+  listVisibleBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   updateComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>
   exclude(id: string): Promise<AppResult<void>>
   listTodos(query: TodoOccurrenceQuery): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>

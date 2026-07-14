@@ -126,8 +126,9 @@ export class ScheduleService implements ScheduleGateway {
     }
     if (kind !== found.value.kind) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能更改日程类型' } }
     const now = this.dependencies.clock.now().toString()
+    const { deleted: _deleted, ...current } = found.value
     const updated: ScheduleDto = {
-      ...found.value,
+      ...current,
       ...parsed.data,
       recurrenceCode: normalized?.recurrenceCode ?? parsed.data.recurrenceCode,
       exclusionCode: normalized?.exclusionCode ?? parsed.data.exclusionCode,
@@ -139,7 +140,7 @@ export class ScheduleService implements ScheduleGateway {
     }
     const existingResult = this.occurrenceRepository === undefined
       ? { ok: true as const, value: [] }
-      : await this.occurrenceRepository.listBySchedule(parsed.data.id)
+      : await this.occurrenceRepository.listVisibleBySchedule(parsed.data.id)
     if (!existingResult.ok) return existingResult
     const existing = new Map(existingResult.value.map((value) => [JSON.stringify([value.start, value.end, value.startMark, value.endMark]), value]))
     return this.repository.saveWithOccurrences(updated, normalized.occurrences.map((value) => {

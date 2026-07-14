@@ -3,13 +3,14 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 
 import type {
   ScheduleDto,
+  ScheduleDetailDto,
   ScheduleListQuery,
   ScheduleSearchQuery
 } from '../../../src/contracts/schedule.contract'
 import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
 import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import type { ScheduleRepository } from '../../../src/platform/ports'
-import { scheduleDtoToRow, scheduleRowToDto } from './schedule-mapper'
+import { scheduleDtoToRow, scheduleRowToDetailDto, scheduleRowToDto } from './schedule-mapper'
 import { databaseSchema, scheduleOccurrences, schedules } from './schema'
 
 type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
@@ -98,14 +99,14 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
     }
   }
 
-  async findById(id: string): Promise<AppResult<ScheduleDto | null>> {
+  async findById(id: string): Promise<AppResult<ScheduleDetailDto | null>> {
     try {
       const row = this.database
         .select()
         .from(schedules)
         .where(and(eq(schedules.id, id), isNull(schedules.deletedAt)))
         .get()
-      return { ok: true, value: row === undefined ? null : scheduleRowToDto(row) }
+      return { ok: true, value: row === undefined ? null : scheduleRowToDetailDto(row) }
     } catch (error) {
       return { ok: false, error: persistenceError(error) }
     }

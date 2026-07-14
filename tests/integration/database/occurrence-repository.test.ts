@@ -52,8 +52,32 @@ describe('DrizzleOccurrenceRepository', () => {
       comment: '单次时间片备注',
       scheduleComment: '整个日程备注'
     })
-    const details = await repository.listBySchedule('10000000-0000-4000-8000-000000000001')
+    const details = await repository.listVisibleBySchedule('10000000-0000-4000-8000-000000000001')
     expect(details.ok && details.value[0]?.comment).toBe('单次时间片备注')
+  })
+
+  it('separates visible occurrences from complete reconciliation history', async () => {
+    await repository.replaceForSchedule('10000000-0000-4000-8000-000000000001', [
+      { id: '20000000-0000-4000-8000-000000000001', excluded: false, start: '2026-07-13T02:00:00Z', end: '2026-07-13T03:00:00Z', startMark: '11', endMark: '11', comment: 'active', done: false },
+      { id: '20000000-0000-4000-8000-000000000002', excluded: true, start: '2026-07-14T02:00:00Z', end: '2026-07-14T03:00:00Z', startMark: '11', endMark: '11', comment: 'excluded', done: false },
+      { id: '20000000-0000-4000-8000-000000000003', excluded: false, start: '2026-07-15T02:00:00Z', end: '2026-07-15T03:00:00Z', startMark: '11', endMark: '11', comment: 'deleted', done: false, deletedAt: '2026-07-12T00:00:00Z' }
+    ])
+
+    const visible = await repository.listVisibleBySchedule(
+      '10000000-0000-4000-8000-000000000001'
+    )
+    const all = await repository.listAllBySchedule(
+      '10000000-0000-4000-8000-000000000001'
+    )
+
+    expect(visible.ok && visible.value.map(({ id }) => id)).toEqual([
+      '20000000-0000-4000-8000-000000000001'
+    ])
+    expect(all.ok && all.value.map(({ id, deleted }) => ({ id, deleted }))).toEqual([
+      { id: '20000000-0000-4000-8000-000000000001', deleted: false },
+      { id: '20000000-0000-4000-8000-000000000002', deleted: false },
+      { id: '20000000-0000-4000-8000-000000000003', deleted: true }
+    ])
   })
 
   it('hides excluded, completed, and soft-deleted occurrences', async () => {

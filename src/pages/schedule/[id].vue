@@ -29,7 +29,7 @@ const exclusionCode = ref('')
 const comment = ref('')
 
 async function refreshOccurrences() {
-  const result = await platform.occurrences.listBySchedule(scheduleId)
+  const result = await platform.occurrences.listVisibleBySchedule(scheduleId)
   if (result.ok) occurrences.value = [...result.value]
 }
 async function refreshRecords() {

@@ -29,6 +29,10 @@ export const ScheduleDtoSchema = z
   })
   .strict()
 
+export const ScheduleDetailDtoSchema = ScheduleDtoSchema.extend({
+  deleted: z.boolean()
+}).strict()
+
 export const ScheduleListQuerySchema = z
   .object({
     kind: ScheduleKindSchema.optional(),
@@ -77,6 +81,7 @@ export const SchedulePageDtoSchema = z.object({
 export type ScheduleKind = z.infer<typeof ScheduleKindSchema>
 export type CreateScheduleInput = z.infer<typeof CreateScheduleInputSchema>
 export type ScheduleDto = z.infer<typeof ScheduleDtoSchema>
+export type ScheduleDetailDto = z.infer<typeof ScheduleDetailDtoSchema>
 export type ScheduleListQuery = z.infer<typeof ScheduleListQuerySchema>
 export type UpdateScheduleInput = z.infer<typeof UpdateScheduleInputSchema>
 export type SetScheduleStarredInput = z.infer<typeof SetScheduleStarredInputSchema>

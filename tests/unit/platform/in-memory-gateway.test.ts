@@ -81,7 +81,7 @@ describe('createInMemoryGateway', () => {
     expect(result.ok && result.value[0]?.scheduleComment).toBe('整个日程备注')
     const scheduleId = result.ok ? result.value[0]?.scheduleId : undefined
     expect(scheduleId).toBeDefined()
-    const details = await gateway.occurrences.listBySchedule(scheduleId!)
+    const details = await gateway.occurrences.listVisibleBySchedule(scheduleId!)
     expect(details.ok && details.value[0]?.comment).toBe('')
     const schedules = await gateway.schedules.list({ offset: 0, limit: 10 })
     expect(schedules.ok && schedules.value[0]?.recurrenceCode).toBe(
@@ -105,7 +105,7 @@ describe('createInMemoryGateway', () => {
 
     await expect(gateway.schedules.findById(first.id)).resolves.toEqual({
       ok: true,
-      value: first
+      value: { ...first, deleted: false }
     })
     await expect(
       gateway.schedules.findById('0198f0de-8f7f-7000-8000-000000000099')

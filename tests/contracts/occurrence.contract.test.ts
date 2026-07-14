@@ -4,6 +4,7 @@ import {
   CalendarOccurrenceDtoSchema,
   OccurrenceRangeQuerySchema,
   ScheduleOccurrenceDtoSchema,
+  StoredScheduleOccurrenceDtoSchema,
   TodoOccurrenceQuerySchema
 } from '../../src/contracts/occurrence.contract'
 
@@ -24,6 +25,13 @@ const baseOccurrence = {
 describe('schedule occurrence contracts', () => {
   it('accepts an event occurrence with a concrete start and end', () => {
     expect(ScheduleOccurrenceDtoSchema.safeParse(baseOccurrence).success).toBe(true)
+  })
+
+  it('represents soft-deleted state for persistence reconciliation', () => {
+    expect(StoredScheduleOccurrenceDtoSchema.parse({
+      ...baseOccurrence,
+      deleted: true
+    }).deleted).toBe(true)
   })
 
   it('keeps the schedule comment separate in calendar occurrences', () => {

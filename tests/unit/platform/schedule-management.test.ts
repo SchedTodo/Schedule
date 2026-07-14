@@ -50,12 +50,12 @@ describe('in-memory schedule management', () => {
 
   it('updates occurrence comments and excludes individual occurrences', async () => {
     const { gateway, schedule } = await createEvent()
-    const listed = await gateway.occurrences.listBySchedule(schedule.id)
+    const listed = await gateway.occurrences.listVisibleBySchedule(schedule.id)
     if (!listed.ok) throw new Error(listed.error.message)
     const occurrence = listed.value[0]!
     const commented = await gateway.occurrences.updateComment(occurrence.id, 'Instance note')
     expect(commented.ok && commented.value.comment).toBe('Instance note')
     await expect(gateway.occurrences.exclude(occurrence.id)).resolves.toEqual({ ok: true, value: undefined })
-    await expect(gateway.occurrences.listBySchedule(schedule.id)).resolves.toEqual({ ok: true, value: [] })
+    await expect(gateway.occurrences.listVisibleBySchedule(schedule.id)).resolves.toEqual({ ok: true, value: [] })
   })
 })

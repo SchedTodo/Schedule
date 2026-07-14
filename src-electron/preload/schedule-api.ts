@@ -10,6 +10,7 @@ import type {
   TodoOccurrenceQuery
 } from '../../src/contracts/occurrence.contract'
 import type {
+  ScheduleDetailDto,
   ScheduleDto
 } from '../../src/contracts/schedule.contract'
 import {
@@ -29,7 +30,7 @@ type ScheduleListRequest = z.input<typeof ScheduleListQuerySchema>
 
 export interface ScheduleHostApi {
   createSchedule(input: CreateScheduleRequest): Promise<AppResult<ScheduleDto>>
-  findScheduleById(id: string): Promise<AppResult<ScheduleDto | null>>
+  findScheduleById(id: string): Promise<AppResult<ScheduleDetailDto | null>>
   listSchedules(query: ScheduleListRequest): Promise<AppResult<ScheduleDto[]>>
   updateSchedule(input: UpdateScheduleInput): Promise<AppResult<ScheduleDto>>
   setScheduleStarred(input: SetScheduleStarredInput): Promise<AppResult<ScheduleDto>>

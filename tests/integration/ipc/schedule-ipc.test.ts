@@ -56,7 +56,7 @@ function createHarness(
       },
       occurrences: {
         listRange: gateway.occurrences?.listRange ?? vi.fn(async () => ({ ok: true as const, value: [] })),
-        listBySchedule: gateway.occurrences?.listBySchedule ?? vi.fn(async () => ({ ok: true as const, value: [] })),
+        listVisibleBySchedule: gateway.occurrences?.listVisibleBySchedule ?? vi.fn(async () => ({ ok: true as const, value: [] })),
         updateComment: gateway.occurrences?.updateComment ?? vi.fn(),
         exclude: gateway.occurrences?.exclude ?? vi.fn(),
         listTodos: gateway.occurrences?.listTodos ?? vi.fn(async () => ({ ok: true as const, value: [] })),
@@ -156,7 +156,10 @@ describe('typed schedule IPC', () => {
     const { api } = createHarness({
       schedules: {
         create: vi.fn(),
-        findById: vi.fn(async () => ({ ok: true as const, value: schedule })),
+        findById: vi.fn(async () => ({
+          ok: true as const,
+          value: { ...schedule, deleted: false }
+        })),
         list: vi.fn(async () => ({ ok: true as const, value: [schedule] }))
       }
     })

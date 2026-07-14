@@ -45,7 +45,7 @@ describe('DrizzleScheduleRepository', () => {
     const found = await repository.findById(firstSchedule.id)
 
     expect(saved).toEqual({ ok: true, value: firstSchedule })
-    expect(found).toEqual({ ok: true, value: firstSchedule })
+    expect(found).toEqual({ ok: true, value: { ...firstSchedule, deleted: false } })
   })
 
   it('upserts changes and lists newest schedules first', async () => {

@@ -37,7 +37,8 @@ describe('HostScheduleApiSchema', () => {
 describe('createHostGateway', () => {
   it('delegates only the named platform methods', async () => {
     const createSchedule = vi.fn(async () => ({ ok: true as const, value: schedule }))
-    const findScheduleById = vi.fn(async () => ({ ok: true as const, value: schedule }))
+    const detail = { ...schedule, deleted: false }
+    const findScheduleById = vi.fn(async () => ({ ok: true as const, value: detail }))
     const listSchedules = vi.fn(async () => ({ ok: true as const, value: [schedule] }))
     const listOccurrences = vi.fn(async () => ({ ok: true as const, value: [] }))
     const updateSchedule = vi.fn(async () => ({ ok: true as const, value: schedule }))
@@ -88,7 +89,7 @@ describe('createHostGateway', () => {
     })
     await expect(gateway.schedules.findById(schedule.id)).resolves.toEqual({
       ok: true,
-      value: schedule
+      value: detail
     })
     await expect(gateway.schedules.list(query)).resolves.toEqual({
       ok: true,

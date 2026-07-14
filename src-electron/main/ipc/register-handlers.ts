@@ -108,7 +108,7 @@ export function registerScheduleIpcHandlers(
   const scheduleOccurrencesContract = scheduleIpcContracts[scheduleIpcChannels.listScheduleOccurrences]
   ipcMain.handle(scheduleIpcChannels.listScheduleOccurrences, (_event, input) => execute(
     input, (value) => scheduleOccurrencesContract.input.parse(value),
-    ({ scheduleId }) => gateway.occurrences.listBySchedule(scheduleId),
+    ({ scheduleId }) => gateway.occurrences.listVisibleBySchedule(scheduleId),
     (value) => scheduleOccurrencesContract.output.parse(value)
   ))
   const commentContract = scheduleIpcContracts[scheduleIpcChannels.updateOccurrenceComment]

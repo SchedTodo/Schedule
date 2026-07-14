@@ -2,10 +2,10 @@ import { readonly, shallowRef } from 'vue'
 
 import type { AppErrorDto } from '../../contracts/result'
 import type { PlatformGateway } from '../../contracts/platform.contract'
-import type { ScheduleDto } from '../../contracts/schedule.contract'
+import type { ScheduleDetailDto } from '../../contracts/schedule.contract'
 
 export function useScheduleDetail(gateway: PlatformGateway, id: string) {
-  const schedule = shallowRef<ScheduleDto | null>(null)
+  const schedule = shallowRef<ScheduleDetailDto | null>(null)
   const loading = shallowRef(false)
   const error = shallowRef<AppErrorDto | null>(null)
   let requestToken = 0

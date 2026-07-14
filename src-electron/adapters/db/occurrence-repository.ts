@@ -5,7 +5,8 @@ import type {
   CalendarOccurrenceDto,
   KnownTimeMark,
   OccurrenceRangeQuery,
-  ScheduleOccurrenceDto
+  ScheduleOccurrenceDto,
+  StoredScheduleOccurrenceDto
 } from '../../../src/contracts/occurrence.contract'
 import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
 import type { OccurrenceRepository } from '../../../src/platform/ports'
@@ -106,7 +107,7 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
     }
   }
 
-  async listBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>> {
+  async listVisibleBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>> {
     try {
       const rows = this.database
         .select({ occurrence: scheduleOccurrences, schedule: schedules })
@@ -133,6 +134,39 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
         comment: occurrence.comment,
         done: occurrence.done
       })) }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
+
+  async listAllBySchedule(
+    scheduleId: string
+  ): Promise<AppResult<readonly StoredScheduleOccurrenceDto[]>> {
+    try {
+      const rows = this.database
+        .select({ occurrence: scheduleOccurrences, schedule: schedules })
+        .from(scheduleOccurrences)
+        .innerJoin(schedules, eq(scheduleOccurrences.scheduleId, schedules.id))
+        .where(eq(scheduleOccurrences.scheduleId, scheduleId))
+        .orderBy(asc(scheduleOccurrences.end))
+        .all()
+      return {
+        ok: true,
+        value: rows.map(({ occurrence, schedule }) => ({
+          id: occurrence.id,
+          scheduleId: occurrence.scheduleId,
+          kind: schedule.kind,
+          title: schedule.title,
+          excluded: occurrence.excluded,
+          start: occurrence.start?.toISOString() ?? null,
+          end: occurrence.end.toISOString(),
+          startMark: occurrence.startMark,
+          endMark: occurrence.endMark,
+          comment: occurrence.comment,
+          done: occurrence.done,
+          deleted: occurrence.deletedAt !== null
+        }))
+      }
     } catch (error) {
       return { ok: false, error: persistenceError(error) }
     }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  ScheduleDetailDtoSchema,
   ScheduleSearchQuerySchema,
   UpdateScheduleInputSchema
 } from '../../src/contracts/schedule.contract'
@@ -14,6 +15,21 @@ import {
 const id = '10000000-0000-4000-8000-000000000001'
 
 describe('schedule management contracts', () => {
+  it('represents deleted state in schedule details', () => {
+    expect(ScheduleDetailDtoSchema.parse({
+      id,
+      kind: 'event',
+      title: 'Review',
+      recurrenceCode: '2026/7/13 10:00-11:00;',
+      exclusionCode: '',
+      comment: '',
+      starred: false,
+      deleted: false,
+      createdAt: '2026-07-11T08:00:00Z',
+      updatedAt: '2026-07-11T08:00:00Z'
+    }).deleted).toBe(false)
+  })
+
   it('accepts a strict schedule update', () => {
     expect(UpdateScheduleInputSchema.safeParse({
       id,

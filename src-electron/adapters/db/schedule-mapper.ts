@@ -1,4 +1,4 @@
-import type { ScheduleDto } from '../../../src/contracts/schedule.contract'
+import type { ScheduleDetailDto, ScheduleDto } from '../../../src/contracts/schedule.contract'
 import { Temporal } from '../../../src/domain/shared/temporal'
 import type { NewScheduleRow, ScheduleRow } from './schema'
 
@@ -28,5 +28,12 @@ export function scheduleRowToDto(row: ScheduleRow): ScheduleDto {
     starred: row.starred,
     createdAt: Temporal.Instant.from(row.createdAt.toISOString()).toString(),
     updatedAt: Temporal.Instant.from(row.updatedAt.toISOString()).toString()
+  }
+}
+
+export function scheduleRowToDetailDto(row: ScheduleRow): ScheduleDetailDto {
+  return {
+    ...scheduleRowToDto(row),
+    deleted: row.deletedAt !== null
   }
 }

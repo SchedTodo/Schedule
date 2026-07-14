@@ -107,11 +107,12 @@ export function createInMemoryGateway(
       },
 
       async findById(id) {
+        const schedule = schedules.find((value) => value.id === id)
         return {
           ok: true,
-          value: deletedScheduleIds.has(id)
+          value: schedule === undefined || deletedScheduleIds.has(id)
             ? null
-            : schedules.find((schedule) => schedule.id === id) ?? null
+            : { ...schedule, deleted: false }
         }
       },
 
@@ -240,7 +241,7 @@ export function createInMemoryGateway(
             }))
         }
       },
-      async listBySchedule(scheduleId) {
+      async listVisibleBySchedule(scheduleId) {
         if (!schedules.some(({ id }) => id === scheduleId)) return missing()
         return {
           ok: true,
