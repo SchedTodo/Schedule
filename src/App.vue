@@ -5,9 +5,12 @@ import { darkTheme, NConfigProvider } from 'naive-ui'
 import { naiveThemeOverrides } from './app/naive-theme'
 import AppShell from './app/components/AppShell.vue'
 import { usePreferencesStore } from './stores/preferences'
+import { useRuntimeStore } from './stores/runtime'
 
 const preferences = usePreferencesStore()
 preferences.hydrate()
+const runtime = useRuntimeStore()
+runtime.init(preferences.calendarMode)
 const usesDarkTheme = computed(
   () =>
     preferences.themeMode === 'dark' ||
