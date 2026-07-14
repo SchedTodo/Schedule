@@ -11,7 +11,14 @@ function formatTime(value: EvaluatedTime): string {
 }
 
 function formatFrequency(value: EvaluatedStatement['frequency']): string {
-  if (value.unit === 'daily' && value.interval === 1 && value.count === undefined) return ''
+  if (
+    !value.explicit &&
+    value.unit === 'daily' &&
+    value.interval === 1 &&
+    value.count === undefined
+  ) {
+    return ''
+  }
   const options = [
     value.interval === 1 ? '' : `i${value.interval}`,
     value.count === undefined ? '' : `c${value.count}`

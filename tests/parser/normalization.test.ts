@@ -61,4 +61,24 @@ describe('normalizeSchedule', () => {
     const second = normalizeSchedule(first.value.code, fixedZoneContext)
     expect(second.ok && second.value.code).toBe(first.value.code)
   })
+
+  it('preserves explicit daily without inserting implicit daily', () => {
+    const implicit = normalizeSchedule('2026/7/13-17 13:00-14:00;', context)
+    const explicit = normalizeSchedule('2026/7/13-17 13:00-14:00 daily;', context)
+
+    expect(implicit.ok && implicit.value.code)
+      .toBe('2026/7/13-2026/7/17 13:00-14:00 Asia/Shanghai;')
+    expect(explicit.ok && explicit.value.code)
+      .toBe('2026/7/13-2026/7/17 13:00-14:00 Asia/Shanghai daily;')
+  })
+
+  it('preserves explicit daily options', () => {
+    const result = normalizeSchedule(
+      '2026/7/13-17 13:00-14:00 daily,i2,c2;',
+      context
+    )
+
+    expect(result.ok && result.value.code)
+      .toBe('2026/7/13-2026/7/17 13:00-14:00 Asia/Shanghai daily,i2,c2;')
+  })
 })

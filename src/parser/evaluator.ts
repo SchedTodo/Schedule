@@ -31,6 +31,7 @@ export interface EvaluatedStatement {
     readonly unit: 'daily' | 'weekly' | 'monthly' | 'yearly'
     readonly interval: number
     readonly count?: number
+    readonly explicit: boolean
   }
   readonly by: Readonly<Record<string, readonly number[]>>
 }
@@ -186,7 +187,8 @@ function evaluateStatement(
     frequency: {
       unit: statement.frequency?.unit ?? 'daily',
       interval: statement.frequency?.interval ?? 1,
-      ...(statement.frequency?.count === undefined ? {} : { count: statement.frequency.count })
+      ...(statement.frequency?.count === undefined ? {} : { count: statement.frequency.count }),
+      explicit: statement.frequency !== undefined
     },
     by: statement.by
   }
