@@ -57,5 +57,16 @@ describe('in-memory schedule management', () => {
     expect(commented.ok && commented.value.comment).toBe('Instance note')
     await expect(gateway.occurrences.exclude(occurrence.id)).resolves.toEqual({ ok: true, value: undefined })
     await expect(gateway.occurrences.listVisibleBySchedule(schedule.id)).resolves.toEqual({ ok: true, value: [] })
+    await gateway.schedules.update({
+      id: schedule.id,
+      title: schedule.title,
+      recurrenceCode: schedule.recurrenceCode,
+      exclusionCode: '',
+      comment: schedule.comment
+    })
+    await expect(gateway.occurrences.listVisibleBySchedule(schedule.id)).resolves.toEqual({
+      ok: true,
+      value: [expect.objectContaining({ id: occurrence.id, comment: 'Instance note' })]
+    })
   })
 })

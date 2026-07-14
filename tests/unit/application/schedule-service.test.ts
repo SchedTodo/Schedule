@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ScheduleService } from '../../../src/application/schedule-service'
 import { FixedClock } from '../../../src/domain/shared/clock'
-import type { ScheduleRepository } from '../../../src/platform/ports'
+import type { OccurrenceRepository, ScheduleRepository } from '../../../src/platform/ports'
 
 function repositoryWith(overrides: Partial<ScheduleRepository> = {}): ScheduleRepository {
   return {
@@ -18,6 +18,21 @@ function repositoryWith(overrides: Partial<ScheduleRepository> = {}): ScheduleRe
     } })),
     setDeleted: vi.fn(async () => ({ ok: true as const, value: undefined })),
     searchPage: vi.fn(async () => ({ ok: true as const, value: { items: [], total: 0 } })),
+    ...overrides
+  }
+}
+
+function occurrenceRepositoryWith(
+  overrides: Partial<OccurrenceRepository> = {}
+): OccurrenceRepository {
+  return {
+    listRange: vi.fn(async () => ({ ok: true as const, value: [] })),
+    listVisibleBySchedule: vi.fn(async () => ({ ok: true as const, value: [] })),
+    listAllBySchedule: vi.fn(async () => ({ ok: true as const, value: [] })),
+    updateComment: vi.fn(),
+    exclude: vi.fn(async () => ({ ok: true as const, value: undefined })),
+    listTodos: vi.fn(async () => ({ ok: true as const, value: [] })),
+    setDone: vi.fn(),
     ...overrides
   }
 }
@@ -101,6 +116,67 @@ describe('ScheduleService', () => {
       title: 'Deadline', recurrenceCode: '2026/7/13 10:00;', exclusionCode: '', comment: ''
     })
     expect(result.ok && result.value.kind).toBe('todo')
+  })
+
+  it('restores matching historical occurrences with their identity and user state', async () => {
+    const schedule = {
+      id: '10000000-0000-4000-8000-000000000001',
+      kind: 'event' as const,
+      title: 'Review',
+      recurrenceCode: '2026/7/13 10:00-11:00 UTC;',
+      exclusionCode: '2026/7/13 10:00-11:00 UTC;',
+      comment: '',
+      starred: false,
+      deleted: false,
+      createdAt: '2026-07-11T08:00:00Z',
+      updatedAt: '2026-07-11T08:00:00Z'
+    }
+    const historical = {
+      id: '20000000-0000-4000-8000-000000000001',
+      scheduleId: schedule.id,
+      kind: 'event' as const,
+      title: schedule.title,
+      excluded: true,
+      start: '2026-07-13T10:00:00Z',
+      end: '2026-07-13T11:00:00Z',
+      startMark: '11' as const,
+      endMark: '11' as const,
+      comment: 'keep',
+      done: true,
+      deleted: true
+    }
+    const repository = repositoryWith({
+      findById: vi.fn(async () => ({ ok: true as const, value: schedule }))
+    })
+    const occurrences = occurrenceRepositoryWith({
+      listAllBySchedule: vi.fn(async () => ({ ok: true as const, value: [historical] }))
+    })
+    const service = new ScheduleService(repository, {
+      clock: new FixedClock('2026-07-12T08:00:00Z'),
+      idGenerator: { next: () => '20000000-0000-4000-8000-000000000099' },
+      defaultTimeZone: 'UTC',
+      weekStartsOn: 1,
+      resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
+    }, occurrences)
+
+    await service.update({
+      id: schedule.id,
+      title: schedule.title,
+      recurrenceCode: '2026/7/13 10:00-11:00 UTC;',
+      exclusionCode: '',
+      comment: ''
+    })
+
+    expect(occurrences.listAllBySchedule).toHaveBeenCalledWith(schedule.id)
+    expect(repository.saveWithOccurrences).toHaveBeenCalledWith(
+      expect.anything(),
+      [expect.objectContaining({
+        id: historical.id,
+        excluded: false,
+        comment: 'keep',
+        done: true
+      })]
+    )
   })
 
   it('returns repository failures and delegates reads', async () => {

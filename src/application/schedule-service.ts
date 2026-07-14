@@ -140,7 +140,7 @@ export class ScheduleService implements ScheduleGateway {
     }
     const existingResult = this.occurrenceRepository === undefined
       ? { ok: true as const, value: [] }
-      : await this.occurrenceRepository.listVisibleBySchedule(parsed.data.id)
+      : await this.occurrenceRepository.listAllBySchedule(parsed.data.id)
     if (!existingResult.ok) return existingResult
     const existing = new Map(existingResult.value.map((value) => [JSON.stringify([value.start, value.end, value.startMark, value.endMark]), value]))
     return this.repository.saveWithOccurrences(updated, normalized.occurrences.map((value) => {

@@ -74,10 +74,14 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
             updatedAt: row.updatedAt
           }
         }).run()
-        transaction.delete(scheduleOccurrences)
-          .where(eq(scheduleOccurrences.scheduleId, schedule.id)).run()
-        if (occurrences.length > 0) {
-          transaction.insert(scheduleOccurrences).values(occurrences.map((occurrence) => ({
+        const existing = transaction
+          .select({ id: scheduleOccurrences.id })
+          .from(scheduleOccurrences)
+          .where(eq(scheduleOccurrences.scheduleId, schedule.id))
+          .all()
+        const desiredIds = new Set(occurrences.map(({ id }) => id))
+        for (const occurrence of occurrences) {
+          transaction.insert(scheduleOccurrences).values({
             id: occurrence.id,
             scheduleId: occurrence.scheduleId,
             excluded: occurrence.excluded,
@@ -90,7 +94,27 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
             deletedAt: null,
             createdAt: row.createdAt,
             updatedAt: row.updatedAt
-          }))).run()
+          }).onConflictDoUpdate({
+            target: scheduleOccurrences.id,
+            set: {
+              excluded: occurrence.excluded,
+              start: occurrence.start === null ? null : new Date(occurrence.start),
+              end: new Date(occurrence.end),
+              startMark: occurrence.startMark,
+              endMark: occurrence.endMark,
+              comment: occurrence.comment,
+              done: occurrence.done,
+              deletedAt: null,
+              updatedAt: row.updatedAt
+            }
+          }).run()
+        }
+        for (const { id } of existing) {
+          if (desiredIds.has(id)) continue
+          transaction.update(scheduleOccurrences)
+            .set({ deletedAt: row.updatedAt, updatedAt: row.updatedAt })
+            .where(eq(scheduleOccurrences.id, id))
+            .run()
         }
       })
       return { ok: true, value: schedule }
