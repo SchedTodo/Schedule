@@ -2,7 +2,7 @@
 
 ## Project Direction
 
-- `release-1.2.0` is the immutable legacy reference. Do not rewrite, rebase, force-push, or add v2 work to it.
+- `release/1.2.0` is the immutable legacy reference. Do not rewrite, rebase, force-push, or add v2 work to it.
 - `main` is the Schedule v2 development line.
 - Follow `docs/superpowers/plans/2026-07-11-schedule-v2-rebuild.md` for the active rebuild.
 - Keep `src` browser-runnable and platform-independent.

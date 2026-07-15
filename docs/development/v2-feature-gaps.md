@@ -1,26 +1,184 @@
-# Schedule v2 Feature Gaps
+# Schedule v2 迁移差异基线
 
-This document records the difference between the current v2 implementation and the capabilities visible in release/1.2.0. It is a backlog inventory, not a promise that every historical feature must return unchanged.
+本文档是 Schedule v2 后续迁移工作的权威基线。它记录 `main` 与 `release/1.2.0` 之间仍需处理的用户可见差异、已批准的非目标和暂缓事项。后续设计、实施计划和验收应引用本文档；若其他旧计划与本文档冲突，以本文档为准。
 
-## Implemented boundary
+## 状态与优先级
 
-Browser and Electron gateways now provide validated schedule creation, lookup, listing, editing, starring, soft deletion/restoration, filtered paging, persisted occurrence generation/range queries, per-occurrence exclusion/comments/Todo completion, persisted settings, concentration records, alarms, notifications, and open-at-login. Month/week/Todo/detail/Database/Settings/Concentration pages consume these gateways without host-specific types. The week view preserves the legacy presentation-only vertical drag offset for revealing overlapping cards without mutating occurrences.
+- `已完成`：当前 v2 已具备该能力，并有相应代码或测试覆盖。
+- `待实施`：仍属于当前迁移范围，满足验收标准后才能关闭。
+- `暂缓`：保留为未来工作，但不阻塞当前本地功能迁移。
+- `非目标`：已经明确决定不实施，不应再作为缺口提出。
+- `P0`：正式替代 1.2 前必须完成。
+- `P1`：本地功能或桌面体验一致性工作。
+- `P2`：发布完备性、清理或长期维护工作。
 
-## Backend and gateway gaps
+## 已批准决策
 
-- Provide user login, logout, profile, token refresh, and session expiry.
-- Provide WebSocket lifecycle, remote synchronization, conflict handling, and sync metadata.
+### 不迁移 1.2 数据库
 
-## Frontend gaps
+状态：`非目标`
 
-- User menu, authentication feedback, sync action, and syncing overlay are not migrated.
+Schedule v2 使用独立的新数据库，不迁移、导入或转换 1.2 的 `Schedule`、`Time`、`Record`、`Setting` 数据。`release/1.2.0` 只作为功能和用户可见行为参考，不作为数据兼容目标。
 
-## Platform gaps
+因此：
 
-- Packaging, signing, updater, and release artifacts.
-- Tauri composition root.
-- Cross-device sync service and secure credential storage.
+- 不要求保留旧日程、时间实例、完成状态、单次备注、专注记录或设置。
+- 不要求提供旧数据库备份、恢复、幂等迁移或失败回滚流程。
+- 现有 v1 数据迁移代码和测试不构成发布要求；在最终切换阶段应移除或停止调用，避免形成错误的数据兼容承诺。
+- 后续文档不得再把“1.2 数据迁移”列为待办或验收条件，除非用户重新批准范围变更。
 
-## Deferred product decisions
+### 同步功能暂缓
 
-- Whether historical login/sync semantics should be restored or redesigned.
+状态：`暂缓`
+
+WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同步操作入口和同步遮罩暂不纳入当前迁移工作，不阻塞本地版本完成。与同步直接绑定的凭据存储、token 刷新和会话过期处理一并暂缓。
+
+恢复同步前必须先单独批准协议、认证方式、冲突语义和安全存储设计，不默认复制 1.2 的实现。
+
+### Tauri 暂不作为当前验收目标
+
+状态：`暂缓`
+
+`src` 继续保持浏览器可运行和平台无关，为未来 Tauri 适配保留边界；但 Tauri composition root 不阻塞当前 Web/Electron 迁移和发布。
+
+## 已完成边界
+
+状态：`已完成`
+
+当前 Browser 和 Electron gateway 已覆盖：
+
+- 日程创建、查询、列表、编辑、收藏、软删除、恢复、筛选和分页。
+- 时间实例生成与范围查询、单次排除、单次备注和 Todo 完成状态。
+- 月视图、周视图、Todo、详情、Database、Settings 和 Concentration 页面。
+- 设置持久化、时区、周起始日、日历视图偏好和开机启动设置。
+- 专注记录的创建、持久化和日程详情展示。
+- 提醒计算、Electron 系统通知和托盘后台驻留的基础能力。
+- ANTLR 日程解析器及旧版解析器语义兼容测试。
+- Vue 代码通过稳定 DTO 和 `PlatformGateway` 工作，不暴露 Electron、Drizzle、SQLite 或 ANTLR context 类型。
+
+“已完成”表示已有实现边界，不表示所有旧版交互细节已经一致；以下工作项仍优先于最终发布。
+
+## 当前待实施工作
+
+### GAP-01：恢复完整专注循环
+
+状态：`待实施`
+
+优先级：`P1`
+
+当前专注页只有单段 Focus 倒计时和开始/暂停。需要恢复 1.2 用户可见的番茄钟流程，但继续通过平台端口保存专注记录。
+
+验收标准：
+
+- 按设置执行 Focus、Small Break 和 Big Break 阶段。
+- 默认循环为四个 Focus，前三次进入 Small Break，第四次进入 Big Break，然后重新开始。
+- 阶段结束会自动切换，并显示当前阶段和累计专注时间。
+- Focus/Break 阶段通知通过通知端口触发，不在 Vue 页面直接使用宿主 API。
+- 切换 Todo 或离开页面时，超过一分钟的 Focus 记录保存到对应日程；Break 不记为专注记录。
+- 使用固定时钟或 fake timer 覆盖阶段切换、暂停、恢复、Todo 切换和记录保存。
+
+### GAP-02：对齐 Electron 窗口、托盘和启动行为
+
+状态：`待实施`
+
+优先级：`P1`
+
+验收标准：
+
+- 普通启动时窗口可见并最大化；开机启动时后台启动且不抢占前台。
+- 最小化和关闭按钮的托盘行为有明确且一致的定义，并由 Electron 集成测试覆盖。
+- 托盘的显示操作会恢复、显示、最大化并聚焦主窗口，退出操作会完整关闭数据库、定时器和托盘。
+- 恢复明确批准的桌面快捷键；F5 刷新是否保留应在实现计划中作为显式决定，不静默遗漏。
+- `window.open` 和外部链接只允许批准的协议，并通过安全的 Electron 外链适配器打开。
+- 保持 `contextIsolation: true`、`sandbox: true` 和 `nodeIntegration: false`。
+
+### GAP-03：对齐提醒时间与通知展示
+
+状态：`待实施`
+
+优先级：`P1`
+
+验收标准：
+
+- 明确定义提醒在轮询时间点之前还是之后触发，并用边界测试保证不会重复或永久漏发。
+- 休眠恢复、设置变更、日程变更和 Todo 完成后会重新计算待提醒实例。
+- 通知标题包含类型和日程名称。
+- 通知正文按用户设置的时区展示可读时间，并保留未知小时、未知分钟的显示语义，不直接展示原始 ISO 字符串。
+- 已完成、已排除、已软删除或禁用提醒的实例不会通知。
+
+### GAP-04：建立可重复的测试时间基线
+
+状态：`待实施`
+
+优先级：`P0`
+
+部分首页测试使用固定在 2026 年 7 月的 fixture，但页面查询读取真实系统时间，导致测试随日期变化。所有依赖“今天”、逻辑日、到期状态、日历范围和提醒窗口的测试必须确定化。
+
+验收标准：
+
+- 单元和组件测试不依赖执行机器的当前日期、时区或 locale。
+- 首页、Todo、日历、详情、专注和提醒测试统一使用固定时钟或 fake timer。
+- 项目规定的 lint、类型检查、单元测试和 Web 构建从任意日期运行均通过。
+- 测试不得通过放宽断言或把 fixture 日期不断推迟来规避时间依赖。
+
+### GAP-05：补齐发布与端到端验证
+
+状态：`待实施`
+
+优先级：`P0`
+
+验收标准：
+
+- 提供可复现的 Windows 打包命令和安装产物；macOS、Linux、签名和自动更新只有在单独批准目标平台后才成为必需项。
+- Web E2E 覆盖日程新增、编辑、删除、Todo 完成、月/周切换、解析错误、设置和专注流程。
+- Electron E2E 覆盖本地持久化、窗口安全边界、托盘、开机启动设置、通知端口和安全外链。
+- `package.json` 中的 E2E、构建和发布脚本均有实际文件与 CI 或本地验证流程对应，不保留空脚本。
+- 生产构建不依赖 legacy 源码、开发服务器或未声明的本机环境。
+
+### GAP-06：完成 legacy 源码切换与文档收口
+
+状态：`待实施`
+
+优先级：`P2`
+
+验收标准：
+
+- 删除不再参与 v2 运行的 `src/main/**`、`src/preload/**`、`src/renderer/**`、`src/prisma/**` 和旧解析器测试。
+- 删除仅被 legacy 代码使用的依赖、别名、环境变量和构建配置。
+- 删除或停用 v1 数据迁移入口，确保新安装只创建 v2 数据库。
+- README 和架构文档只描述实际存在的 v2 命令、能力和限制。
+- 删除 legacy 源码前后运行同一套验证，证明 v2 不通过旧别名或遗留文件间接工作。
+
+## 账户与身份边界
+
+状态：`暂缓`
+
+1.2 的 Google 登录、头像、用户菜单和登录反馈主要服务于同步。当前本地版本固定显示 Guest，不把账户体系作为本地功能完成条件。
+
+如果未来恢复账户能力，应作为独立设计处理，并至少明确：
+
+- 登录的产品目的是否仍只用于同步。
+- 浏览器与 Electron 的认证流程。
+- token、刷新凭据和会话过期数据的安全存储边界。
+- Guest 与登录用户之间的数据归属和切换行为。
+
+## 执行顺序
+
+后续默认按以下顺序推进；每一项应有独立设计、TDD 实施计划和验证结果：
+
+1. `GAP-04`：先稳定时间相关测试基线。
+2. `GAP-01`：恢复完整专注循环。
+3. `GAP-02`：对齐窗口、托盘和启动行为。
+4. `GAP-03`：对齐提醒时间和通知展示。
+5. `GAP-05`：补齐发布和端到端验证。
+6. `GAP-06`：删除 legacy 实现并完成文档收口。
+
+同步、账户和 Tauri 不在上述执行序列中，必须经用户重新批准后才能进入实施计划。
+
+## 维护规则
+
+- 新发现的 1.2 行为差异先记录在本文档，再编写设计或实施代码。
+- 关闭工作项时，必须附上对应测试或验证命令，并把状态改为 `已完成`。
+- 范围变更必须记录在“已批准决策”，不能只修改某个实施计划。
+- 不得把已批准的非目标重新包装成隐含发布要求。
+- 本文档记录产品与迁移范围；具体代码步骤继续写入 `docs/superpowers/plans/`。
