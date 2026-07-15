@@ -54,7 +54,16 @@ describe('secondary pages', () => {
 
   it('restores the Schedule header with Info and Times cards', async () => {
     const router = await routerAt(`/schedule/${schedule.id}`)
+    const detailSchedule: ScheduleDto = {
+      ...schedule,
+      recurrenceCode: '2026/7/15 10:00;2026/7/16 11:00;',
+      exclusionCode: '2026/7/17 12:00;2026/7/18 13:00;'
+    }
     const platform = createInMemoryGateway([schedule])
+    vi.spyOn(platform.schedules, 'findById').mockResolvedValue({
+      ok: true,
+      value: { ...detailSchedule, deleted: false }
+    })
     const excludeMany = vi.spyOn(platform.occurrences, 'excludeMany')
       .mockResolvedValue({ ok: true, value: undefined })
     const wrapper = mount(ScheduleDetailPage, {
@@ -72,8 +81,13 @@ describe('secondary pages', () => {
     expect(wrapper.text()).not.toContain('Starfalse')
     expect(wrapper.text()).not.toContain('Records')
     expect(wrapper.find('.star-icon').exists()).toBe(true)
+    expect(wrapper.find('.star-button').exists()).toBe(true)
     expect(wrapper.find('.schedule-actions').exists()).toBe(true)
     expect(wrapper.find('.schedule-type').exists()).toBe(true)
+    expect(wrapper.get('.recurrence-code').element.textContent)
+      .toBe('2026/7/15 10:00;\n2026/7/16 11:00;\n')
+    expect(wrapper.get('.exclusion-code').element.textContent)
+      .toBe('2026/7/17 12:00;\n2026/7/18 13:00;\n')
     expect(wrapper.findAllComponents(NPopconfirm)).toHaveLength(2)
     const table = wrapper.getComponent(NDataTable)
     const columns = table.props('columns') as Array<{ title?: unknown }>

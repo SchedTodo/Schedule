@@ -54,6 +54,7 @@ const pagination = reactive({
   pageSizes: [5, 10, 15, 20]
 })
 const format = (value: string) => formatInstant(value, timeZone.value)
+const formatTimeCode = (value: string) => value.replace(/;\s*/g, ';\n')
 const sortedOccurrences = computed(() =>
   sortDetailOccurrences(occurrences.value, timeZone.value)
 )
@@ -195,6 +196,7 @@ void refreshSettings()
         </template>
         <template #header-extra>
           <NButton
+            class="star-button"
             text
             :disabled="detail.schedule.value.deleted"
             :color="detail.schedule.value.starred ? '#ffe742' : '#c2c2c2'"
@@ -231,8 +233,8 @@ void refreshSettings()
             {{ detail.schedule.value.kind }}
           </NTag>
           <b>Comment</b><span class="pre-line">{{ detail.schedule.value.comment }}</span>
-          <b>rTime</b><span class="pre-line">{{ detail.schedule.value.recurrenceCode }}</span>
-          <b>exTime</b><span class="pre-line">{{ detail.schedule.value.exclusionCode }}</span>
+          <b>rTime</b><span class="pre-line recurrence-code">{{ formatTimeCode(detail.schedule.value.recurrenceCode) }}</span>
+          <b>exTime</b><span class="pre-line exclusion-code">{{ formatTimeCode(detail.schedule.value.exclusionCode) }}</span>
           <b>Deleted</b><NTag :type="detail.schedule.value.deleted ? 'success' : 'error'">
             {{ detail.schedule.value.deleted }}
           </NTag>
@@ -305,9 +307,12 @@ void refreshSettings()
 .schedule-info > .n-tag { justify-self: start; }
 .schedule-type { align-self: start; inline-size: fit-content; }
 .schedule-actions :deep(.n-button) { border-radius: 3px; }
+.star-button { margin-inline-end: var(--space-4); }
 .star-icon { font-size: 1.5rem; }
 .pre-line { white-space: pre-line; }
 table { inline-size: 100%; border-collapse: collapse; }
 th, td { padding: 0.6rem; border-block-end: 1px solid var(--color-border); text-align: start; }
-:deep(.row-before-today td) { color: #ccc; }
+:deep(.row-before-today) {
+  --n-td-text-color: var(--color-text-muted);
+}
 </style>

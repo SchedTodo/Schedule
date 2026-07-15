@@ -75,4 +75,14 @@ describe('current UI source conventions', () => {
     expect(week).toContain('border: 1px solid var(--color-border)')
     expect(week).toContain('border-block-end: 1px solid var(--color-border)')
   })
+
+  it('uses shared tokens for Schedule detail action spacing and past rows', () => {
+    const detail = Object.entries(currentUiModules)
+      .find(([path]) => path.endsWith('/src/pages/schedule/[id].vue'))?.[1] ?? ''
+
+    expect(detail).toContain('.star-button { margin-inline-end: var(--space-4); }')
+    expect(detail).toContain(':deep(.row-before-today) {')
+    expect(detail).toContain('--n-td-text-color: var(--color-text-muted)')
+    expect(detail).not.toContain(':deep(.row-before-today td) { color: #ccc; }')
+  })
 })
