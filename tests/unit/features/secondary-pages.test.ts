@@ -104,7 +104,6 @@ describe('secondary pages', () => {
       }
     })
 
-    wrapper.findAllComponents(NSelect)[2]!.vm.$emit('update:value', 'deleted')
     await vi.waitFor(() => expect(wrapper.text()).toContain('Weekly review'))
     await wrapper.get('tbody tr').trigger('click')
 

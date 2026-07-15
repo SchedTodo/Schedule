@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { ArrowUndo, Star } from '@vicons/ionicons5'
 import { inject, ref, watch } from 'vue'
-import { NCard, NDatePicker, NInput, NSelect, NTag } from 'naive-ui'
+import { NButton, NCard, NDatePicker, NIcon, NInput, NSelect, NTag } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { ScheduleKind, SchedulePageItemDto } from '../contracts/schedule.contract'
@@ -12,8 +13,7 @@ const router = useRouter()
 const search = ref('')
 const kind = ref<ScheduleKind | null>(null)
 const dates = ref<[number, number] | null>(null)
-const starred = ref<'all' | 'starred' | 'unstarred'>('all')
-const deleted = ref<'active' | 'deleted'>('active')
+const starredOnly = ref(false)
 const page = ref(1)
 const pageSize = 20
 const items = ref<readonly SchedulePageItemDto[]>([])
@@ -27,10 +27,9 @@ async function refresh() {
       : {
           start: new Date(dates.value[0]).toISOString(),
           end: new Date(dates.value[1]).toISOString()
-        }),
+    }),
     ...(kind.value === null ? {} : { kind: kind.value }),
-    ...(starred.value === 'all' ? {} : { starred: starred.value === 'starred' }),
-    deleted: deleted.value === 'deleted',
+    ...(starredOnly.value ? { starred: true } : {}),
     page: page.value,
     pageSize
   })
@@ -45,6 +44,10 @@ async function restore(id: string) {
   await refresh()
 }
 
+function toggleStarFilter() {
+  starredOnly.value = !starredOnly.value
+}
+
 function previousPage() {
   page.value -= 1
   void refresh()
@@ -56,7 +59,7 @@ function nextPage() {
 }
 
 watch(
-  [search, kind, dates, starred, deleted],
+  [search, kind, dates, starredOnly],
   () => {
     page.value = 1
     void refresh()
@@ -90,7 +93,6 @@ watch(
             start-placeholder="Start Date"
             end-placeholder="End Date"
           />
-          <span>Type</span>
           <NSelect
             :value="kind"
             placeholder="Type"
@@ -102,26 +104,15 @@ watch(
             style="width: 12rem"
             @update:value="kind = $event"
           />
-          <NSelect
-            v-model:value="starred"
-            aria-label="Star filter"
-            placeholder="Star"
-            :options="[
-              { label: 'All Stars', value: 'all' },
-              { label: 'Starred', value: 'starred' },
-              { label: 'Not Starred', value: 'unstarred' }
-            ]"
-            style="width: 9rem"
-          />
-          <NSelect
-            v-model:value="deleted"
-            aria-label="Deleted filter"
-            :options="[
-              { label: 'Active', value: 'active' },
-              { label: 'Deleted', value: 'deleted' }
-            ]"
-            style="width: 9rem"
-          />
+          <NButton
+            text
+            class="database-star-filter"
+            :aria-label="starredOnly ? 'Show all schedules' : 'Show starred schedules'"
+            :color="starredOnly ? '#ffe742' : '#c2c2c2'"
+            @click="toggleStarFilter"
+          >
+            <NIcon><Star /></NIcon>
+          </NButton>
         </div>
         <table>
           <thead>
@@ -143,10 +134,19 @@ watch(
             >
               <td>{{ item.id }}</td>
               <td>{{ item.title }}</td>
-              <td>
+              <td class="database-deleted-cell">
                 <NTag type="error">
                   {{ item.deleted }}
                 </NTag>
+                <NButton
+                  v-if="item.deleted"
+                  text
+                  class="database-restore"
+                  aria-label="Restore schedule"
+                  @click.stop="restore(item.id)"
+                >
+                  <NIcon><ArrowUndo /></NIcon>
+                </NButton>
               </td>
               <td>{{ new Date(item.createdAt).toLocaleString() }}</td>
               <td>{{ new Date(item.updatedAt).toLocaleString() }}</td>
@@ -156,14 +156,9 @@ watch(
                 </NTag>
               </td>
               <td>
-                {{ item.starred ? '★' : '☆' }}
-                <button
-                  v-if="item.deleted"
-                  type="button"
-                  @click.stop="restore(item.id)"
-                >
-                  Restore
-                </button>
+                <NIcon :color="item.starred ? '#ffe742' : '#c2c2c2'">
+                  <Star />
+                </NIcon>
               </td>
             </tr>
           </tbody>
@@ -205,6 +200,17 @@ watch(
 }
 .database-filter > :first-of-type {
   max-inline-size: 28rem;
+}
+.database-star-filter {
+  flex: 0 0 auto;
+  font-size: 1.25rem;
+}
+.database-deleted-cell {
+  white-space: nowrap;
+}
+.database-restore {
+  margin-inline-start: 0.35rem;
+  color: var(--color-text-muted);
 }
 table {
   inline-size: 100%;
