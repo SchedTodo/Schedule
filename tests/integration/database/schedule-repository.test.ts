@@ -29,7 +29,7 @@ describe('DrizzleScheduleRepository', () => {
     sqlite = new Database(':memory:')
     sqlite.exec(
       readFileSync(
-        new URL('../../../src-electron/adapters/db/migrations/0001_v2_schema.sql', import.meta.url),
+        new URL('../../../src-electron/adapters/db/schema.sql', import.meta.url),
         'utf8'
       )
     )

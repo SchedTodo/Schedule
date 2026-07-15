@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rebuild Schedule as a platform-independent Vue web application with isolated Electron adapters, an ANTLR-based schedule language, typed runtime contracts, and a migration path from the 1.2 database.
+**Goal:** Rebuild Schedule as a platform-independent Vue web application with isolated Electron adapters, an ANTLR-based schedule language, typed runtime contracts, and a fresh v2 database.
 
 **Architecture:** `src` contains the browser-runnable Vue application, domain model, application services, platform ports, contracts, and parser. `src-electron` contains Electron lifecycle code, preload/IPC adapters, SQLite persistence, notifications, autostart, WebSocket integration, and packaging. Dependencies point inward: platform adapters depend on contracts and application ports, while `src` never imports Electron, Node database drivers, or generated database types.
 
@@ -21,8 +21,8 @@
 - Use official ANTLR's TypeScript target. Grammar files contain no target-language actions, and generated files are never edited manually.
 - Use Temporal domain types and serialize them at process/network boundaries. Do not add Moment or new Luxon usage.
 - Runtime boundary data is `unknown` until validated with Zod.
-- Persist SQLite schema changes as reviewed SQL migrations. Never run schema push in production.
-- Preserve the 1.2 database before migration and prove migration idempotence with fixture databases.
+- Create new SQLite databases from one reviewed complete schema. Do not add migration metadata or incremental upgrade behavior.
+- Do not convert, back up, import, or otherwise support the 1.2 database.
 - Use test-driven development, keep each task independently testable, and commit after every task.
 
 ---
@@ -87,7 +87,7 @@ src-electron/
 │  │  ├─ client.ts
 │  │  ├─ schema.ts
 │  │  ├─ schedule-repository.ts
-│  │  └─ migrations/
+│  │  └─ schema.sql
 │  ├─ electron-notifier.ts
 │  ├─ electron-external-link.ts
 │  ├─ electron-autostart.ts
@@ -101,7 +101,6 @@ tests/
 ├─ integration/
 │  ├─ database/
 │  └─ ipc/
-├─ fixtures/v1/
 └─ e2e/
    ├─ web/
    └─ electron/
@@ -424,24 +423,22 @@ git add tools/antlr src/parser tests/parser package.json pnpm-lock.yaml
 git commit -m "feat: replace schedule parser with ANTLR"
 ```
 
-### Task 5: Build the Drizzle SQLite repository and v1 migration
+### Task 5: Build the Drizzle SQLite repository and direct schema initialization
 
 **Files:**
 - Create: `src-electron/adapters/db/schema.ts`
 - Create: `src-electron/adapters/db/client.ts`
 - Create: `src-electron/adapters/db/schedule-mapper.ts`
 - Create: `src-electron/adapters/db/schedule-repository.ts`
-- Create: `src-electron/adapters/db/migrations/0001_v2_schema.sql`
-- Create: `src-electron/adapters/db/migrate-v1.ts`
-- Create: `tests/fixtures/v1/prod.db`
+- Create: `src-electron/adapters/db/schema.sql`
 - Create: `tests/integration/database/schedule-repository.test.ts`
-- Create: `tests/integration/database/v1-migration.test.ts`
+- Create: `tests/integration/database/database-initialization.test.ts`
 - Read reference: `src/prisma/schema.prisma`
 - Read reference: `src/main/service/scheduleService.ts`
 
 **Interfaces:**
 - Consumes: domain `Schedule` and `ScheduleRepository` port.
-- Produces: `DrizzleScheduleRepository` and `migrateV1Database(databasePath, backupPath)`.
+- Produces: `DrizzleScheduleRepository` and `initializeScheduleDatabase(databasePath, schemaSql)`.
 
 - [ ] **Step 1: Install Drizzle and SQLite driver**
 
@@ -456,29 +453,29 @@ pnpm add -D drizzle-kit@latest @types/better-sqlite3@latest
 
 Cover create/read/update/delete, transactions, recurrence persistence, timestamps, soft deletion, and mapper round trips.
 
-- [ ] **Step 3: Write failing v1 migration tests**
+- [ ] **Step 3: Write failing direct-initialization tests**
 
-Copy a sanitized v1 fixture database, migrate the copy, verify row counts and representative schedules, run migration a second time, and assert the second run makes no changes.
+Verify a missing database receives the complete current schema and an existing database is opened without conversion or upgrades.
 
-- [ ] **Step 4: Define the v2 schema and reviewed SQL migration**
+- [ ] **Step 4: Define the reviewed complete v2 schema**
 
-Use integer epoch milliseconds for instants, explicit nullability, foreign keys, indexes for calendar range queries, and a migration metadata table. Do not expose inferred database row types outside this adapter.
+Use integer epoch milliseconds for instants, explicit nullability, foreign keys, and indexes for calendar range queries. Do not add a migration metadata table or expose inferred database row types outside this adapter.
 
-- [ ] **Step 5: Implement automatic backup and transactional migration**
+- [ ] **Step 5: Initialize only new database files**
 
-Migration must refuse to overwrite an existing backup, preserve the original database on failure, and report a stable migration error.
+Execute the complete schema only when the database file did not exist before opening. Existing files are opened unchanged.
 
 - [ ] **Step 6: Run database tests**
 
 Run: `pnpm vitest run tests/integration/database`
 
-Expected: repository and two-pass migration tests pass.
+Expected: repository and direct-initialization tests pass.
 
-- [ ] **Step 7: Commit persistence and migration**
+- [ ] **Step 7: Commit persistence and direct initialization**
 
 ```powershell
-git add src-electron/adapters/db tests/fixtures/v1 tests/integration/database package.json pnpm-lock.yaml
-git commit -m "feat: add Drizzle persistence and v1 migration"
+git add src-electron/adapters/db tests/integration/database package.json pnpm-lock.yaml
+git commit -m "feat: 增加 Drizzle 持久化与直接建库"
 ```
 
 ### Task 6: Implement typed Electron IPC and secure host adapters
@@ -726,7 +723,7 @@ Cover create/edit/delete schedule, parser error location, todo completion, week/
 
 - [ ] **Step 3: Test Electron-specific behavior only**
 
-Cover local SQLite persistence across restart, preload availability, blocked Node access, allowed external HTTPS links, rejected unsafe protocols, and database migration startup.
+Cover local SQLite persistence across restart, preload availability, blocked Node access, allowed external HTTPS links, rejected unsafe protocols, and fresh database initialization.
 
 - [ ] **Step 4: Run complete verification**
 
@@ -753,14 +750,13 @@ git commit -m "test: cover Schedule v2 user journeys"
 - Delete after replacement: `src/main/**`
 - Delete after replacement: `src/preload/**`
 - Delete after replacement: `src/renderer/**`
-- Delete after migration replacement: `src/prisma/**`
+- Delete after persistence replacement: `src/prisma/**`
 - Delete after parser replacement: `src/test/timeParser.test.ts`
 - Delete after utility migration: unused files under `src/utils/**`
 - Modify: `README.md`
 - Modify: `README.en.md`
 - Modify: `.github/workflows/**`
 - Create: `docs/architecture.md`
-- Create: `docs/migration-1.2-to-2.0.md`
 
 **Interfaces:**
 - Produces: a repository containing only v2 source, documented architecture boundaries, and reproducible CI/release commands.
@@ -777,9 +773,9 @@ Remove unused packages, exports, generated aliases, old environment variables, A
 
 Run all tests before deletion, delete legacy paths, then rerun the same commands. The second run must not resolve imports through legacy aliases.
 
-- [ ] **Step 4: Document architecture and migration recovery**
+- [ ] **Step 4: Document architecture and database initialization**
 
-Document dependency direction, platform adapter creation, ANTLR generation, database backup/restore, migration failure recovery, Web development, Electron packaging, and future Tauri adapter requirements.
+Document dependency direction, platform adapter creation, ANTLR generation, fresh database initialization, Web development, Electron packaging, and future Tauri adapter requirements.
 
 - [ ] **Step 5: Run final release verification**
 
@@ -806,7 +802,7 @@ git commit -m "refactor: complete Schedule v2 platform-independent rebuild"
 
 ## Plan Self-Review
 
-- Spec coverage: Web/Electron separation, future Tauri compatibility, Vite 8, pnpm 11+, latest stable Vue 3, Pinia without TanStack Query, ANTLR, Temporal, Zod, Drizzle, Playwright, modern CSS, migration, sync, alarm, and release verification each have an owning task.
+- Spec coverage: Web/Electron separation, future Tauri compatibility, Vite 8, pnpm 11+, latest stable Vue 3, Pinia without TanStack Query, ANTLR, Temporal, Zod, Drizzle, direct database initialization, Playwright, modern CSS, sync, alarm, and release verification each have an owning task.
 - Placeholder scan: the implementation deliberately excludes prerelease Vue, experimental router loaders, TypeScript 7 preview, `node:sqlite` RC, Tailwind, and TanStack Query rather than leaving their adoption undecided.
 - Type consistency: UI consumes `PlatformGateway`; Electron implements it through typed contracts; persistence implements `ScheduleRepository`; parser returns `ScheduleSpec`; all cross-process types are DTOs validated by Zod.
 - Scope control: each task ends with an independently reviewable test/build result and commit. If execution proves a task too large, split it only at its testable interface boundaries without changing the interfaces declared above.

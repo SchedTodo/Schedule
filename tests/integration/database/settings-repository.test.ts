@@ -12,8 +12,7 @@ describe('DrizzleSettingsRepository', () => {
   let repository: DrizzleSettingsRepository
   beforeEach(() => {
     sqlite = new Database(':memory:')
-    sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/migrations/0001_v2_schema.sql', import.meta.url), 'utf8'))
-    sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/migrations/0003_settings.sql', import.meta.url), 'utf8'))
+    sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/schema.sql', import.meta.url), 'utf8'))
     repository = new DrizzleSettingsRepository(drizzle(sqlite))
   })
   afterEach(() => sqlite.close())

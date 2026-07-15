@@ -1,5 +1,4 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -7,12 +6,8 @@ import { ScheduleService } from '../../src/application/schedule-service'
 import { dueAlarms } from '../../src/application/alarm-scheduler'
 import { SystemClock } from '../../src/domain/shared/clock'
 import { CryptoIdGenerator } from '../../src/domain/shared/id-generator'
-import { openScheduleDatabase } from '../adapters/db/client'
-import { migrateV1Database } from '../adapters/db/migrate-v1'
-import migrationSql from '../adapters/db/migrations/0001_v2_schema.sql?raw'
-import occurrenceMigrationSql from '../adapters/db/migrations/0002_occurrence.sql?raw'
-import settingsMigrationSql from '../adapters/db/migrations/0003_settings.sql?raw'
-import recordMigrationSql from '../adapters/db/migrations/0004_concentration_record.sql?raw'
+import { initializeScheduleDatabase } from '../adapters/db/client'
+import schemaSql from '../adapters/db/schema.sql?raw'
 import { DrizzleOccurrenceRepository } from '../adapters/db/occurrence-repository'
 import { DrizzleSettingsRepository } from '../adapters/db/settings-repository'
 import { ElectronNotifier } from '../adapters/electron-notifier'
@@ -42,16 +37,7 @@ function createWindow(): BrowserWindow {
 function registerSchedulePlatform(): void {
   const databasePath =
     process.env.SCHEDULE_DATABASE_PATH ?? resolve(app.getPath('userData'), 'schedule-v2.db')
-  const databaseExists = existsSync(databasePath)
-  if (databaseExists) {
-    migrateV1Database(databasePath, `${databasePath}.v1.backup.db`, migrationSql)
-  }
-
-  const connection = openScheduleDatabase(databasePath)
-  if (!databaseExists) connection.sqlite.exec(migrationSql)
-  connection.sqlite.exec(occurrenceMigrationSql)
-  connection.sqlite.exec(settingsMigrationSql)
-  connection.sqlite.exec(recordMigrationSql)
+  const connection = initializeScheduleDatabase(databasePath, schemaSql)
   const repository = new DrizzleScheduleRepository(connection.database)
   const occurrenceRepository = new DrizzleOccurrenceRepository(connection.database)
   const settingsRepository = new DrizzleSettingsRepository(connection.database)

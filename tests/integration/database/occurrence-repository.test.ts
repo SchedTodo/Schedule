@@ -14,8 +14,7 @@ describe('DrizzleOccurrenceRepository', () => {
 
   beforeEach(() => {
     sqlite = new Database(':memory:')
-    sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/migrations/0001_v2_schema.sql', import.meta.url), 'utf8'))
-    sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/migrations/0002_occurrence.sql', import.meta.url), 'utf8'))
+    sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/schema.sql', import.meta.url), 'utf8'))
     sqlite.prepare(`INSERT INTO schedule
       (id, kind, title, recurrence_code, exclusion_code, comment, starred, created_at, updated_at)
       VALUES (?, ?, ?, ?, '', '整个日程备注', 0, ?, ?)`)
