@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowUndo, Star } from '@vicons/ionicons5'
+import { ReloadOutline, Star } from '@vicons/ionicons5'
 import { inject, ref, watch } from 'vue'
 import { NButton, NCard, NDatePicker, NIcon, NInput, NSelect, NTag } from 'naive-ui'
 import { useRouter } from 'vue-router'
@@ -82,6 +82,7 @@ watch(
           >Search Name or Comment</label>
           <NInput
             v-model:value="search"
+            class="database-search"
             placeholder="Search Name or Comment..."
             :input-props="{ id: 'database-search' }"
             clearable
@@ -117,7 +118,9 @@ watch(
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th class="database-id-cell">
+                ID
+              </th>
               <th>Name</th>
               <th>Deleted</th>
               <th>Created</th>
@@ -132,7 +135,9 @@ watch(
               :key="item.id"
               @click="router.push({ name: 'schedule-detail', params: { id: item.id } })"
             >
-              <td>{{ item.id }}</td>
+              <td class="database-id-cell">
+                {{ item.id }}
+              </td>
               <td>{{ item.title }}</td>
               <td class="database-deleted-cell">
                 <NTag type="error">
@@ -140,12 +145,12 @@ watch(
                 </NTag>
                 <NButton
                   v-if="item.deleted"
-                  text
+                  size="tiny"
                   class="database-restore"
                   aria-label="Restore schedule"
                   @click.stop="restore(item.id)"
                 >
-                  <NIcon><ArrowUndo /></NIcon>
+                  <NIcon><ReloadOutline /></NIcon>
                 </NButton>
               </td>
               <td>{{ new Date(item.createdAt).toLocaleString() }}</td>
@@ -198,8 +203,10 @@ watch(
   justify-content: flex-end;
   gap: 1rem;
 }
-.database-filter > :first-of-type {
-  max-inline-size: 28rem;
+.database-search {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  max-inline-size: none;
 }
 .database-star-filter {
   flex: 0 0 auto;
@@ -209,8 +216,19 @@ watch(
   white-space: nowrap;
 }
 .database-restore {
+  inline-size: 1.75rem;
+  min-inline-size: 1.75rem;
+  block-size: 1.75rem;
   margin-inline-start: 0.35rem;
+  padding: 0;
   color: var(--color-text-muted);
+}
+.database-id-cell {
+  inline-size: 8rem;
+  max-inline-size: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 table {
   inline-size: 100%;
