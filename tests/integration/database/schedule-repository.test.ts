@@ -83,7 +83,7 @@ describe('DrizzleScheduleRepository', () => {
     expect(deleted).toEqual({ ok: true, value: undefined })
     await expect(repository.findById(firstSchedule.id)).resolves.toEqual({
       ok: true,
-      value: null
+      value: { ...firstSchedule, updatedAt: '2026-07-11T04:00:00Z', deleted: true }
     })
     await expect(repository.list({ offset: 0, limit: 50 })).resolves.toEqual({
       ok: true,

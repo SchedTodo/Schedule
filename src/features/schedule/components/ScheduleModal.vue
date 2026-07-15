@@ -13,7 +13,13 @@ const props = withDefaults(defineProps<{
 }>(), {
   loading: false,
   error: null,
-  mode: 'add'
+  mode: 'add',
+  initialValue: () => ({
+    title: '',
+    recurrenceCode: '',
+    exclusionCode: '',
+    comment: ''
+  })
 })
 const emit = defineEmits<{ submit: [input: CreateScheduleInput] }>()
 const show = ref(false)

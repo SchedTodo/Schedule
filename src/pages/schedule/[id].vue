@@ -165,17 +165,34 @@ void refreshSettings()
 
 <template>
   <div class="detail-page">
-    <NPageHeader title="Schedule" :show-breadcrumb="false" @back="router.back()" />
-    <NSpin v-if="detail.loading.value" description="Loading" />
-    <NAlert v-else-if="detail.error.value" type="error">
+    <NPageHeader
+      title="Schedule"
+      :show-breadcrumb="false"
+      @back="router.back()"
+    />
+    <NSpin
+      v-if="detail.loading.value"
+      description="Loading"
+    />
+    <NAlert
+      v-else-if="detail.error.value"
+      type="error"
+    >
       {{ detail.error.value.message }}
     </NAlert>
     <template v-else-if="detail.schedule.value">
-      <NAlert v-if="mutationError" type="error" closable @close="mutationError = null">
+      <NAlert
+        v-if="mutationError"
+        type="error"
+        closable
+        @close="mutationError = null"
+      >
         {{ mutationError }}
       </NAlert>
       <NCard segmented>
-        <template #header><b>Info</b></template>
+        <template #header>
+          <b>Info</b>
+        </template>
         <template #header-extra>
           <NButton
             text
@@ -184,34 +201,63 @@ void refreshSettings()
             :aria-label="detail.schedule.value.starred ? 'Unstar schedule' : 'Star schedule'"
             @click="toggleStar"
           >
-            <NIcon class="star-icon"><Star /></NIcon>
+            <NIcon class="star-icon">
+              <Star />
+            </NIcon>
           </NButton>
-          <NButtonGroup v-if="!detail.schedule.value.deleted" class="schedule-actions">
-            <ScheduleModal mode="edit" :initial-value="editValue" @submit="saveEdit" />
+          <NButtonGroup
+            v-if="!detail.schedule.value.deleted"
+            class="schedule-actions"
+          >
+            <ScheduleModal
+              mode="edit"
+              :initial-value="editValue"
+              @submit="saveEdit"
+            />
             <NPopconfirm @positive-click="removeSchedule">
-              <template #trigger><NButton>Delete</NButton></template>
+              <template #trigger>
+                <NButton>Delete</NButton>
+              </template>
               Delete the whole Schedule?
             </NPopconfirm>
           </NButtonGroup>
         </template>
         <div class="schedule-info">
           <b>Name</b><span>{{ detail.schedule.value.title }}</span>
-          <b>Type</b><NTag class="schedule-type" type="success">{{ detail.schedule.value.kind }}</NTag>
+          <b>Type</b><NTag
+            class="schedule-type"
+            type="success"
+          >
+            {{ detail.schedule.value.kind }}
+          </NTag>
           <b>Comment</b><span class="pre-line">{{ detail.schedule.value.comment }}</span>
           <b>rTime</b><span class="pre-line">{{ detail.schedule.value.recurrenceCode }}</span>
           <b>exTime</b><span class="pre-line">{{ detail.schedule.value.exclusionCode }}</span>
-          <b>Deleted</b><NTag :type="detail.schedule.value.deleted ? 'success' : 'error'">{{ detail.schedule.value.deleted }}</NTag>
+          <b>Deleted</b><NTag :type="detail.schedule.value.deleted ? 'success' : 'error'">
+            {{ detail.schedule.value.deleted }}
+          </NTag>
           <b>Created</b><span>{{ format(detail.schedule.value.createdAt) }}</span>
           <b>Updated</b><span>{{ format(detail.schedule.value.updatedAt) }}</span>
         </div>
       </NCard>
-      <NCard v-if="detail.schedule.value.kind === 'todo'" segmented>
-        <template #header><b>Records</b></template>
-        <NEmpty v-if="records.length === 0" description="No Records" />
+      <NCard
+        v-if="detail.schedule.value.kind === 'todo'"
+        segmented
+      >
+        <template #header>
+          <b>Records</b>
+        </template>
+        <NEmpty
+          v-if="records.length === 0"
+          description="No Records"
+        />
         <table v-else>
           <thead><tr><th>Start</th><th>End</th><th>Duration</th></tr></thead>
           <tbody>
-            <tr v-for="record in records" :key="record.id">
+            <tr
+              v-for="record in records"
+              :key="record.id"
+            >
               <td>{{ format(record.start) }}</td>
               <td>{{ format(record.end) }}</td>
               <td>{{ Math.round((Date.parse(record.end) - Date.parse(record.start)) / 60000) }} min</td>
@@ -220,10 +266,17 @@ void refreshSettings()
         </table>
       </NCard>
       <NCard segmented>
-        <template #header><b>Times</b></template>
-        <template v-if="!detail.schedule.value.deleted" #header-extra>
+        <template #header>
+          <b>Times</b>
+        </template>
+        <template
+          v-if="!detail.schedule.value.deleted"
+          #header-extra
+        >
           <NPopconfirm @positive-click="excludeSelected">
-            <template #trigger><NButton>Delete</NButton></template>
+            <template #trigger>
+              <NButton>Delete</NButton>
+            </template>
             Delete selected times?
           </NPopconfirm>
         </template>
@@ -237,7 +290,12 @@ void refreshSettings()
         />
       </NCard>
     </template>
-    <NAlert v-else type="warning">Schedule not found</NAlert>
+    <NAlert
+      v-else
+      type="warning"
+    >
+      Schedule not found
+    </NAlert>
   </div>
 </template>
 

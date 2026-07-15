@@ -112,7 +112,8 @@ export class ScheduleService implements ScheduleGateway {
     const found = await this.repository.findById(parsed.data.id)
     if (!found.ok) return found
     if (found.value === null) return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: '日程不存在' } }
-    if (found.value.deleted) {
+    const { deleted, ...current } = found.value
+    if (deleted) {
       return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能修改已删除的日程' } }
     }
     let kind: 'event' | 'todo' = parsed.data.recurrenceCode === '' ? 'todo' : found.value.kind
@@ -129,7 +130,6 @@ export class ScheduleService implements ScheduleGateway {
     }
     if (kind !== found.value.kind) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能更改日程类型' } }
     const now = this.dependencies.clock.now().toString()
-    const { deleted: _deleted, ...current } = found.value
     const updated: ScheduleDto = {
       ...current,
       ...parsed.data,

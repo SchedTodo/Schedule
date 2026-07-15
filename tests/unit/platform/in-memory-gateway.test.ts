@@ -85,7 +85,7 @@ describe('createInMemoryGateway', () => {
     expect(details.ok && details.value[0]?.comment).toBe('')
     const schedules = await gateway.schedules.list({ offset: 0, limit: 10 })
     expect(schedules.ok && schedules.value[0]?.recurrenceCode).toBe(
-      '2026/7/12-2026/7/13 10:00-11:00 UTC;'
+      '2026/7/12-2026/7/13 10:00-11:00 UTC daily;'
     )
   })
 
