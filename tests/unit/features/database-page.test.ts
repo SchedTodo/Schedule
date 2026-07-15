@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { NSelect } from 'naive-ui'
+import { NDataTable, NSelect } from 'naive-ui'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -51,14 +51,27 @@ async function mountDatabase() {
 describe('Database page', () => {
   it('uses the legacy filters and toggles the starred-only query', async () => {
     const { searchPage, wrapper } = await mountDatabase()
-    expect(wrapper.findAllComponents(NSelect)).toHaveLength(1)
+    expect(wrapper.findAllComponents(NSelect).filter(
+      (select) => select.props('placeholder') === 'Type'
+    )).toHaveLength(1)
     expect(wrapper.find('[aria-label="Deleted filter"]').exists()).toBe(false)
     expect(wrapper.find('[aria-label="Star filter"]').exists()).toBe(false)
     expect(searchPage.mock.calls[0]?.[0]).not.toHaveProperty('deleted')
 
+    const pagination = wrapper.getComponent(NDataTable).props('pagination') as {
+      onChange: (page: number) => void
+    }
+    pagination.onChange(2)
+    await vi.waitFor(() => {
+      expect(searchPage.mock.calls.at(-1)?.[0]).toMatchObject({ page: 2, pageSize: 10 })
+    })
     await wrapper.get('.database-star-filter').trigger('click')
     await vi.waitFor(() => {
-      expect(searchPage.mock.calls.at(-1)?.[0]).toMatchObject({ starred: true })
+      expect(searchPage.mock.calls.at(-1)?.[0]).toMatchObject({
+        page: 1,
+        pageSize: 10,
+        starred: true
+      })
     })
     expect(searchPage.mock.calls.at(-1)?.[0]).not.toHaveProperty('deleted')
   })
@@ -80,5 +93,40 @@ describe('Database page', () => {
       })
     })
     expect(router.currentRoute.value.name).toBe('database')
+  })
+
+  it('uses remote pagination and resets the page when page size changes', async () => {
+    const { searchPage, wrapper } = await mountDatabase()
+    const table = wrapper.getComponent(NDataTable)
+    const pagination = table.props('pagination') as {
+      page: number
+      pageSize: number
+      itemCount: number
+      showSizePicker: boolean
+      pageSizes: number[]
+      onChange: (page: number) => void
+      onUpdatePageSize: (pageSize: number) => void
+    }
+
+    expect(table.props('remote')).toBe(true)
+    expect(pagination).toMatchObject({
+      page: 1,
+      pageSize: 10,
+      itemCount: 2,
+      showSizePicker: true,
+      pageSizes: [5, 10, 15, 20]
+    })
+    expect(searchPage.mock.calls[0]?.[0]).toMatchObject({ page: 1, pageSize: 10 })
+
+    pagination.onChange(2)
+    await vi.waitFor(() => {
+      expect(searchPage.mock.calls.at(-1)?.[0]).toMatchObject({ page: 2, pageSize: 10 })
+    })
+
+    ;(wrapper.getComponent(NDataTable).props('pagination') as typeof pagination)
+      .onUpdatePageSize(5)
+    await vi.waitFor(() => {
+      expect(searchPage.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, pageSize: 5 })
+    })
   })
 })

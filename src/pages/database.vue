@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ReloadOutline, Star } from '@vicons/ionicons5'
-import { inject, ref, watch } from 'vue'
-import { NButton, NCard, NDatePicker, NIcon, NInput, NSelect, NTag } from 'naive-ui'
+import { h, inject, reactive, ref, watch } from 'vue'
+import { NButton, NCard, NDataTable, NDatePicker, NIcon, NInput, NSelect, NTag } from 'naive-ui'
+import type { DataTableColumns, PaginationProps } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { ScheduleKind, SchedulePageItemDto } from '../contracts/schedule.contract'
@@ -14,10 +15,25 @@ const search = ref('')
 const kind = ref<ScheduleKind | null>(null)
 const dates = ref<[number, number] | null>(null)
 const starredOnly = ref(false)
-const page = ref(1)
-const pageSize = 20
-const items = ref<readonly SchedulePageItemDto[]>([])
-const total = ref(0)
+const items = ref<SchedulePageItemDto[]>([])
+
+const pagination = reactive<PaginationProps>({
+  page: 1,
+  pageSize: 10,
+  itemCount: 0,
+  showSizePicker: true,
+  pageSizes: [5, 10, 15, 20],
+  prefix: ({ itemCount }) => `Total is ${itemCount ?? 0}.`,
+  onChange(nextPage) {
+    pagination.page = nextPage
+    void refresh()
+  },
+  onUpdatePageSize(nextPageSize) {
+    pagination.pageSize = nextPageSize
+    pagination.page = 1
+    void refresh()
+  }
+})
 
 async function refresh() {
   const result = await platform.schedules.searchPage({
@@ -30,12 +46,12 @@ async function refresh() {
     }),
     ...(kind.value === null ? {} : { kind: kind.value }),
     ...(starredOnly.value ? { starred: true } : {}),
-    page: page.value,
-    pageSize
+    page: pagination.page ?? 1,
+    pageSize: pagination.pageSize ?? 10
   })
   if (result.ok) {
-    items.value = result.value.items
-    total.value = result.value.total
+    items.value = [...result.value.items]
+    pagination.itemCount = result.value.total
   }
 }
 
@@ -48,20 +64,78 @@ function toggleStarFilter() {
   starredOnly.value = !starredOnly.value
 }
 
-function previousPage() {
-  page.value -= 1
-  void refresh()
+function renderDeleted(item: SchedulePageItemDto) {
+  return h('div', { class: 'database-deleted-content' }, [
+    h(NTag, { type: 'error' }, { default: () => String(item.deleted) }),
+    item.deleted
+      ? h(
+          NButton,
+          {
+            size: 'tiny',
+            class: 'database-restore',
+            'aria-label': 'Restore schedule',
+            onClick: (event: MouseEvent) => {
+              event.stopPropagation()
+              void restore(item.id)
+            }
+          },
+          { default: () => h(NIcon, null, { default: () => h(ReloadOutline) }) }
+        )
+      : null
+  ])
 }
 
-function nextPage() {
-  page.value += 1
-  void refresh()
+function renderKind(item: SchedulePageItemDto) {
+  return h(NTag, { type: 'success' }, { default: () => item.kind })
+}
+
+function renderStar(item: SchedulePageItemDto) {
+  return h(
+    NIcon,
+    { color: item.starred ? '#ffe742' : '#c2c2c2' },
+    { default: () => h(Star) }
+  )
+}
+
+const columns: DataTableColumns<SchedulePageItemDto> = [
+  {
+    title: 'ID',
+    key: 'id',
+    width: '8rem',
+    ellipsis: { tooltip: true },
+    className: 'database-id-cell'
+  },
+  { title: 'Name', key: 'title' },
+  {
+    title: 'Deleted',
+    key: 'deleted',
+    className: 'database-deleted-cell',
+    render: renderDeleted
+  },
+  {
+    title: 'Created',
+    key: 'createdAt',
+    render: (item) => new Date(item.createdAt).toLocaleString()
+  },
+  {
+    title: 'Updated',
+    key: 'updatedAt',
+    render: (item) => new Date(item.updatedAt).toLocaleString()
+  },
+  { title: 'Type', key: 'kind', render: renderKind },
+  { title: 'Star', key: 'starred', render: renderStar }
+]
+
+function rowProps(item: SchedulePageItemDto) {
+  return {
+    onClick: () => void router.push({ name: 'schedule-detail', params: { id: item.id } })
+  }
 }
 
 watch(
   [search, kind, dates, starredOnly],
   () => {
-    page.value = 1
+    pagination.page = 1
     void refresh()
   },
   { immediate: true }
@@ -115,75 +189,13 @@ watch(
             <NIcon><Star /></NIcon>
           </NButton>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th class="database-id-cell">
-                ID
-              </th>
-              <th>Name</th>
-              <th>Deleted</th>
-              <th>Created</th>
-              <th>Updated</th>
-              <th>Type</th>
-              <th>Star</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="item in items"
-              :key="item.id"
-              @click="router.push({ name: 'schedule-detail', params: { id: item.id } })"
-            >
-              <td class="database-id-cell">
-                {{ item.id }}
-              </td>
-              <td>{{ item.title }}</td>
-              <td class="database-deleted-cell">
-                <NTag type="error">
-                  {{ item.deleted }}
-                </NTag>
-                <NButton
-                  v-if="item.deleted"
-                  size="tiny"
-                  class="database-restore"
-                  aria-label="Restore schedule"
-                  @click.stop="restore(item.id)"
-                >
-                  <NIcon><ReloadOutline /></NIcon>
-                </NButton>
-              </td>
-              <td>{{ new Date(item.createdAt).toLocaleString() }}</td>
-              <td>{{ new Date(item.updatedAt).toLocaleString() }}</td>
-              <td>
-                <NTag type="success">
-                  {{ item.kind }}
-                </NTag>
-              </td>
-              <td>
-                <NIcon :color="item.starred ? '#ffe742' : '#c2c2c2'">
-                  <Star />
-                </NIcon>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="database-pagination">
-          Total is {{ total }}.
-          <button
-            :disabled="page === 1"
-            @click="previousPage"
-          >
-            ‹
-          </button><button class="active">
-            {{ page }}
-          </button><button
-            :disabled="page * pageSize >= total"
-            @click="nextPage"
-          >
-            ›
-          </button>
-        </div>
+        <NDataTable
+          remote
+          :columns="columns"
+          :data="items"
+          :pagination="pagination"
+          :row-props="rowProps"
+        />
       </div>
     </NCard>
   </div>
@@ -212,8 +224,12 @@ watch(
   flex: 0 0 auto;
   font-size: 1.25rem;
 }
-.database-deleted-cell {
+:deep(.database-deleted-cell) {
   white-space: nowrap;
+}
+.database-deleted-content {
+  display: flex;
+  align-items: center;
 }
 .database-restore {
   inline-size: 1.75rem;
@@ -223,45 +239,15 @@ watch(
   padding: 0;
   color: var(--color-text-muted);
 }
-.database-id-cell {
+:deep(.database-id-cell) {
   inline-size: 8rem;
   max-inline-size: 8rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-table {
-  inline-size: 100%;
-  border-collapse: collapse;
-}
-th,
-td {
-  padding: 0.85rem;
-  border-block-end: 1px solid var(--color-border);
-  text-align: start;
-}
-tbody tr {
+:deep(.n-data-table-tbody .n-data-table-tr) {
   cursor: pointer;
-}
-tbody tr:hover {
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-}
-.database-pagination {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.5rem;
-}
-.database-pagination button {
-  min-inline-size: 2rem;
-  padding: 0.3rem;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: inherit;
-}
-.database-pagination button.active {
-  border-color: #18a058;
-  color: #18a058;
 }
 .sr-only {
   position: absolute;

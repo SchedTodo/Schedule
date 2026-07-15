@@ -15,21 +15,20 @@ describe('Database page source', () => {
     expect(source).not.toContain('.database-filter > :first-of-type')
   })
 
-  it('limits the ID column to a single ellipsized 8rem line', () => {
-    expect(source).toMatch(/<th class="database-id-cell">\s*ID\s*<\/th>/)
-    expect(source).toMatch(/<td class="database-id-cell">\s*{{ item\.id }}\s*<\/td>/)
-    expect(source).toContain('.database-id-cell {')
-    expect(source).toContain('inline-size: 8rem;')
-    expect(source).toContain('max-inline-size: 8rem;')
-    expect(source).toContain('overflow: hidden;')
-    expect(source).toContain('text-overflow: ellipsis;')
-    expect(source).toContain('white-space: nowrap;')
+  it('uses a typed data table with an ellipsized 8rem ID column', () => {
+    expect(source).toContain('NDataTable')
+    expect(source).toContain('DataTableColumns<SchedulePageItemDto>')
+    expect(source).toContain("width: '8rem'")
+    expect(source).toContain('ellipsis: { tooltip: true }')
+    expect(source).toContain("className: 'database-id-cell'")
+    expect(source).not.toContain('<table>')
+    expect(source).not.toContain('class="database-pagination"')
   })
 
   it('uses the outlined circular Restore control from option A', () => {
     expect(source).toContain("import { ReloadOutline, Star } from '@vicons/ionicons5'")
-    expect(source).toContain('<NIcon><ReloadOutline /></NIcon>')
-    expect(source).toContain('size="tiny"')
+    expect(source).toContain('h(ReloadOutline)')
+    expect(source).toContain("size: 'tiny'")
     expect(source).not.toContain('ArrowUndo')
   })
 })

@@ -50,6 +50,13 @@ describe('secondary pages', () => {
     for (const text of ['Database', 'Search Name or Comment', 'Start Date', 'Type', 'ID', 'Name', 'Deleted', 'Created', 'Updated', 'Star', 'Total is']) {
       expect(wrapper.text()).toContain(text)
     }
+    const table = wrapper.getComponent(NDataTable)
+    expect(table.props('remote')).toBe(true)
+    expect(table.props('pagination')).toMatchObject({
+      pageSize: 10,
+      showSizePicker: true,
+      pageSizes: [5, 10, 15, 20]
+    })
   })
 
   it('restores the Schedule header with Info and Times cards', async () => {
