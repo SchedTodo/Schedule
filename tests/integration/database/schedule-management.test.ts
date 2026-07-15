@@ -60,6 +60,31 @@ describe('Drizzle schedule management', () => {
       .toEqual({ deleted_at: null })
   })
 
+  it('queries all deletion states when deleted is omitted', async () => {
+    const active = {
+      id: '10000000-0000-4000-8000-000000000001', kind: 'event' as const,
+      title: 'Active', recurrenceCode: '2026/7/13 10:00-11:00;', exclusionCode: '',
+      comment: '', starred: false, createdAt: '2026-07-11T08:00:00Z', updatedAt: '2026-07-11T08:00:00Z'
+    }
+    const deleted = {
+      ...active,
+      id: '10000000-0000-4000-8000-000000000002',
+      title: 'Deleted'
+    }
+    await repository.save(active)
+    await repository.save(deleted)
+    await repository.setDeleted(deleted.id, true, '2026-07-11T09:00:00Z')
+
+    const all = await repository.searchPage({ search: '', page: 1, pageSize: 20 })
+    expect(all.ok && all.value.items.map(({ id }) => id)).toEqual(
+      expect.arrayContaining([active.id, deleted.id])
+    )
+    const activeOnly = await repository.searchPage({ search: '', deleted: false, page: 1, pageSize: 20 })
+    expect(activeOnly.ok && activeOnly.value.items.map(({ id }) => id)).toEqual([active.id])
+    const deletedOnly = await repository.searchPage({ search: '', deleted: true, page: 1, pageSize: 20 })
+    expect(deletedOnly.ok && deletedOnly.value.items.map(({ id }) => id)).toEqual([deleted.id])
+  })
+
   it('restores desired rows and soft deletes occurrences no longer generated', async () => {
     const schedule = {
       id: '10000000-0000-4000-8000-000000000001', kind: 'event' as const,

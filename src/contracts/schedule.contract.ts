@@ -62,7 +62,7 @@ export const ScheduleSearchQuerySchema = z.object({
   end: z.iso.datetime({ offset: true }).optional(),
   kind: ScheduleKindSchema.optional(),
   starred: z.boolean().optional(),
-  deleted: z.boolean().default(false),
+  deleted: z.boolean().optional(),
   page: z.number().int().positive().default(1),
   pageSize: z.number().int().positive().max(200).default(20)
 }).strict().refine((value) =>

@@ -209,7 +209,10 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
 
   async searchPage(query: ScheduleSearchQuery) {
     try {
-      const conditions: SQL[] = [query.deleted ? isNotNull(schedules.deletedAt) : isNull(schedules.deletedAt)]
+      const conditions: SQL[] = []
+      if (query.deleted !== undefined) {
+        conditions.push(query.deleted ? isNotNull(schedules.deletedAt) : isNull(schedules.deletedAt))
+      }
       if (query.kind !== undefined) conditions.push(eq(schedules.kind, query.kind))
       if (query.starred !== undefined) conditions.push(eq(schedules.starred, query.starred))
       if (query.search !== '') conditions.push(like(schedules.title, `%${query.search}%`))

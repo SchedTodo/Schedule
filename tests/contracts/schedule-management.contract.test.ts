@@ -48,7 +48,10 @@ describe('schedule management contracts', () => {
 
   it('validates database filters and paging', () => {
     const parsed = ScheduleSearchQuerySchema.parse({ page: 2, pageSize: 25, starred: true })
-    expect(parsed).toMatchObject({ page: 2, pageSize: 25, starred: true, deleted: false })
+    expect(parsed).toMatchObject({ page: 2, pageSize: 25, starred: true })
+    expect(parsed).not.toHaveProperty('deleted')
+    expect(ScheduleSearchQuerySchema.parse({ deleted: false }).deleted).toBe(false)
+    expect(ScheduleSearchQuerySchema.parse({ deleted: true }).deleted).toBe(true)
     expect(ScheduleSearchQuerySchema.safeParse({ page: 0, pageSize: 201 }).success).toBe(false)
   })
 

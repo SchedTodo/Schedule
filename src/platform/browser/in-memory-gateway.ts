@@ -204,7 +204,10 @@ export function createInMemoryGateway(
         const parsed = ScheduleSearchQuerySchema.safeParse(query)
         if (!parsed.success) return { ok: false, error: validationError }
         const matches = schedules.filter((schedule) => {
-          if (deletedScheduleIds.has(schedule.id) !== parsed.data.deleted) return false
+          if (
+            parsed.data.deleted !== undefined &&
+            deletedScheduleIds.has(schedule.id) !== parsed.data.deleted
+          ) return false
           if (parsed.data.kind && schedule.kind !== parsed.data.kind) return false
           if (parsed.data.starred !== undefined && schedule.starred !== parsed.data.starred) return false
           const search = parsed.data.search.toLocaleLowerCase()

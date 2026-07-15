@@ -46,6 +46,18 @@ describe('in-memory schedule management', () => {
     })
     const deleted = await gateway.schedules.searchPage({ deleted: true, page: 1, pageSize: 20, search: '' })
     expect(deleted.ok && deleted.value.total).toBe(1)
+    const active = await gateway.schedules.create({
+      title: 'Planning', recurrenceCode: '2026/7/14 10:00-11:00;', exclusionCode: '', comment: ''
+    })
+    if (!active.ok) throw new Error(active.error.message)
+    const all = await gateway.schedules.searchPage({ page: 1, pageSize: 20, search: '' })
+    expect(all.ok && all.value.items.map(({ id }) => id)).toEqual(
+      expect.arrayContaining([schedule.id, active.value.id])
+    )
+    const activeOnly = await gateway.schedules.searchPage({ deleted: false, page: 1, pageSize: 20, search: '' })
+    expect(activeOnly.ok && activeOnly.value.items.map(({ id }) => id)).toEqual([active.value.id])
+    const deletedOnly = await gateway.schedules.searchPage({ deleted: true, page: 1, pageSize: 20, search: '' })
+    expect(deletedOnly.ok && deletedOnly.value.items.map(({ id }) => id)).toEqual([schedule.id])
     await gateway.schedules.setDeleted({ id: schedule.id, deleted: false })
     const starred = await gateway.schedules.searchPage({ starred: true, deleted: false, page: 1, pageSize: 20, search: '' })
     expect(starred.ok && starred.value.items[0]).toMatchObject({ starred: true, deleted: false })
