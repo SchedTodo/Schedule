@@ -5,6 +5,9 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { platformGatewayKey } from '../../app/injection-keys'
 import type { ScheduleOccurrenceDto } from '../../contracts/occurrence.contract'
+import { defaultSettings } from '../../contracts/settings.contract'
+import type { FocusCycleSnapshot } from '../../features/concentrate/focus-cycle'
+import { FocusSession } from '../../features/concentrate/focus-session'
 
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
@@ -14,58 +17,84 @@ const router = useRouter()
 const routeId = Array.isArray(route.params.timeId) ? route.params.timeId[0] : route.params.timeId
 const todos = ref<readonly ScheduleOccurrenceDto[]>([])
 const selectedId = ref(routeId ?? '')
-const durationSeconds = ref(25 * 60)
-const remainingSeconds = ref(25 * 60)
-const active = ref(false)
-const sessionStart = ref<string | null>(null)
+const snapshot = ref<FocusCycleSnapshot>()
+let session: FocusSession | undefined
 let timer: ReturnType<typeof setInterval> | undefined
+let unmounted = false
 
 const selected = computed(() => todos.value.find(({ id }) => id === selectedId.value))
-const percentage = computed(() => Math.round((1 - remainingSeconds.value / durationSeconds.value) * 100))
-const display = computed(() => `${String(Math.floor(remainingSeconds.value / 60)).padStart(2, '0')}:${String(remainingSeconds.value % 60).padStart(2, '0')}`)
+const stageLabel = computed(() => {
+  const state = snapshot.value
+  if (!state) return ''
+  if (state.stage === 'focus') return `Focus ${state.focusNumber} of 4`
+  return state.stage === 'smallBreak' ? 'Small Break' : 'Big Break'
+})
+const buttonLabel = computed(() => {
+  if (snapshot.value?.running) return 'Pause'
+  return (snapshot.value?.cumulativeFocusMs ?? 0) === 0 ? 'Start' : 'Resume'
+})
 
-async function load() {
-  const settings = await platform.settings.get()
-  const values = settings.ok ? settings.value : undefined
-  const todoResult = await platform.occurrences.listTodos({
-    now: new Date().toISOString(),
-    timeZone: values?.timeZone ?? 'UTC',
-    logicalDayStartHour: values?.logicalDayStartHour ?? 0,
-    logicalDayStartMinute: values?.logicalDayStartMinute ?? 0
-  })
-  if (settings.ok) {
-    durationSeconds.value = settings.value.focusMinutes * 60
-    remainingSeconds.value = durationSeconds.value
-  }
-  if (todoResult.ok) todos.value = todoResult.value
+function formatCountdown(milliseconds: number) {
+  const seconds = Math.ceil(milliseconds / 1000)
+  return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+function formatTotal(milliseconds: number) {
+  const seconds = Math.floor(milliseconds / 1000)
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+function refresh() {
+  session?.tick()
+  snapshot.value = session?.snapshot()
 }
 
 function toggle() {
-  active.value = !active.value
-  if (active.value) {
-    sessionStart.value ??= new Date().toISOString()
-    timer = setInterval(() => {
-      remainingSeconds.value = Math.max(0, remainingSeconds.value - 1)
-      if (remainingSeconds.value === 0) active.value = false
-    }, 1000)
-  } else if (timer !== undefined) {
-    clearInterval(timer)
-    timer = undefined
-  }
+  if (!session) return
+  if (session.snapshot().running) session.pause()
+  else session.start()
+  refresh()
 }
 
-async function submitSession() {
-  const todo = selected.value
-  if (!todo || sessionStart.value === null) return
-  const end = new Date()
-  if (end.getTime() - Date.parse(sessionStart.value) < 60_000) return
-  await platform.records.create({ scheduleId: todo.scheduleId, start: sessionStart.value, end: end.toISOString() })
-  sessionStart.value = null
+async function selectTodo(value: string | number | null) {
+  const id = value === null ? '' : String(value)
+  const todo = todos.value.find((candidate) => candidate.id === id)
+  await session?.selectTodo(todo && { scheduleId: todo.scheduleId })
+  selectedId.value = id
+  refresh()
+}
+
+async function load() {
+  const settingsResult = await platform.settings.get()
+  const values = settingsResult.ok ? settingsResult.value : defaultSettings
+  const todoResult = await platform.occurrences.listTodos({
+    now: new Date().toISOString(),
+    timeZone: values.timeZone,
+    logicalDayStartHour: values.logicalDayStartHour,
+    logicalDayStartMinute: values.logicalDayStartMinute
+  })
+  if (unmounted) return
+  if (todoResult.ok) todos.value = todoResult.value
+  session = new FocusSession({
+    focusMs: values.focusMinutes * 60_000,
+    smallBreakMs: values.smallBreakMinutes * 60_000,
+    bigBreakMs: values.bigBreakMinutes * 60_000
+  }, {
+    now: () => Date.now(),
+    notify: (input) => platform.notifications.show(input),
+    saveRecord: (input) => platform.records.create(input)
+  })
+  await session.selectTodo(selected.value && { scheduleId: selected.value.scheduleId })
+  snapshot.value = session.snapshot()
+  timer = setInterval(refresh, 250)
 }
 
 onBeforeUnmount(() => {
+  unmounted = true
   if (timer !== undefined) clearInterval(timer)
-  void submitSession()
+  void session?.dispose()
 })
 void load()
 </script>
@@ -79,17 +108,27 @@ void load()
     />
     <NCard>
       <NSelect
-        v-model:value="selectedId"
+        :value="selectedId"
         :options="todos.map((todo) => ({ label: todo.title, value: todo.id }))"
+        @update:value="selectTodo"
       />
+      <p class="stage-label">
+        {{ stageLabel }}
+      </p>
       <NProgress
         type="circle"
-        :percentage="percentage"
+        :percentage="snapshot?.progressPercent ?? 0"
       >
-        {{ display }}
+        {{ formatCountdown(snapshot?.remainingMs ?? 0) }}
       </NProgress>
-      <NButton @click="toggle">
-        {{ active ? 'Pause' : 'Start' }}
+      <p class="focused-total">
+        Focused {{ formatTotal(snapshot?.cumulativeFocusMs ?? 0) }}
+      </p>
+      <NButton
+        data-testid="focus-toggle"
+        @click="toggle"
+      >
+        {{ buttonLabel }}
       </NButton>
     </NCard>
   </div>
@@ -99,4 +138,6 @@ void load()
 .concentrate-page { min-block-size: 100%; padding: 6vh 8vw; background: #001428; color: white; }
 .n-card { max-inline-size: 32rem; margin: 12vh auto 0; text-align: center; }
 .n-progress { margin: 2rem; }
+.stage-label { margin-block: 2rem 0; font-size: 1.5rem; font-weight: 600; }
+.focused-total { margin-block: 0 1.5rem; font-variant-numeric: tabular-nums; }
 </style>
