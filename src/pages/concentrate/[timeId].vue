@@ -88,7 +88,7 @@ async function load() {
   })
   await session.selectTodo(selected.value && { scheduleId: selected.value.scheduleId })
   snapshot.value = session.snapshot()
-  timer = setInterval(refresh, 250)
+  timer = setInterval(refresh, 1000)
 }
 
 onBeforeUnmount(() => {
