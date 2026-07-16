@@ -55,6 +55,12 @@ const pagination = reactive({
 })
 const format = (value: string) => formatInstant(value, timeZone.value)
 const formatTimeCode = (value: string) => value.replace(/;\s*/g, ';\n')
+const formatDuration = (start: string, end: string) => {
+  const seconds = Math.floor((Date.parse(end) - Date.parse(start)) / 1000)
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+}
 const sortedOccurrences = computed(() =>
   sortDetailOccurrences(occurrences.value, timeZone.value)
 )
@@ -262,7 +268,7 @@ void refreshSettings()
             >
               <td>{{ format(record.start) }}</td>
               <td>{{ format(record.end) }}</td>
-              <td>{{ Math.round((Date.parse(record.end) - Date.parse(record.start)) / 60000) }} min</td>
+              <td>{{ formatDuration(record.start, record.end) }}</td>
             </tr>
           </tbody>
         </table>

@@ -134,6 +134,35 @@ describe('secondary pages', () => {
       }))
   })
 
+  it('shows Todo record durations with second precision', async () => {
+    const todoSchedule: ScheduleDto = { ...schedule, kind: 'todo' }
+    const platform = createInMemoryGateway([todoSchedule])
+    vi.spyOn(platform.schedules, 'findById').mockResolvedValue({
+      ok: true,
+      value: { ...todoSchedule, deleted: false }
+    })
+    vi.spyOn(platform.records, 'listBySchedule').mockResolvedValue({
+      ok: true,
+      value: [{
+        id: '2198f0de-8f7f-7000-8000-000000000001',
+        scheduleId: todoSchedule.id,
+        start: '2026-07-16T08:00:00.000Z',
+        end: '2026-07-16T08:01:23.000Z'
+      }]
+    })
+    const router = await routerAt(`/schedule/${todoSchedule.id}`)
+    const wrapper = mount(ScheduleDetailPage, {
+      global: {
+        plugins: [router],
+        provide: { [platformGatewayKey as symbol]: platform }
+      }
+    })
+
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Records'))
+    expect(wrapper.text()).toContain('00:01:23')
+    expect(wrapper.text()).not.toContain('1 min')
+  })
+
   it('restores complete settings choices and aligned controls', async () => {
     const router = await routerAt('/settings')
     const wrapper = mount(SettingsPage, { global: { plugins: [createPinia(), router] } })
