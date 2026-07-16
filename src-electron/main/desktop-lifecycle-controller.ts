@@ -32,6 +32,7 @@ export interface DesktopLifecycleDependencies {
   requestAppQuit(): void
   reportError(error: unknown): void
   resources: readonly Disposable[]
+  backgroundEnabled: boolean
   development: boolean
 }
 
@@ -50,8 +51,10 @@ export class DesktopLifecycleController {
     window.onReadyToShow(() => {
       if (mode === 'normal') this.showMainWindow()
     })
-    window.onMinimize(() => { this.hideMainWindow() })
-    window.onClose((event) => { this.hideMainWindow(event) })
+    if (this.dependencies.backgroundEnabled) {
+      window.onMinimize(() => { this.hideMainWindow() })
+      window.onClose((event) => { this.hideMainWindow(event) })
+    }
     if (!this.dependencies.development) return
 
     try {

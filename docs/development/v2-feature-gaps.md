@@ -79,7 +79,7 @@ WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同�
 
 ### GAP-02：对齐 Electron 窗口、托盘和启动行为
 
-状态：`待实施`
+状态：`已完成`（2026-07-17）
 
 优先级：`P1`
 
@@ -91,6 +91,29 @@ WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同�
 - 恢复明确批准的桌面快捷键；F5 刷新是否保留应在实现计划中作为显式决定，不静默遗漏。
 - `window.open` 和外部链接只允许批准的协议，并通过安全的 Electron 外链适配器打开。
 - 保持 `contextIsolation: true`、`sandbox: true` 和 `nodeIntegration: false`。
+
+完成说明：
+
+- 普通启动显示、最大化并聚焦主窗口；精确的 `--autostart` 启动保持隐藏且不聚焦。
+- 托盘启用时，最小化和关闭按钮都隐藏到托盘；显式禁用托盘时保留原生最小化和关闭，避免产生不可恢复的隐藏进程。托盘“显示”按恢复、显示、最大化、聚焦的顺序处理主窗口。
+- 托盘“退出”和应用退出共用一次性清理流程，完整释放数据库、提醒定时器、桌面快捷键和托盘。
+- 已批准的桌面快捷键恢复；F5 仅在开发环境刷新，生产环境明确禁用。
+- 所有新窗口请求均在应用内拒绝；仅 `https:` 外链可交给安全的 Electron 外链适配器。
+- Electron 集成测试覆盖生命周期控制器、窗口、托盘和 IPC；沙箱外 Electron E2E 覆盖普通启动、开机后台启动、不安全新窗口请求和无托盘窗口关闭退出。
+
+关闭验证：
+
+```powershell
+.\node_modules\.bin\eslint.cmd .
+.\node_modules\.bin\vue-tsc.cmd --noEmit -p tsconfig.app.json
+.\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.electron.json
+.\node_modules\.bin\vitest.cmd run tests/unit tests/contracts tests/parser
+.\node_modules\.bin\vitest.cmd run tests/integration/electron tests/integration/ipc
+.\node_modules\.bin\vite.cmd build
+.\node_modules\.bin\vite.cmd build --config vite.electron-main.config.ts
+.\node_modules\.bin\vite.cmd build --config vite.electron-preload.config.ts
+.\node_modules\.bin\playwright.cmd test tests/e2e/electron/startup.spec.ts
+```
 
 ### GAP-03：对齐提醒时间与通知展示
 

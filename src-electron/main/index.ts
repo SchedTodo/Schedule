@@ -135,6 +135,7 @@ void app.whenReady().then(() => {
     requestAppQuit: () => { app.quit() },
     reportError: (error) => { console.error('Electron lifecycle failed', error) },
     resources: [...resources, { dispose: () => { tray?.destroy() } }],
+    backgroundEnabled,
     development: Boolean(process.env.VITE_DEV_SERVER_URL)
   })
 

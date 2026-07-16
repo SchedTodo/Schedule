@@ -9,6 +9,7 @@ import {
 } from '../../../src-electron/main/desktop-lifecycle-controller'
 
 function createHarness(options: {
+  backgroundEnabled?: boolean
   development?: boolean
   minimized?: boolean
   registerError?: unknown
@@ -50,6 +51,7 @@ function createHarness(options: {
     requestAppQuit,
     reportError,
     resources: options.resources ?? [],
+    backgroundEnabled: options.backgroundEnabled ?? true,
     development: options.development ?? false
   })
   return { calls, controller, handlers, reportError, requestAppQuit, shortcutHandler, shortcuts }
@@ -89,6 +91,22 @@ describe('DesktopLifecycleController', () => {
     harness.handlers.close?.(event)
     expect(event.preventDefault).toHaveBeenCalledOnce()
     expect(harness.calls).toEqual(['hide'])
+  })
+
+  it('keeps native minimize behavior when background mode is disabled', () => {
+    const harness = createHarness({ backgroundEnabled: false })
+    harness.controller.start('normal')
+    harness.handlers.minimize?.()
+    expect(harness.calls).toEqual([])
+  })
+
+  it('allows native Close when background mode is disabled', () => {
+    const harness = createHarness({ backgroundEnabled: false })
+    const event = { preventDefault: vi.fn() }
+    harness.controller.start('normal')
+    harness.handlers.close?.(event)
+    expect(event.preventDefault).not.toHaveBeenCalled()
+    expect(harness.calls).toEqual([])
   })
 
   it('allows Close to continue after quit starts', () => {

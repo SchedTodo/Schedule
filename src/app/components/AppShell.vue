@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { UserOutlined } from '@vicons/antd'
-import { HelpCircleOutline, HomeOutline, SettingsOutline } from '@vicons/ionicons5'
-import { Database } from '@vicons/tabler'
+import UserOutlined from '@vicons/antd/es/UserOutlined'
+import HelpCircleOutline from '@vicons/ionicons5/es/HelpCircleOutline'
+import HomeOutline from '@vicons/ionicons5/es/HomeOutline'
+import SettingsOutline from '@vicons/ionicons5/es/SettingsOutline'
+import Database from '@vicons/tabler/es/Database'
 import { computed, onBeforeUnmount, onMounted } from 'vue'
-import { NAvatar, NIcon, NLayoutContent, NLayoutFooter, NLayoutHeader } from 'naive-ui'
+import { NAvatar } from 'naive-ui/es/avatar'
+import { NIcon } from 'naive-ui/es/icon'
+import { NLayoutContent, NLayoutFooter, NLayoutHeader } from 'naive-ui/es/layout'
 import { useRoute, useRouter } from 'vue-router'
 
 import IdeaPane from '../../features/ideas/IdeaPane.vue'

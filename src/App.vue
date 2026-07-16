@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { darkTheme, NConfigProvider } from 'naive-ui'
+import { NConfigProvider } from 'naive-ui/es/config-provider'
+import { darkTheme } from 'naive-ui/es/themes'
 
 import { naiveThemeOverrides } from './app/naive-theme'
 import AppShell from './app/components/AppShell.vue'

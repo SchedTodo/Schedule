@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { Bulb } from '@vicons/ionicons5'
+import Bulb from '@vicons/ionicons5/es/Bulb'
 import { ref } from 'vue'
-import { NButton, NIcon, NInput, NPopover } from 'naive-ui'
+import { NButton } from 'naive-ui/es/button'
+import { NIcon } from 'naive-ui/es/icon'
+import { NInput } from 'naive-ui/es/input'
+import { NPopover } from 'naive-ui/es/popover'
 
 const storageKey = 'schedule-v2-ideas'
 const show = ref(false)

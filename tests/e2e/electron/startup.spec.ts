@@ -108,3 +108,21 @@ test('denies unsafe window.open requests without creating a child window', async
     await closeSchedule(launched)
   }
 })
+
+test('exits when the user closes the window while the tray is disabled', async () => {
+  const launched = await launchSchedule()
+  const { application, directory } = launched
+  const process = application.process()
+  try {
+    const window = await application.firstWindow()
+    const exited = new Promise<void>((resolve, reject) => {
+      process.once('exit', () => { resolve() })
+      process.once('error', reject)
+    })
+    await window.close()
+    await exited
+  } finally {
+    if (process.exitCode === null) await application.close()
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
