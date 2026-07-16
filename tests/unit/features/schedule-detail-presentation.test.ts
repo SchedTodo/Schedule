@@ -7,6 +7,7 @@ import {
   occurrenceWeekday,
   sortDetailOccurrences
 } from '../../../src/features/schedule/schedule-detail-presentation'
+import { TEST_LOCALE, TEST_NOW, TEST_TIME_ZONE } from '../../support/time'
 
 function occurrence(id: string, day: number): ScheduleOccurrenceDto {
   return {
@@ -27,21 +28,21 @@ function occurrence(id: string, day: number): ScheduleOccurrenceDto {
 describe('schedule detail presentation', () => {
   it('formats marked instants to minutes and derives the configured-zone weekday', () => {
     const value = occurrence('14', 14)
-    expect(formatOccurrenceDateTime(value.start!, value.startMark, 'Asia/Shanghai'))
+    expect(formatOccurrenceDateTime(value.start!, value.startMark, TEST_TIME_ZONE))
       .toBe('2026/7/14 13:00')
-    expect(formatOccurrenceDateTime(value.start!, '10', 'Asia/Shanghai'))
+    expect(formatOccurrenceDateTime(value.start!, '10', TEST_TIME_ZONE))
       .toBe('2026/7/14 13:?')
-    expect(occurrenceWeekday(value, 'Asia/Shanghai', 'zh-CN')).toBe('星期二')
+    expect(occurrenceWeekday(value, TEST_TIME_ZONE, TEST_LOCALE)).toBe('星期二')
   })
 
   it('places today and future first, then past occurrences in ascending order', () => {
-    const values = [13, 17, 15, 14, 16].map((day) => occurrence(String(day), day))
+    const values = [12, 16, 14, 13, 15].map((day) => occurrence(String(day), day))
     const sorted = sortDetailOccurrences(
       values,
-      'Asia/Shanghai',
-      Temporal.Instant.from('2026-07-14T04:00:00Z')
+      TEST_TIME_ZONE,
+      Temporal.Instant.from(TEST_NOW)
     )
 
-    expect(sorted.map(({ start }) => start?.slice(8, 10))).toEqual(['14', '15', '16', '17', '13'])
+    expect(sorted.map(({ start }) => start?.slice(8, 10))).toEqual(['13', '14', '15', '16', '12'])
   })
 })

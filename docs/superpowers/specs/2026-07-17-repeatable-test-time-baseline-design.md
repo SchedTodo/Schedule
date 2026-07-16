@@ -29,7 +29,7 @@
 - 默认测试时区：`Asia/Shanghai`。
 - 默认测试 locale：`zh-CN`。
 
-Vitest setup 在每个测试前仅冻结 `Date` 并设置固定系统时间，在每个测试后恢复真实 timer。这样，未显式注入时间的 `new Date()`、`Date.now()` 和 Temporal polyfill 的 `Temporal.Now.instant()` 都获得相同 instant，同时普通异步 timer 仍可正常驱动 `vi.waitFor`。
+Vitest setup 在每个测试前把全局 `Date` 替换为固定构造器，并在每个测试后恢复原生 `Date`。无参数 `new Date()`、`Date.now()` 和 Temporal polyfill 的 `Temporal.Now.instant()` 因而获得同一毫秒 instant；带参数的 Date 构造、`Date.parse` 和 `Date.UTC` 保持原生语义。该 stub 不启用 Vitest fake timer，因此普通异步 timer 可正常驱动 `vi.waitFor`，且 `vi.waitFor` 不会自动推进测试日期。
 
 专注测试需要控制 interval，因此在全局 Date 基线之上调用 `vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })`，并重设同一固定系统时间。它不创建第二个时间基线。
 
@@ -49,20 +49,20 @@ Vitest setup 在每个测试前仅冻结 `Date` 并设置固定系统时间，�
 ## 测试策略
 
 1. 先增加基线回归测试，并在尚未注册 Vitest setup 时观察其因真实日期而失败。
-2. 注册 setup 后确认 `Date.now()`、`new Date()` 和 `Temporal.Now.instant()` 都等于固定 instant。
+2. 注册 setup 后确认 `Date.now()`、`new Date()` 和 `Temporal.Now.instant().epochMilliseconds` 都等于固定 instant。
 3. 逐个迁移首页、Todo、日历、详情、专注和提醒测试，运行聚焦套件。
 4. 在不同 `TZ` 环境变量下运行聚焦套件，确认业务结果不变。
 5. 运行项目最低验证：ESLint、Vue TypeScript、Vitest unit/contracts/parser 和 Vite Web build。
 
 ## 风险与约束
 
-- fake timer 若包含 timeout，可能阻止 `vi.waitFor` 推进；全局基线只 fake `Date`，不 fake timeout/interval。
+- Vitest 的 Date fake timer 会被 `vi.waitFor` 自动推进；全局基线使用不参与 timer 推进的 Date stub，只有专注测试启用 fake interval。
 - 测试覆盖范围包含 legacy parser 兼容测试；每个测试后必须恢复 timer，防止跨文件泄漏。
 - 与 GAP-04 无关的用户改动和未跟踪文件保持不动。
 
 ## 验收映射
 
-- 不依赖当前日期：全局固定 `Date`/Temporal 基线。
+- 不依赖当前日期：全局固定 `Date` stub/Temporal 毫秒基线。
 - 不依赖时区或 locale：时间敏感断言显式传入共享时区和 locale。
 - 指定模块统一：六类套件引用同一测试支持模块。
 - 完整构建可重复：运行项目规定的四项 Web 验证，并补充不同 `TZ` 的聚焦验证。

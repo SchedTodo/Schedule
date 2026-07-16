@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import TodoSidebar from '../../../src/features/schedule/components/TodoSidebar.vue'
+import { TEST_NOW, TEST_TIME_ZONE } from '../../support/time'
 
 function todo(
   index: number,
@@ -40,8 +41,8 @@ describe('Todo sidebar', () => {
     return mount(TodoSidebar, {
       props: {
         items,
-        timeZone: 'Asia/Shanghai',
-        now: '2026-07-13T04:00:00Z'
+        timeZone: TEST_TIME_ZONE,
+        now: TEST_NOW
       }
     })
   }

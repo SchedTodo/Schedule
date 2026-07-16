@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, type Pinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { NLayoutSider } from 'naive-ui'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { platformGatewayKey } from '../../../src/app/injection-keys'
 import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.contract'
@@ -14,6 +14,7 @@ import { CryptoIdGenerator } from '../../../src/domain/shared/id-generator'
 import { createInMemoryGateway } from '../../../src/platform/browser/in-memory-gateway'
 import HomePage from '../../../src/pages/index.vue'
 import { useRuntimeStore } from '../../../src/stores/runtime'
+import { TEST_NOW } from '../../support/time'
 
 const todo: ScheduleDto = {
   id: '0198f0de-8f7f-7000-8000-000000000001',
@@ -42,19 +43,21 @@ const eventOccurrence: CalendarOccurrenceDto = {
   excluded: false
 }
 
-const fixedNow = '2026-07-13T04:00:00Z'
-
-beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['Date'] })
-  vi.setSystemTime(fixedNow)
-})
-
-afterEach(() => {
-  vi.useRealTimers()
-})
+const fixedNow = TEST_NOW
 
 describe('home workspace', () => {
-  async function mountHome(seed: readonly ScheduleDto[] = [], pinia: Pinia = createPinia()) {
+  function testGateway(seed: readonly ScheduleDto[] = []) {
+    return createInMemoryGateway(seed, {
+      clock: new FixedClock(fixedNow),
+      idGenerator: new CryptoIdGenerator()
+    })
+  }
+
+  async function mountHome(
+    seed: readonly ScheduleDto[] = [],
+    pinia: Pinia = createPinia(),
+    platform = testGateway(seed)
+  ) {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [{ path: '/', component: HomePage }]
@@ -64,14 +67,25 @@ describe('home workspace', () => {
       global: {
         plugins: [pinia, router],
         provide: {
-          [platformGatewayKey as symbol]: createInMemoryGateway(seed, {
-            clock: new FixedClock(fixedNow),
-            idGenerator: new CryptoIdGenerator()
-          })
+          [platformGatewayKey as symbol]: platform
         }
       }
     })
   }
+
+  it('queries the current logical day from the shared test instant', async () => {
+    const platform = testGateway([todo])
+    const listTodos = vi.spyOn(platform.occurrences, 'listTodos')
+    const wrapper = await mountHome([todo], createPinia(), platform)
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Submit report'))
+
+    expect(listTodos).toHaveBeenCalledWith({
+      now: TEST_NOW,
+      timeZone: 'UTC',
+      logicalDayStartHour: 0,
+      logicalDayStartMinute: 0
+    })
+  })
 
   it('restores the runtime calendar view after the homepage remounts', async () => {
     const pinia = createPinia()

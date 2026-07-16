@@ -4,7 +4,7 @@
 
 **Goal:** 为所有 Vitest 测试建立 2026 年 7 月的统一固定时间基线，并让首页、Todo、日历、详情、专注和提醒测试显式复用该基线。
 
-**Architecture:** `tests/support/time.ts` 只保存测试常量，`tests/setup.ts` 负责每个测试的 Date fake timer 生命周期，`vite.config.ts` 统一注册 setup。各时间敏感套件从支持模块取值；专注套件仅额外 fake interval，生产代码保持不变。
+**Architecture:** `tests/support/time.ts` 只保存测试常量，`tests/setup.ts` 负责每个测试的固定 Date stub 生命周期，`vite.config.ts` 统一注册 setup。各时间敏感套件从支持模块取值；专注套件仅额外 fake interval，生产代码保持不变。
 
 **Tech Stack:** Node.js 24 LTS、pnpm 11.11.0、Vitest、Vue Test Utils、Temporal polyfill、TypeScript strict mode。
 
@@ -13,7 +13,7 @@
 - 固定 instant 必须是 `2026-07-13T04:00:00.000Z`，默认测试时区必须是 `Asia/Shanghai`，默认测试 locale 必须是 `zh-CN`。
 - 不引入新依赖，不修改生产运行时的时区或 locale 行为。
 - 不推迟既有 fixture 日期，不放宽现有业务断言。
-- 全局 fake timer 只 fake `Date`；专注测试按需额外 fake `setInterval` 和 `clearInterval`。
+- 全局 Date stub 不启用 fake timer；专注测试按需 fake `Date`、`setInterval` 和 `clearInterval`。
 - 保留与 GAP-04 无关的用户改动和未跟踪文件。
 
 ---
@@ -30,7 +30,7 @@
 - Produces: `TEST_NOW = '2026-07-13T04:00:00.000Z'`。
 - Produces: `TEST_TIME_ZONE = 'Asia/Shanghai'`。
 - Produces: `TEST_LOCALE = 'zh-CN'`。
-- Produces: Vitest 每测试自动安装和恢复的 Date-only fake timer。
+- Produces: Vitest 每测试自动安装和恢复、且不参与 timer 推进的固定 Date stub。
 
 - [ ] **Step 1: 创建常量模块并写失败的基线回归测试**
 
@@ -54,7 +54,7 @@ describe('test time baseline', () => {
   it('freezes Date and Temporal.Now at the shared instant', () => {
     expect(new Date().toISOString()).toBe(TEST_NOW)
     expect(Date.now()).toBe(Date.parse(TEST_NOW))
-    expect(Temporal.Now.instant().toString()).toBe(TEST_NOW.replace('.000Z', 'Z'))
+    expect(Temporal.Now.instant().epochMilliseconds).toBe(Date.parse(TEST_NOW))
   })
 })
 ```
@@ -78,13 +78,26 @@ import { afterEach, beforeEach, vi } from 'vitest'
 
 import { TEST_NOW } from './support/time'
 
+const NativeDate = Date
+const fixedEpochMilliseconds = NativeDate.parse(TEST_NOW)
+const FixedDate = new Proxy(NativeDate, {
+  apply: () => new NativeDate(fixedEpochMilliseconds).toString(),
+  construct: (target, argumentsList, newTarget) => Reflect.construct(
+    target,
+    argumentsList.length === 0 ? [fixedEpochMilliseconds] : argumentsList,
+    newTarget
+  ),
+  get: (target, property, receiver) => property === 'now'
+    ? () => fixedEpochMilliseconds
+    : Reflect.get(target, property, receiver)
+})
+
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['Date'] })
-  vi.setSystemTime(TEST_NOW)
+  vi.stubGlobal('Date', FixedDate)
 })
 
 afterEach(() => {
-  vi.useRealTimers()
+  vi.unstubAllGlobals()
 })
 ```
 
