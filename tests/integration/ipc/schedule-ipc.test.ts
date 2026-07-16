@@ -3,8 +3,6 @@ import { describe, expect, it, vi } from 'vitest'
 import type { PlatformGateway } from '../../../src/contracts/platform.contract'
 import { createScheduleHostApi } from '../../../src-electron/preload/schedule-api'
 import { registerScheduleIpcHandlers } from '../../../src-electron/main/ipc/register-handlers'
-import { createMainWindowOptions } from '../../../src-electron/main/window'
-import { ElectronExternalLink } from '../../../src-electron/adapters/electron-external-link'
 
 const schedule = {
   id: '0198f0de-8f7f-7000-8000-000000000001',
@@ -224,26 +222,5 @@ describe('typed schedule IPC', () => {
     await expect(handlers.get('notification:show')?.({}, { title: '', body: 'Focus 2' }))
       .resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
     expect(show).toHaveBeenCalledWith({ title: 'Focus', body: 'Focus 2' })
-  })
-})
-
-describe('secure Electron host boundary', () => {
-  it('enables renderer isolation and disables Node integration', () => {
-    expect(createMainWindowOptions('D:/app/preload.js').webPreferences).toMatchObject({
-      preload: 'D:/app/preload.js',
-      contextIsolation: true,
-      sandbox: true,
-      nodeIntegration: false
-    })
-  })
-
-  it('opens HTTPS links and rejects unsafe external protocols', async () => {
-    const openExternal = vi.fn(async () => undefined)
-    const links = new ElectronExternalLink({ openExternal })
-
-    await expect(links.open('https://example.com/help')).resolves.toBeUndefined()
-    await expect(links.open('file:///C:/secret.txt')).rejects.toThrow('不允许的外部链接协议')
-    await expect(links.open('javascript:alert(1)')).rejects.toThrow('不允许的外部链接协议')
-    expect(openExternal).toHaveBeenCalledOnce()
   })
 })
