@@ -131,11 +131,17 @@ void app.whenReady().then(() => {
   if (process.env.SCHEDULE_DISABLE_TRAY === '1') return
   const tray = createApplicationTray(
     resolve(mainDirectory, '../../resources/icon256.ico'),
-    () => BrowserWindow.getAllWindows()[0],
-    createWindow,
-    () => {
-      quitting = true
-      app.quit()
+    {
+      show() {
+        const window = BrowserWindow.getAllWindows()[0] ?? createWindow()
+        if (window.isMinimized()) window.restore()
+        window.show()
+        window.focus()
+      },
+      quit() {
+        quitting = true
+        app.quit()
+      }
     }
   )
   app.on('before-quit', () => {

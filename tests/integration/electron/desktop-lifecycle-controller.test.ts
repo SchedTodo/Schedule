@@ -17,7 +17,7 @@ function createHarness(options: {
 } = {}) {
   const handlers: {
     ready?: () => void
-    minimize?: (event: PreventableEvent) => void
+    minimize?: () => void
     close?: (event: PreventableEvent) => void
   } = {}
   const calls: string[] = []
@@ -75,11 +75,18 @@ describe('DesktopLifecycleController', () => {
     expect(harness.calls).toEqual([])
   })
 
-  it.each(['minimize', 'close'] as const)('hides on %s while not quitting', (kind) => {
+  it('hides after the native window minimize event', () => {
+    const harness = createHarness()
+    harness.controller.start('normal')
+    harness.handlers.minimize?.()
+    expect(harness.calls).toEqual(['hide'])
+  })
+
+  it('prevents Close and hides while not quitting', () => {
     const harness = createHarness()
     const event = { preventDefault: vi.fn() }
     harness.controller.start('normal')
-    harness.handlers[kind]?.(event)
+    harness.handlers.close?.(event)
     expect(event.preventDefault).toHaveBeenCalledOnce()
     expect(harness.calls).toEqual(['hide'])
   })

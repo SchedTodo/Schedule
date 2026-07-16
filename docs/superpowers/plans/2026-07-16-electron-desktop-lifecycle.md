@@ -68,7 +68,7 @@ import {
 function createHarness(options: { development?: boolean; minimized?: boolean } = {}) {
   const handlers: {
     ready?: () => void
-    minimize?: (event: PreventableEvent) => void
+    minimize?: () => void
     close?: (event: PreventableEvent) => void
   } = {}
   const calls: string[] = []
@@ -125,11 +125,18 @@ describe('DesktopLifecycleController', () => {
     expect(harness.calls).toEqual([])
   })
 
-  it.each(['minimize', 'close'] as const)('hides on %s while not quitting', (kind) => {
+  it('hides after the native window minimize event', () => {
+    const harness = createHarness()
+    harness.controller.start('normal')
+    harness.handlers.minimize?.()
+    expect(harness.calls).toEqual(['hide'])
+  })
+
+  it('prevents Close and hides while not quitting', () => {
     const harness = createHarness()
     const event = { preventDefault: vi.fn() }
     harness.controller.start('normal')
-    harness.handlers[kind]?.(event)
+    harness.handlers.close?.(event)
     expect(event.preventDefault).toHaveBeenCalledOnce()
     expect(harness.calls).toEqual(['hide'])
   })
@@ -189,7 +196,7 @@ export interface PreventableEvent {
 
 export interface WindowPort {
   onReadyToShow(handler: () => void): void
-  onMinimize(handler: (event: PreventableEvent) => void): void
+  onMinimize(handler: () => void): void
   onClose(handler: (event: PreventableEvent) => void): void
   isMinimized(): boolean
   restore(): void
@@ -233,7 +240,7 @@ export class DesktopLifecycleController {
     window.onReadyToShow(() => {
       if (mode === 'normal') this.showMainWindow()
     })
-    window.onMinimize((event) => { this.hideMainWindow(event) })
+    window.onMinimize(() => { this.hideMainWindow() })
     window.onClose((event) => { this.hideMainWindow(event) })
     if (!this.dependencies.development) return
     try {
@@ -252,9 +259,9 @@ export class DesktopLifecycleController {
     window.focus()
   }
 
-  hideMainWindow(event: PreventableEvent): void {
+  hideMainWindow(event?: PreventableEvent): void {
     if (this.quitting) return
-    event.preventDefault()
+    event?.preventDefault()
     this.dependencies.window.hide()
   }
 

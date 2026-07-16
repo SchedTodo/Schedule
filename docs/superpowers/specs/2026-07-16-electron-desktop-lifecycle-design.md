@@ -10,7 +10,7 @@ The change does not restore login, add new protocols, add a second window, or ex
 
 - A normal launch creates the main window hidden and, on `ready-to-show`, shows, maximizes, and focuses it.
 - A launch containing the exact `--autostart` argument creates the main window but leaves it hidden. It does not show, maximize, or focus the window and therefore does not take the foreground.
-- Clicking either Minimize or Close while the application is not quitting prevents the default window action and hides the main window to the tray.
+- Clicking Minimize lets Electron enter its native minimized state and then hides the main window to the tray. Clicking Close while the application is not quitting prevents the default close and hides the window. Both controls therefore have the same user-visible tray result.
 - During a real application quit, the window Close event is not prevented.
 - Tray “Show Schedule” and tray double-click use the same action: restore the window when minimized, then show, maximize, and focus it.
 - Tray “Quit” marks the application as quitting before requesting `app.quit()`.
@@ -40,7 +40,7 @@ Its injected capabilities are limited to:
 ```ts
 interface WindowPort {
   onReadyToShow(handler: () => void): void
-  onMinimize(handler: (event: PreventableEvent) => void): void
+  onMinimize(handler: () => void): void
   onClose(handler: (event: PreventableEvent) => void): void
   isMinimized(): boolean
   restore(): void
@@ -97,7 +97,7 @@ Existing close interception, tray callbacks, and the multiple cleanup registrati
 
 On `ready-to-show`, a normal launch calls `show()`, `maximize()`, then `focus()`. An autostart launch performs none of these foreground operations and leaves the initially hidden window unchanged.
 
-Minimize and Close share `hideMainWindow()`. When `quitting` is false, the controller calls `preventDefault()` and `hide()`. When `quitting` is true, it allows Close to continue.
+Minimize and Close share `hideMainWindow()`. Electron 43's typed Minimize event is not cancellable, so the controller hides immediately after native minimization. For Close, when `quitting` is false, the controller calls `preventDefault()` and `hide()`; when `quitting` is true, it allows Close to continue.
 
 Tray Show checks `isMinimized()`, calls `restore()` only when required, then calls `show()`, `maximize()`, and `focus()`. Tray Quit sets `quitting` before calling the injected application quit request. The application's `before-quit` event invokes `dispose()`.
 

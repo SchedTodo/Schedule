@@ -6,7 +6,7 @@ export interface PreventableEvent {
 
 export interface WindowPort {
   onReadyToShow(handler: () => void): void
-  onMinimize(handler: (event: PreventableEvent) => void): void
+  onMinimize(handler: () => void): void
   onClose(handler: (event: PreventableEvent) => void): void
   isMinimized(): boolean
   restore(): void
@@ -50,7 +50,7 @@ export class DesktopLifecycleController {
     window.onReadyToShow(() => {
       if (mode === 'normal') this.showMainWindow()
     })
-    window.onMinimize((event) => { this.hideMainWindow(event) })
+    window.onMinimize(() => { this.hideMainWindow() })
     window.onClose((event) => { this.hideMainWindow(event) })
     if (!this.dependencies.development) return
 
@@ -70,9 +70,9 @@ export class DesktopLifecycleController {
     window.focus()
   }
 
-  hideMainWindow(event: PreventableEvent): void {
+  hideMainWindow(event?: PreventableEvent): void {
     if (this.quitting) return
-    event.preventDefault()
+    event?.preventDefault()
     this.dependencies.window.hide()
   }
 

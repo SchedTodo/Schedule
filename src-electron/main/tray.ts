@@ -1,24 +1,55 @@
-import { Menu, Tray, type BrowserWindow } from 'electron'
+import { Menu, Tray } from 'electron'
+
+export interface TrayActions {
+  show(): void
+  quit(): void
+}
+
+export interface TrayLike {
+  setToolTip(value: string): void
+  setContextMenu(menu: object): void
+  on(event: 'double-click', handler: () => void): void
+  destroy(): void
+}
+
+export interface TrayMenuItem {
+  label?: string
+  type?: 'separator'
+  click?: () => void
+}
+
+export interface TrayFactory {
+  create(iconPath: string): TrayLike
+  buildMenu(template: readonly TrayMenuItem[]): object
+}
+
+const electronTrayFactory: TrayFactory = {
+  create(iconPath) {
+    const tray = new Tray(iconPath)
+    return {
+      setToolTip: (value) => { tray.setToolTip(value) },
+      setContextMenu: (menu) => {
+        tray.setContextMenu(menu as ReturnType<typeof Menu.buildFromTemplate>)
+      },
+      on: (event, handler) => { tray.on(event, handler) },
+      destroy: () => { tray.destroy() }
+    }
+  },
+  buildMenu: (template) => Menu.buildFromTemplate([...template])
+}
 
 export function createApplicationTray(
   iconPath: string,
-  getWindow: () => BrowserWindow | undefined,
-  createWindow: () => BrowserWindow,
-  quit: () => void
-): Tray {
-  const tray = new Tray(iconPath)
-  const show = () => {
-    const window = getWindow() ?? createWindow()
-    if (window.isMinimized()) window.restore()
-    window.show()
-    window.focus()
-  }
+  actions: TrayActions,
+  factory: TrayFactory = electronTrayFactory
+): TrayLike {
+  const tray = factory.create(iconPath)
   tray.setToolTip('Schedule')
-  tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Show Schedule', click: show },
+  tray.setContextMenu(factory.buildMenu([
+    { label: 'Show Schedule', click: actions.show },
     { type: 'separator' },
-    { label: 'Quit', click: quit }
+    { label: 'Quit', click: actions.quit }
   ]))
-  tray.on('double-click', show)
+  tray.on('double-click', actions.show)
   return tray
 }
