@@ -5,6 +5,7 @@ import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.co
 import MonthScheduleView from '../../../src/features/schedule/components/MonthScheduleView.vue'
 import OccurrenceTooltip from '../../../src/features/schedule/components/OccurrenceTooltip.vue'
 import WeekScheduleView from '../../../src/features/schedule/components/WeekScheduleView.vue'
+import { TEST_TIME_ZONE } from '../../support/time'
 
 const occurrences: readonly CalendarOccurrenceDto[] = [
   {
@@ -38,6 +39,16 @@ const occurrences: readonly CalendarOccurrenceDto[] = [
 ]
 
 describe('occurrence calendar views', () => {
+  it('starts the default week range on the shared test date', () => {
+    const wrapper = mount(WeekScheduleView, {
+      props: { items: [occurrences[0]!], timeZone: 'UTC', dayCount: 1 }
+    })
+
+    expect(wrapper.get('.day-card header').text()).toBe('2026/07/13')
+    expect(wrapper.get('[data-occurrence-id]').attributes('data-occurrence-id'))
+      .toBe(occurrences[0]!.id)
+  })
+
   it('renders every occurrence from one recurring schedule in month view', () => {
     const wrapper = mount(MonthScheduleView, { props: { items: occurrences, timeZone: 'UTC' } })
     expect(wrapper.findAll('[data-occurrence-id]')).toHaveLength(2)
@@ -66,12 +77,12 @@ describe('occurrence calendar views', () => {
       end: '2026-07-14T00:30:00Z'
     }]
     const month = mount(MonthScheduleView, {
-      props: { items: crossing, timeZone: 'Asia/Shanghai' }
+      props: { items: crossing, timeZone: TEST_TIME_ZONE }
     })
     const week = mount(WeekScheduleView, {
       props: {
         items: crossing,
-        timeZone: 'Asia/Shanghai',
+        timeZone: TEST_TIME_ZONE,
         startDate: '2026-07-14',
         dayCount: 1
       }
@@ -92,7 +103,7 @@ describe('occurrence calendar views', () => {
     const wrapper = mount(WeekScheduleView, {
       props: {
         items: [allDay],
-        timeZone: 'Asia/Shanghai',
+        timeZone: TEST_TIME_ZONE,
         startDate: '2026-07-17',
         dayCount: 1,
         startHour: 6

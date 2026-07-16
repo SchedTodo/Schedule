@@ -7,8 +7,10 @@ import { platformGatewayKey } from '../../../src/app/injection-keys'
 import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import { createInMemoryGateway } from '../../../src/platform/browser/in-memory-gateway'
 import ConcentratePage from '../../../src/pages/concentrate/[timeId].vue'
+import { TEST_NOW } from '../../support/time'
 
-const initialTime = '2026-07-16T00:00:00.000Z'
+const initialTime = TEST_NOW
+const oneMinuteAfterInitialTime = new Date(Date.parse(TEST_NOW) + 60_001).toISOString()
 const firstTodo: ScheduleOccurrenceDto = {
   id: '1198f0de-8f7f-7000-8000-000000000001',
   scheduleId: '0198f0de-8f7f-7000-8000-000000000001',
@@ -109,7 +111,7 @@ describe('concentrate page', () => {
     expect(createRecord).toHaveBeenCalledWith({
       scheduleId: firstTodo.scheduleId,
       start: initialTime,
-      end: '2026-07-16T00:01:00.001Z'
+      end: oneMinuteAfterInitialTime
     })
   })
 
@@ -123,7 +125,7 @@ describe('concentrate page', () => {
     expect(createRecord).toHaveBeenCalledWith({
       scheduleId: firstTodo.scheduleId,
       start: initialTime,
-      end: '2026-07-16T00:01:00.001Z'
+      end: oneMinuteAfterInitialTime
     })
   })
 })
