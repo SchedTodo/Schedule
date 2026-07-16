@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -11,30 +11,27 @@ import schemaSql from '../adapters/db/schema.sql?raw'
 import { DrizzleOccurrenceRepository } from '../adapters/db/occurrence-repository'
 import { DrizzleSettingsRepository } from '../adapters/db/settings-repository'
 import { ElectronNotifier } from '../adapters/electron-notifier'
+import { ElectronExternalLink } from '../adapters/electron-external-link'
 import { DrizzleRecordRepository } from '../adapters/db/record-repository'
 import { DrizzleScheduleRepository } from '../adapters/db/schedule-repository'
+import {
+  DesktopLifecycleController,
+  resolveLaunchMode,
+  type Disposable
+} from './desktop-lifecycle-controller'
+import {
+  createElectronShortcutPort,
+  createElectronWindowPort
+} from './electron-desktop-adapters'
 import { registerScheduleIpcHandlers } from './ipc/register-handlers'
-import { registerApplicationLifecycle } from './lifecycle'
-import { createMainWindowOptions, loadMainWindow } from './window'
-import { createApplicationTray } from './tray'
+import { createMainWindowOptions, installWindowOpenHandler, loadMainWindow } from './window'
+import { createApplicationTray, type TrayLike } from './tray'
 
 const mainDirectory = dirname(fileURLToPath(import.meta.url))
 const preloadPath = resolve(mainDirectory, '../preload/index.cjs')
 const webEntryPath = resolve(mainDirectory, '../../dist-web/index.html')
-let quitting = false
 
-function createWindow(): BrowserWindow {
-  const window = new BrowserWindow(createMainWindowOptions(preloadPath))
-  window.on('close', (event) => {
-    if (quitting || process.env.SCHEDULE_DISABLE_TRAY === '1') return
-    event.preventDefault()
-    window.hide()
-  })
-  void loadMainWindow(window, process.env.VITE_DEV_SERVER_URL, webEntryPath)
-  return window
-}
-
-function registerSchedulePlatform(): void {
+function registerSchedulePlatform(): readonly Disposable[] {
   const databasePath =
     process.env.SCHEDULE_DATABASE_PATH ?? resolve(app.getPath('userData'), 'schedule-v2.db')
   const connection = initializeScheduleDatabase(databasePath, schemaSql)
@@ -115,36 +112,44 @@ function registerSchedulePlatform(): void {
       }
     })()
   }, 30_000)
-  app.on('before-quit', () => {
-    clearInterval(alarmTimer)
-    connection.sqlite.close()
-  })
+  return [
+    { dispose: () => { clearInterval(alarmTimer) } },
+    { dispose: () => { connection.sqlite.close() } }
+  ]
 }
 
 void app.whenReady().then(() => {
-  registerSchedulePlatform()
-  registerApplicationLifecycle(app, createWindow, () => BrowserWindow.getAllWindows().length)
-  createWindow()
-  app.on('before-quit', () => {
-    quitting = true
-  })
-  if (process.env.SCHEDULE_DISABLE_TRAY === '1') return
-  const tray = createApplicationTray(
-    resolve(mainDirectory, '../../resources/icon256.ico'),
-    {
-      show() {
-        const window = BrowserWindow.getAllWindows()[0] ?? createWindow()
-        if (window.isMinimized()) window.restore()
-        window.show()
-        window.focus()
-      },
-      quit() {
-        quitting = true
-        app.quit()
-      }
-    }
+  const resources = registerSchedulePlatform()
+  const backgroundEnabled = process.env.SCHEDULE_DISABLE_TRAY !== '1'
+  const mainWindow = new BrowserWindow(createMainWindowOptions(preloadPath))
+  installWindowOpenHandler(
+    mainWindow.webContents,
+    new ElectronExternalLink(shell),
+    (error) => { console.error('Electron external link failed', error) }
   )
-  app.on('before-quit', () => {
-    tray.destroy()
+
+  let tray: TrayLike | undefined
+  const controller = new DesktopLifecycleController({
+    window: createElectronWindowPort(mainWindow),
+    shortcuts: createElectronShortcutPort(globalShortcut),
+    requestAppQuit: () => { app.quit() },
+    reportError: (error) => { console.error('Electron lifecycle failed', error) },
+    resources: [...resources, { dispose: () => { tray?.destroy() } }],
+    development: Boolean(process.env.VITE_DEV_SERVER_URL)
   })
+
+  controller.start(resolveLaunchMode(process.argv))
+  if (backgroundEnabled) {
+    tray = createApplicationTray(resolve(mainDirectory, '../../resources/icon256.ico'), {
+      show: () => { controller.showMainWindow() },
+      quit: () => { controller.quit() }
+    })
+  }
+
+  app.on('activate', () => { controller.showMainWindow() })
+  app.on('before-quit', () => { controller.dispose() })
+  app.on('window-all-closed', () => {
+    if (!backgroundEnabled) app.quit()
+  })
+  void loadMainWindow(mainWindow, process.env.VITE_DEV_SERVER_URL, webEntryPath)
 })
