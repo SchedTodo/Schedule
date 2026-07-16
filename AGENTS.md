@@ -30,6 +30,8 @@ Before committing, run the checks relevant to the change. For the Web foundation
 .\node_modules\.bin\vite.cmd build
 ```
 
+Electron and Playwright Electron tests launch GUI processes. Run those commands outside the sandbox with the required approval. If Electron reports repeated GPU child-process exits, `ERR_FAILED` while loading a local page, an empty BrowserWindow URL, or Windows code `0xC0000135`, verify the execution boundary before changing product code, dependencies, hardware acceleration, or Chromium switches. Follow [`docs/development/electron-e2e-troubleshooting.md`](docs/development/electron-e2e-troubleshooting.md).
+
 Add focused integration or Playwright commands when the changed area requires them.
 
 ## Git
