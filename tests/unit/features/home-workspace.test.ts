@@ -2,13 +2,15 @@ import { mount } from '@vue/test-utils'
 import { createPinia, type Pinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { NLayoutSider } from 'naive-ui'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { platformGatewayKey } from '../../../src/app/injection-keys'
 import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import type { ScheduleDto } from '../../../src/contracts/schedule.contract'
 import ScheduleModal from '../../../src/features/schedule/components/ScheduleModal.vue'
 import WeekScheduleView from '../../../src/features/schedule/components/WeekScheduleView.vue'
+import { FixedClock } from '../../../src/domain/shared/clock'
+import { CryptoIdGenerator } from '../../../src/domain/shared/id-generator'
 import { createInMemoryGateway } from '../../../src/platform/browser/in-memory-gateway'
 import HomePage from '../../../src/pages/index.vue'
 import { useRuntimeStore } from '../../../src/stores/runtime'
@@ -40,6 +42,17 @@ const eventOccurrence: CalendarOccurrenceDto = {
   excluded: false
 }
 
+const fixedNow = '2026-07-13T04:00:00Z'
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(fixedNow)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 describe('home workspace', () => {
   async function mountHome(seed: readonly ScheduleDto[] = [], pinia: Pinia = createPinia()) {
     const router = createRouter({
@@ -50,7 +63,12 @@ describe('home workspace', () => {
     return mount(HomePage, {
       global: {
         plugins: [pinia, router],
-        provide: { [platformGatewayKey as symbol]: createInMemoryGateway(seed) }
+        provide: {
+          [platformGatewayKey as symbol]: createInMemoryGateway(seed, {
+            clock: new FixedClock(fixedNow),
+            idGenerator: new CryptoIdGenerator()
+          })
+        }
       }
     })
   }
