@@ -101,7 +101,7 @@ Minimize and Close share `hideMainWindow()`. When `quitting` is false, the contr
 
 Tray Show checks `isMinimized()`, calls `restore()` only when required, then calls `show()`, `maximize()`, and `focus()`. Tray Quit sets `quitting` before calling the injected application quit request. The application's `before-quit` event invokes `dispose()`.
 
-`dispose()` is idempotent. It attempts every registered cleanup even if an earlier cleanup throws, and reports each error through `reportError`. This ensures database close, alarm timer cancellation, tray destruction, and shortcut unregistration are all attempted for tray quit and any other application quit path.
+`dispose()` first sets `quitting` so system-initiated and programmatic quit paths cannot be blocked by the window Close handler. It is idempotent, attempts every registered cleanup even if an earlier cleanup throws, and reports each error through `reportError`. This ensures database close, alarm timer cancellation, tray destruction, and shortcut unregistration are all attempted for tray quit and any other application quit path.
 
 ## Error Handling and Security
 
