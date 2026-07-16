@@ -12,6 +12,7 @@ import type {
 import type { AppResult } from './result'
 import type { SettingsDto, UpdateSettingsInput } from './settings.contract'
 import type { ConcentrationRecordDto, CreateConcentrationRecordInput } from './record.contract'
+import type { NotificationInput } from './notification.contract'
 import type {
   CalendarOccurrenceDto,
   ExcludeOccurrencesInput,
@@ -50,5 +51,8 @@ export interface PlatformGateway {
     create(input: CreateConcentrationRecordInput): Promise<AppResult<ConcentrationRecordDto>>
     listBySchedule(scheduleId: string): Promise<AppResult<readonly ConcentrationRecordDto[]>>
     delete(id: string): Promise<AppResult<void>>
+  }
+  readonly notifications: {
+    show(input: NotificationInput): Promise<AppResult<void>>
   }
 }

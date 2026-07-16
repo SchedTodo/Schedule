@@ -3,6 +3,7 @@ import type { z } from 'zod'
 import type { AppResult } from '../../src/contracts/result'
 import type { SettingsDto, UpdateSettingsInput } from '../../src/contracts/settings.contract'
 import type { ConcentrationRecordDto, CreateConcentrationRecordInput } from '../../src/contracts/record.contract'
+import type { NotificationInput } from '../../src/contracts/notification.contract'
 import type {
   CalendarOccurrenceDto,
   ExcludeOccurrencesInput,
@@ -48,6 +49,7 @@ export interface ScheduleHostApi {
   createRecord(input: CreateConcentrationRecordInput): Promise<AppResult<ConcentrationRecordDto>>
   listRecords(scheduleId: string): Promise<AppResult<ConcentrationRecordDto[]>>
   deleteRecord(id: string): Promise<AppResult<void>>
+  showNotification(input: NotificationInput): Promise<AppResult<void>>
 }
 
 export function createScheduleHostApi(invoke: IpcInvoke): ScheduleHostApi {
@@ -136,6 +138,11 @@ export function createScheduleHostApi(invoke: IpcInvoke): ScheduleHostApi {
     async deleteRecord(id) {
       return scheduleIpcContracts[scheduleIpcChannels.deleteRecord].output.parse(
         await invoke(scheduleIpcChannels.deleteRecord, { id })
+      )
+    },
+    async showNotification(input) {
+      return scheduleIpcContracts[scheduleIpcChannels.showNotification].output.parse(
+        await invoke(scheduleIpcChannels.showNotification, input)
       )
     }
   }

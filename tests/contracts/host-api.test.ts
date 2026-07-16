@@ -55,6 +55,7 @@ describe('createHostGateway', () => {
     const createRecord = vi.fn()
     const listRecords = vi.fn()
     const deleteRecord = vi.fn()
+    const showNotification = vi.fn(async () => ({ ok: true as const, value: undefined }))
     const gateway = createHostGateway({
       createSchedule,
       findScheduleById,
@@ -73,7 +74,8 @@ describe('createHostGateway', () => {
       updateSettings,
       createRecord,
       listRecords,
-      deleteRecord
+      deleteRecord,
+      showNotification
     })
     const input = {
       title: '周会',
@@ -95,8 +97,13 @@ describe('createHostGateway', () => {
       ok: true,
       value: [schedule]
     })
+    await expect(gateway.notifications.show({ title: 'Focus', body: 'Focus 2' })).resolves.toEqual({
+      ok: true,
+      value: undefined
+    })
     expect(createSchedule).toHaveBeenCalledWith(input)
     expect(findScheduleById).toHaveBeenCalledWith(schedule.id)
     expect(listSchedules).toHaveBeenCalledWith(query)
+    expect(showNotification).toHaveBeenCalledWith({ title: 'Focus', body: 'Focus 2' })
   })
 })

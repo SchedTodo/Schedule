@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { AppErrorDtoSchema } from '../../src/contracts/result'
 import { SettingsDtoSchema, UpdateSettingsInputSchema } from '../../src/contracts/settings.contract'
 import { ConcentrationRecordDtoSchema, CreateConcentrationRecordInputSchema } from '../../src/contracts/record.contract'
+import { NotificationInputSchema } from '../../src/contracts/notification.contract'
 import {
   CalendarOccurrenceDtoSchema,
   ExcludeOccurrencesInputSchema,
@@ -45,6 +46,7 @@ export const scheduleIpcChannels = {
   createRecord: 'record:create',
   listRecords: 'record:list-by-schedule',
   deleteRecord: 'record:delete'
+  ,showNotification: 'notification:show'
 } as const
 
 export const FindScheduleByIdInputSchema = z.object({ id: z.uuid() }).strict()
@@ -127,6 +129,10 @@ export const scheduleIpcContracts = {
   },
   [scheduleIpcChannels.deleteRecord]: {
     input: ExcludeOccurrenceInputSchema,
+    output: appResultSchema(z.void())
+  },
+  [scheduleIpcChannels.showNotification]: {
+    input: NotificationInputSchema,
     output: appResultSchema(z.void())
   }
 } as const

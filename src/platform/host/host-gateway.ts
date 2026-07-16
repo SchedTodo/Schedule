@@ -29,6 +29,9 @@ export function createHostGateway(host: unknown): PlatformGateway {
       create: (input) => api.createRecord(input),
       listBySchedule: (scheduleId) => api.listRecords(scheduleId),
       delete: (id) => api.deleteRecord(id)
+    },
+    notifications: {
+      show: (input) => api.showNotification(input)
     }
   }
 }

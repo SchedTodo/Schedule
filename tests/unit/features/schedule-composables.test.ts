@@ -58,6 +58,9 @@ function gatewayWith(
       create: vi.fn(),
       listBySchedule: vi.fn(),
       delete: vi.fn()
+    },
+    notifications: {
+      show: vi.fn()
     }
   }
 }

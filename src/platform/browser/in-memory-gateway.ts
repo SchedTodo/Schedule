@@ -16,6 +16,7 @@ import {
 import type { Clock } from '../../domain/shared/clock'
 import { defaultSettings, SettingsDtoSchema, UpdateSettingsInputSchema } from '../../contracts/settings.contract'
 import { CreateConcentrationRecordInputSchema, type ConcentrationRecordDto } from '../../contracts/record.contract'
+import { NotificationInputSchema } from '../../contracts/notification.contract'
 import { SystemClock } from '../../domain/shared/clock'
 import type { IdGenerator } from '../../domain/shared/id-generator'
 import { CryptoIdGenerator } from '../../domain/shared/id-generator'
@@ -341,6 +342,14 @@ export function createInMemoryGateway(
         if (index < 0) return { ok: false, error: { code: 'NOT_FOUND', message: '专注记录不存在' } }
         records.splice(index, 1)
         return { ok: true, value: undefined }
+      }
+    },
+    notifications: {
+      async show(input) {
+        const parsed = NotificationInputSchema.safeParse(input)
+        return parsed.success
+          ? { ok: true, value: undefined }
+          : { ok: false, error: validationError }
       }
     }
   }

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { AppResult } from '../../contracts/result'
 import type { SettingsDto, UpdateSettingsInput } from '../../contracts/settings.contract'
 import type { ConcentrationRecordDto, CreateConcentrationRecordInput } from '../../contracts/record.contract'
+import type { NotificationInput } from '../../contracts/notification.contract'
 import type {
   CalendarOccurrenceDto,
   ExcludeOccurrencesInput,
@@ -41,6 +42,7 @@ export interface HostScheduleApi {
   createRecord(input: CreateConcentrationRecordInput): Promise<AppResult<ConcentrationRecordDto>>
   listRecords(scheduleId: string): Promise<AppResult<readonly ConcentrationRecordDto[]>>
   deleteRecord(id: string): Promise<AppResult<void>>
+  showNotification(input: NotificationInput): Promise<AppResult<void>>
 }
 
 function method<T extends (...arguments_: never[]) => unknown>() {
@@ -67,5 +69,6 @@ export const HostScheduleApiSchema = z
     ,createRecord: method<HostScheduleApi['createRecord']>()
     ,listRecords: method<HostScheduleApi['listRecords']>()
     ,deleteRecord: method<HostScheduleApi['deleteRecord']>()
+    ,showNotification: method<HostScheduleApi['showNotification']>()
   })
   .strict()

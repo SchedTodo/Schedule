@@ -162,4 +162,9 @@ export function registerScheduleIpcHandlers(
     input, (value) => deleteRecordContract.input.parse(value),
     ({ id }) => gateway.records.delete(id), (value) => deleteRecordContract.output.parse(value)
   ))
+  const notificationContract = scheduleIpcContracts[scheduleIpcChannels.showNotification]
+  ipcMain.handle(scheduleIpcChannels.showNotification, (_event, input) => execute(
+    input, (value) => notificationContract.input.parse(value),
+    (value) => gateway.notifications.show(value), (value) => notificationContract.output.parse(value)
+  ))
 }

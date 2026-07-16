@@ -37,6 +37,7 @@ function createHarness(
   gateway: {
     schedules: Pick<PlatformGateway['schedules'], 'create' | 'findById' | 'list'> & Partial<PlatformGateway['schedules']>
     occurrences?: Partial<PlatformGateway['occurrences']>
+    notifications?: Partial<PlatformGateway['notifications']>
   }
 ) {
   const handlers = new Map<string, (_event: unknown, input: unknown) => Promise<unknown>>()
@@ -75,6 +76,9 @@ function createHarness(
         create: vi.fn(),
         listBySchedule: vi.fn(async () => ({ ok: true as const, value: [] })),
         delete: vi.fn()
+      },
+      notifications: {
+        show: gateway.notifications?.show ?? vi.fn(async () => ({ ok: true as const, value: undefined }))
       }
     }
   )
@@ -206,6 +210,20 @@ describe('typed schedule IPC', () => {
     await expect(handlers.get('occurrence:exclude-many')?.({}, { ids: ['invalid'] }))
       .resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
     expect(excludeMany).toHaveBeenCalledWith(input)
+  })
+
+  it('validates and round trips notification requests', async () => {
+    const show = vi.fn(async () => ({ ok: true as const, value: undefined }))
+    const { api, handlers } = createHarness({
+      schedules: { create: vi.fn(), findById: vi.fn(), list: vi.fn() },
+      notifications: { show }
+    })
+
+    await expect(api.showNotification({ title: 'Focus', body: 'Focus 2' }))
+      .resolves.toEqual({ ok: true, value: undefined })
+    await expect(handlers.get('notification:show')?.({}, { title: '', body: 'Focus 2' }))
+      .resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
+    expect(show).toHaveBeenCalledWith({ title: 'Focus', body: 'Focus 2' })
   })
 })
 

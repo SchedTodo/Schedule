@@ -83,7 +83,13 @@ function registerSchedulePlatform(): void {
         return result
       }
     },
-    records: recordRepository
+    records: recordRepository,
+    notifications: {
+      async show(input) {
+        notifier.notifyMessage(input)
+        return { ok: true, value: undefined }
+      }
+    }
   })
   const alarmTimer = setInterval(() => {
     void (async () => {
