@@ -2,6 +2,8 @@
 
 本文档是 Schedule v2 后续迁移工作的权威基线。它记录 `main` 与 `release/1.2.0` 之间仍需处理的用户可见差异、已批准的非目标和暂缓事项。后续设计、实施计划和验收应引用本文档；若其他旧计划与本文档冲突，以本文档为准。
 
+当前基线日期：2026-07-18。
+
 ## 状态与优先级
 
 - `已完成`：当前 v2 已具备该能力，并有相应代码或测试覆盖。
@@ -11,6 +13,17 @@
 - `P0`：正式替代 1.2 前必须完成。
 - `P1`：本地功能或桌面体验一致性工作。
 - `P2`：发布完备性、清理或长期维护工作。
+
+## 当前进度摘要
+
+| 工作项 | 状态 | 当前结论 |
+| --- | --- | --- |
+| `GAP-01` 完整专注循环 | `已完成` | 四段循环、阶段通知和有效 Focus 记录已落地 |
+| `GAP-02` Electron 生命周期 | `已完成` | 窗口、托盘、启动、外链和退出行为已验收 |
+| `GAP-03` 提醒与通知展示 | `待实施` | 仍缺重算时机、边界语义和本地化时间展示 |
+| `GAP-04` 可重复测试时间基线 | `已完成` | 固定时钟、显式时区与跨时区复验已落地 |
+| `GAP-05` 发布与端到端验证 | `待实施` | 已有部分 Electron E2E，尚无 Web E2E 和 Windows 打包链路 |
+| `GAP-06` legacy 收口 | `待实施` | 直接建库已完成，legacy 源码与依赖清理尚未完成 |
 
 ## 已批准决策
 
@@ -24,7 +37,7 @@ Schedule v2 使用独立的新数据库，不迁移、导入或转换 1.2 的 `S
 
 - 不要求保留旧日程、时间实例、完成状态、单次备注、专注记录或设置。
 - 不要求提供旧数据库备份、恢复、幂等迁移或失败回滚流程。
-- 现有 v1 数据迁移代码和测试不构成发布要求；在最终切换阶段应移除或停止调用，避免形成错误的数据兼容承诺。
+- v2 Electron 已改为仅对新数据库执行一份完整 schema；v1 转换、备份、版本检测、迁移元数据和增量迁移代码及测试均已移除。
 - 后续文档不得再把“1.2 数据迁移”列为待办或验收条件，除非用户重新批准范围变更。
 
 ### 同步功能暂缓
@@ -52,21 +65,24 @@ WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同�
 - 月视图、周视图、Todo、详情、Database、Settings 和 Concentration 页面。
 - 设置持久化、时区、周起始日、日历视图偏好和开机启动设置。
 - 专注记录的创建、持久化和日程详情展示。
+- 四个 Focus、三个 Small Break 和一个 Big Break 的完整专注循环、阶段通知，以及按 Todo 保存超过一分钟的连续 Focus 片段。
 - 提醒计算、Electron 系统通知和托盘后台驻留的基础能力。
+- 新数据库直接创建完整 schema；Database 页面通过服务端查询和远程分页展示日程。
 - ANTLR 日程解析器及旧版解析器语义兼容测试。
+- 单元和组件测试统一固定当前时间，并对关键时间场景执行跨宿主时区复验。
 - Vue 代码通过稳定 DTO 和 `PlatformGateway` 工作，不暴露 Electron、Drizzle、SQLite 或 ANTLR context 类型。
 
 “已完成”表示已有实现边界，不表示所有旧版交互细节已经一致；以下工作项仍优先于最终发布。
 
-## 当前待实施工作
+## 迁移工作项
 
 ### GAP-01：恢复完整专注循环
 
-状态：`待实施`
+状态：`已完成`（2026-07-18）
 
 优先级：`P1`
 
-当前专注页只有单段 Focus 倒计时和开始/暂停。需要恢复 1.2 用户可见的番茄钟流程，但继续通过平台端口保存专注记录。
+关闭前基线：专注页只有单段 Focus 倒计时和开始/暂停，需要恢复 1.2 用户可见的番茄钟流程，同时继续通过平台端口保存专注记录。
 
 验收标准：
 
@@ -76,6 +92,24 @@ WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同�
 - Focus/Break 阶段通知通过通知端口触发，不在 Vue 页面直接使用宿主 API。
 - 切换 Todo 或离开页面时，超过一分钟的 Focus 记录保存到对应日程；Break 不记为专注记录。
 - 使用固定时钟或 fake timer 覆盖阶段切换、暂停、恢复、Todo 切换和记录保存。
+
+完成说明：
+
+- `FocusCycle` 使用时间戳对账，按四个 Focus、三个 Small Break、一个 Big Break 的固定顺序自动循环，并正确排除暂停和 Break 时间。
+- `FocusSession` 在暂停、阶段切换、Todo 切换和离页时关闭连续 Focus 片段，仅保存严格超过 60 秒的记录。
+- 阶段切换通知通过 `PlatformGateway.notifications`、预加载 API 和 IPC 校验后交给 Electron notifier；Vue 不直接调用宿主 API。
+- 页面展示当前阶段、Focus 序号、剩余时间、进度和累计专注时间，并保留显式开始、暂停和恢复操作。
+
+关闭验证：
+
+```powershell
+.\node_modules\.bin\eslint.cmd .
+.\node_modules\.bin\vue-tsc.cmd --noEmit -p tsconfig.app.json
+.\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.electron.json
+.\node_modules\.bin\vitest.cmd run tests/unit tests/contracts tests/parser
+.\node_modules\.bin\vitest.cmd run tests/integration/ipc/schedule-ipc.test.ts
+.\node_modules\.bin\vite.cmd build
+```
 
 ### GAP-02：对齐 Electron 窗口、托盘和启动行为
 
@@ -121,6 +155,8 @@ WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同�
 
 优先级：`P1`
 
+当前实现只有 30 秒轮询、进程内去重和原始 ISO 时间正文；设置变更、日程变更、Todo 完成与休眠恢复尚未形成统一重算入口，因此本项仍未关闭。
+
 验收标准：
 
 - 明确定义提醒在轮询时间点之前还是之后触发，并用边界测试保证不会重复或永久漏发。
@@ -131,11 +167,11 @@ WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同�
 
 ### GAP-04：建立可重复的测试时间基线
 
-状态：`待实施`
+状态：`已完成`（2026-07-18）
 
 优先级：`P0`
 
-部分首页测试使用固定在 2026 年 7 月的 fixture，但页面查询读取真实系统时间，导致测试随日期变化。所有依赖“今天”、逻辑日、到期状态、日历范围和提醒窗口的测试必须确定化。
+关闭前基线：部分首页测试使用固定在 2026 年 7 月的 fixture，但页面查询读取真实系统时间，导致测试随日期变化。所有依赖“今天”、逻辑日、到期状态、日历范围和提醒窗口的测试必须确定化。
 
 验收标准：
 
@@ -144,11 +180,32 @@ WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同�
 - 项目规定的 lint、类型检查、单元测试和 Web 构建从任意日期运行均通过。
 - 测试不得通过放宽断言或把 fixture 日期不断推迟来规避时间依赖。
 
+完成说明：
+
+- Vitest 全局 setup 将无参数 `Date`、`Date.now()` 和 `Temporal.Now.instant()` 固定到 `2026-07-13T04:00:00.000Z`，显式日期构造保持原行为。
+- 共享测试支持模块统一提供 `TEST_NOW`、`Asia/Shanghai` 和 `zh-CN`；首页、Todo、日历、详情、专注和提醒测试不再读取真实当前日期。
+- 时间和文本断言显式传入业务时区与 locale，生产运行时的系统时区和 locale 行为未被修改。
+- 2026-07-18 在 `America/Los_Angeles` 宿主时区下复验六类时间敏感套件，结果为 6 个文件、27 个测试全部通过；完整核心套件为 44 个文件、233 个测试全部通过。
+
+关闭验证：
+
+```powershell
+.\node_modules\.bin\eslint.cmd .
+.\node_modules\.bin\vue-tsc.cmd --noEmit -p tsconfig.app.json
+.\node_modules\.bin\vitest.cmd run tests/unit tests/contracts tests/parser
+$env:TZ='America/Los_Angeles'
+.\node_modules\.bin\vitest.cmd run tests/unit/features/home-workspace.test.ts tests/unit/features/todo-sidebar.test.ts tests/unit/features/occurrence-calendar.test.ts tests/unit/features/schedule-detail-presentation.test.ts tests/unit/features/concentrate-page.test.ts tests/unit/application/alarm-scheduler.test.ts
+Remove-Item Env:TZ
+.\node_modules\.bin\vite.cmd build
+```
+
 ### GAP-05：补齐发布与端到端验证
 
 状态：`待实施`
 
 优先级：`P0`
+
+部分进展：Electron 已有 `startup.spec.ts` 和 `schedule-ui.spec.ts`，覆盖启动安全边界和部分本地 UI 流程；仓库也保留 `electron-builder.yml`。但 `test:e2e:web` 指向的 `tests/e2e/web` 尚不存在，`package.json` 没有 electron-builder 依赖、Windows 打包命令或发布脚本，现有打包配置也尚未按 v2 产物验证，因此本项仍未关闭。
 
 验收标准：
 
@@ -164,11 +221,12 @@ WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同�
 
 优先级：`P2`
 
+部分进展：v2 已移除所有数据库迁移路径，新数据库只执行 `src-electron/adapters/db/schema.sql`；Database 页面也已切换为远程分页数据表。以下仍是本项的剩余验收范围：
+
 验收标准：
 
 - 删除不再参与 v2 运行的 `src/main/**`、`src/preload/**`、`src/renderer/**`、`src/prisma/**` 和旧解析器测试。
 - 删除仅被 legacy 代码使用的依赖、别名、环境变量和构建配置。
-- 删除或停用 v1 数据迁移入口，确保新安装只创建 v2 数据库。
 - README 和架构文档只描述实际存在的 v2 命令、能力和限制。
 - 删除 legacy 源码前后运行同一套验证，证明 v2 不通过旧别名或遗留文件间接工作。
 
@@ -187,14 +245,11 @@ WebSocket 生命周期、跨设备同步、冲突处理、同步元数据、同�
 
 ## 执行顺序
 
-后续默认按以下顺序推进；每一项应有独立设计、TDD 实施计划和验证结果：
+`GAP-01`、`GAP-02` 和 `GAP-04` 已完成。剩余工作默认按以下顺序推进；每一项应有独立设计、TDD 实施计划和验证结果：
 
-1. `GAP-04`：先稳定时间相关测试基线。
-2. `GAP-01`：恢复完整专注循环。
-3. `GAP-02`：对齐窗口、托盘和启动行为。
-4. `GAP-03`：对齐提醒时间和通知展示。
-5. `GAP-05`：补齐发布和端到端验证。
-6. `GAP-06`：删除 legacy 实现并完成文档收口。
+1. `GAP-03`：对齐提醒时间和通知展示。
+2. `GAP-05`：补齐发布和端到端验证。
+3. `GAP-06`：删除 legacy 实现并完成文档收口。
 
 同步、账户和 Tauri 不在上述执行序列中，必须经用户重新批准后才能进入实施计划。
 
