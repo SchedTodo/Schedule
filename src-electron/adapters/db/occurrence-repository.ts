@@ -1,7 +1,20 @@
-import { and, asc, eq, gte, inArray, isNull, lt } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  or
+} from 'drizzle-orm'
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 
 import type {
+  AlarmCandidateQuery,
   CalendarOccurrenceDto,
   ExcludeOccurrencesInput,
   KnownTimeMark,
@@ -9,6 +22,7 @@ import type {
   ScheduleOccurrenceDto,
   StoredScheduleOccurrenceDto
 } from '../../../src/contracts/occurrence.contract'
+import { AlarmCandidateQuerySchema } from '../../../src/contracts/occurrence.contract'
 import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
 import type { OccurrenceRepository } from '../../../src/platform/ports'
 import { todoLogicalDayRange } from '../../../src/domain/schedule/logical-day'
@@ -101,6 +115,62 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
           endMark: occurrence.endMark,
           comment: occurrence.comment,
           scheduleComment: schedule.comment,
+          done: occurrence.done
+        }))
+      }
+    } catch (error) {
+      return { ok: false, error: persistenceError(error) }
+    }
+  }
+
+  async listAlarmCandidates(
+    query: AlarmCandidateQuery
+  ): Promise<AppResult<readonly ScheduleOccurrenceDto[]>> {
+    const parsed = AlarmCandidateQuerySchema.safeParse(query)
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: { code: 'VALIDATION_FAILED', message: '提醒候选查询无效' }
+      }
+    }
+    try {
+      const rows = this.database
+        .select({ occurrence: scheduleOccurrences, schedule: schedules })
+        .from(scheduleOccurrences)
+        .innerJoin(schedules, eq(scheduleOccurrences.scheduleId, schedules.id))
+        .where(and(
+          isNull(scheduleOccurrences.deletedAt),
+          isNull(schedules.deletedAt),
+          eq(scheduleOccurrences.excluded, false),
+          eq(scheduleOccurrences.done, false),
+          or(
+            and(
+              eq(schedules.kind, 'event'),
+              isNotNull(scheduleOccurrences.start),
+              gt(scheduleOccurrences.end, new Date(parsed.data.checkedAt)),
+              lte(scheduleOccurrences.start, new Date(parsed.data.through))
+            ),
+            and(
+              eq(schedules.kind, 'todo'),
+              lte(scheduleOccurrences.end, new Date(parsed.data.through))
+            )
+          )
+        ))
+        .orderBy(asc(scheduleOccurrences.end))
+        .all()
+      return {
+        ok: true,
+        value: rows.map(({ occurrence, schedule }) => ({
+          id: occurrence.id,
+          scheduleId: occurrence.scheduleId,
+          kind: schedule.kind,
+          title: schedule.title,
+          excluded: occurrence.excluded,
+          start: occurrence.start?.toISOString() ?? null,
+          end: occurrence.end.toISOString(),
+          startMark: occurrence.startMark,
+          endMark: occurrence.endMark,
+          comment: occurrence.comment,
           done: occurrence.done
         }))
       }

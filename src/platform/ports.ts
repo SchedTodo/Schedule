@@ -7,6 +7,7 @@ import type {
 } from '../contracts/schedule.contract'
 import type { AppResult } from '../contracts/result'
 import type {
+  AlarmCandidateQuery,
   CalendarOccurrenceDto,
   ExcludeOccurrencesInput,
   OccurrenceRangeQuery,
@@ -30,6 +31,9 @@ export interface ScheduleRepository {
 
 export interface OccurrenceRepository {
   listRange(query: OccurrenceRangeQuery): Promise<AppResult<readonly CalendarOccurrenceDto[]>>
+  listAlarmCandidates(
+    query: AlarmCandidateQuery
+  ): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   listVisibleBySchedule(scheduleId: string): Promise<AppResult<readonly ScheduleOccurrenceDto[]>>
   listAllBySchedule(scheduleId: string): Promise<AppResult<readonly StoredScheduleOccurrenceDto[]>>
   updateComment(id: string, comment: string): Promise<AppResult<ScheduleOccurrenceDto>>

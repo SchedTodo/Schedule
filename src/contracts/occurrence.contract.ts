@@ -63,6 +63,17 @@ export const OccurrenceRangeQuerySchema = z
     path: ['end']
   })
 
+export const AlarmCandidateQuerySchema = z
+  .object({
+    checkedAt: z.iso.datetime({ offset: true }),
+    through: z.iso.datetime({ offset: true })
+  })
+  .strict()
+  .refine((value) => Date.parse(value.checkedAt) <= Date.parse(value.through), {
+    message: 'Alarm candidate bound must not precede check time',
+    path: ['through']
+  })
+
 export const ScheduleOccurrenceListInputSchema = z.object({ scheduleId: z.uuid() }).strict()
 export const UpdateOccurrenceCommentInputSchema = z.object({
   id: z.uuid(),
@@ -86,6 +97,7 @@ export type CalendarOccurrenceDto = z.infer<typeof CalendarOccurrenceDtoSchema>
 export type StoredScheduleOccurrenceDto = z.infer<typeof StoredScheduleOccurrenceDtoSchema>
 export type ScheduleOccurrenceDraft = z.infer<typeof ScheduleOccurrenceDraftSchema>
 export type OccurrenceRangeQuery = z.infer<typeof OccurrenceRangeQuerySchema>
+export type AlarmCandidateQuery = z.infer<typeof AlarmCandidateQuerySchema>
 export type ScheduleOccurrenceListInput = z.infer<typeof ScheduleOccurrenceListInputSchema>
 export type UpdateOccurrenceCommentInput = z.infer<typeof UpdateOccurrenceCommentInputSchema>
 export type ExcludeOccurrenceInput = z.infer<typeof ExcludeOccurrenceInputSchema>

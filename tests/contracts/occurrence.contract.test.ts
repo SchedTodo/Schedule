@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  AlarmCandidateQuerySchema,
   CalendarOccurrenceDtoSchema,
   OccurrenceRangeQuerySchema,
   ScheduleOccurrenceDtoSchema,
@@ -91,5 +92,18 @@ describe('schedule occurrence contracts', () => {
     delete withoutTimeZone.timeZone
     expect(TodoOccurrenceQuerySchema.safeParse(query).success).toBe(true)
     expect(TodoOccurrenceQuerySchema.safeParse(withoutTimeZone).success).toBe(false)
+  })
+
+  it('validates bounded alarm candidate queries', () => {
+    const query = {
+      checkedAt: '2026-07-23T02:00:00Z',
+      through: '2026-07-24T02:00:00Z'
+    }
+    expect(AlarmCandidateQuerySchema.safeParse(query).success).toBe(true)
+    expect(AlarmCandidateQuerySchema.safeParse({
+      ...query,
+      through: '2026-07-23T01:59:59Z'
+    }).success).toBe(false)
+    expect(AlarmCandidateQuerySchema.safeParse({ ...query, extra: true }).success).toBe(false)
   })
 })

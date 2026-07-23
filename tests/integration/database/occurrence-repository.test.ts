@@ -112,6 +112,95 @@ describe('DrizzleOccurrenceRepository', () => {
     ])
   })
 
+  it('lists only active alarm candidates through the target boundary', async () => {
+    const eventScheduleId = '10000000-0000-4000-8000-000000000001'
+    const todoScheduleId = '10000000-0000-4000-8000-000000000002'
+    sqlite.prepare(`INSERT INTO schedule
+      (id, kind, title, recurrence_code, exclusion_code, comment, starred, created_at, updated_at)
+      VALUES (?, 'todo', 'Due todo', '', '', '', 0, 1, 1)`)
+      .run(todoScheduleId)
+    await repository.replaceForSchedule(eventScheduleId, [
+      {
+        id: '20000000-0000-4000-8000-000000000001',
+        excluded: false,
+        start: '2026-07-23T03:00:00Z',
+        end: '2026-07-23T04:00:00Z',
+        startMark: '11',
+        endMark: '11',
+        comment: '',
+        done: false
+      },
+      {
+        id: '20000000-0000-4000-8000-000000000002',
+        excluded: false,
+        start: '2026-07-23T01:00:00Z',
+        end: '2026-07-23T02:00:00Z',
+        startMark: '11',
+        endMark: '11',
+        comment: '',
+        done: false
+      }
+    ])
+    await repository.replaceForSchedule(todoScheduleId, [
+      {
+        id: '20000000-0000-4000-8000-000000000003',
+        excluded: false,
+        start: null,
+        end: '2026-07-23T05:00:00Z',
+        startMark: '11',
+        endMark: '11',
+        comment: '',
+        done: false
+      },
+      {
+        id: '20000000-0000-4000-8000-000000000004',
+        excluded: false,
+        start: null,
+        end: '2026-07-23T05:00:01Z',
+        startMark: '11',
+        endMark: '11',
+        comment: '',
+        done: false
+      }
+    ])
+
+    const result = await repository.listAlarmCandidates({
+      checkedAt: '2026-07-23T02:00:00Z',
+      through: '2026-07-23T05:00:00Z'
+    })
+
+    expect(result.ok && result.value.map(({ id }) => id)).toEqual([
+      '20000000-0000-4000-8000-000000000001',
+      '20000000-0000-4000-8000-000000000003'
+    ])
+  })
+
+  it('excludes invalid occurrence and schedule states from alarm candidates', async () => {
+    const scheduleId = '10000000-0000-4000-8000-000000000001'
+    const deletedScheduleId = '10000000-0000-4000-8000-000000000002'
+    sqlite.prepare(`INSERT INTO schedule
+      (id, kind, title, recurrence_code, exclusion_code, comment, starred, deleted_at, created_at, updated_at)
+      VALUES (?, 'event', 'Deleted schedule', 'rule', '', '', 0, 1, 1, 1)`)
+      .run(deletedScheduleId)
+    await repository.replaceForSchedule(scheduleId, [
+      { id: '20000000-0000-4000-8000-000000000001', excluded: false, start: '2026-07-23T03:00:00Z', end: '2026-07-23T04:00:00Z', startMark: '11', endMark: '11', comment: '', done: false },
+      { id: '20000000-0000-4000-8000-000000000002', excluded: true, start: '2026-07-23T03:00:00Z', end: '2026-07-23T04:00:00Z', startMark: '11', endMark: '11', comment: '', done: false },
+      { id: '20000000-0000-4000-8000-000000000003', excluded: false, start: '2026-07-23T03:00:00Z', end: '2026-07-23T04:00:00Z', startMark: '11', endMark: '11', comment: '', done: true },
+      { id: '20000000-0000-4000-8000-000000000004', excluded: false, start: '2026-07-23T03:00:00Z', end: '2026-07-23T04:00:00Z', startMark: '11', endMark: '11', comment: '', done: false, deletedAt: '2026-07-23T01:00:00Z' }
+    ])
+    await repository.replaceForSchedule(deletedScheduleId, [
+      { id: '20000000-0000-4000-8000-000000000005', excluded: false, start: '2026-07-23T03:00:00Z', end: '2026-07-23T04:00:00Z', startMark: '11', endMark: '11', comment: '', done: false }
+    ])
+
+    const result = await repository.listAlarmCandidates({
+      checkedAt: '2026-07-23T02:00:00Z',
+      through: '2026-07-23T05:00:00Z'
+    })
+
+    expect(result.ok && result.value.map(({ id }) => id))
+      .toEqual(['20000000-0000-4000-8000-000000000001'])
+  })
+
   it('atomically excludes selected occurrences and appends concrete exTime rules', async () => {
     const first = '20000000-0000-4000-8000-000000000001'
     const second = '20000000-0000-4000-8000-000000000002'
