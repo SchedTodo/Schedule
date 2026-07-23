@@ -27,6 +27,7 @@ function occurrenceRepositoryWith(
 ): OccurrenceRepository {
   return {
     listRange: vi.fn(async () => ({ ok: true as const, value: [] })),
+    listAlarmCandidates: vi.fn(async () => ({ ok: true as const, value: [] })),
     listVisibleBySchedule: vi.fn(async () => ({ ok: true as const, value: [] })),
     listAllBySchedule: vi.fn(async () => ({ ok: true as const, value: [] })),
     updateComment: vi.fn(),
