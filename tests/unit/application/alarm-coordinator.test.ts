@@ -74,8 +74,8 @@ describe('AlarmCoordinator', () => {
       }
     }
     candidateFailure = undefined
-    notify = vi.fn(async (_input: NotificationInput) => undefined)
-    listCandidates = vi.fn(async (_query: AlarmCandidateQuery) => candidateFailure === undefined
+    notify = vi.fn(async () => undefined)
+    listCandidates = vi.fn(async () => candidateFailure === undefined
       ? { ok: true as const, value: candidates.value }
       : { ok: false as const, error: candidateFailure })
     coordinator = new AlarmCoordinator({

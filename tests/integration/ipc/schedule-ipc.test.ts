@@ -232,7 +232,19 @@ describe('typed schedule IPC', () => {
 
   it('recalculates only after successful alarm-affecting mutations', async () => {
     const onAlarmInputsChanged = vi.fn()
-    const { scheduleComment: _scheduleComment, ...occurrenceResult } = occurrence
+    const occurrenceResult = {
+      id: occurrence.id,
+      scheduleId: occurrence.scheduleId,
+      kind: occurrence.kind,
+      title: occurrence.title,
+      excluded: occurrence.excluded,
+      start: occurrence.start,
+      end: occurrence.end,
+      startMark: occurrence.startMark,
+      endMark: occurrence.endMark,
+      comment: occurrence.comment,
+      done: occurrence.done
+    }
     const { handlers } = createHarness({
       schedules: {
         create: vi.fn(async () => ({ ok: true as const, value: schedule })),
