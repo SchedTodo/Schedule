@@ -11,6 +11,10 @@ export interface IpcMainRegistrar {
   handle(channel: string, handler: IpcHandler): void
 }
 
+export interface ScheduleIpcHandlerOptions {
+  readonly onAlarmInputsChanged?: () => void
+}
+
 const validationError: AppErrorDto = {
   code: 'VALIDATION_FAILED',
   message: 'IPC 请求格式无效'
@@ -41,16 +45,28 @@ async function execute<TInput, TValue>(
   }
 }
 
+function recalculateAfterSuccess<T>(
+  result: AppResult<T>,
+  callback: (() => void) | undefined
+): AppResult<T> {
+  if (result.ok) callback?.()
+  return result
+}
+
 export function registerScheduleIpcHandlers(
   ipcMain: IpcMainRegistrar,
-  gateway: PlatformGateway
+  gateway: PlatformGateway,
+  options: ScheduleIpcHandlerOptions = {}
 ): void {
   const createContract = scheduleIpcContracts[scheduleIpcChannels.create]
   ipcMain.handle(scheduleIpcChannels.create, (_event, input) =>
     execute(
       input,
       (value) => createContract.input.parse(value),
-      (value) => gateway.schedules.create(value),
+      async (value) => recalculateAfterSuccess(
+        await gateway.schedules.create(value),
+        options.onAlarmInputsChanged
+      ),
       (value) => createContract.output.parse(value)
     )
   )
@@ -78,7 +94,10 @@ export function registerScheduleIpcHandlers(
   const updateContract = scheduleIpcContracts[scheduleIpcChannels.update]
   ipcMain.handle(scheduleIpcChannels.update, (_event, input) => execute(
     input, (value) => updateContract.input.parse(value),
-    (value) => gateway.schedules.update(value), (value) => updateContract.output.parse(value)
+    async (value) => recalculateAfterSuccess(
+      await gateway.schedules.update(value),
+      options.onAlarmInputsChanged
+    ), (value) => updateContract.output.parse(value)
   ))
   const starredContract = scheduleIpcContracts[scheduleIpcChannels.setStarred]
   ipcMain.handle(scheduleIpcChannels.setStarred, (_event, input) => execute(
@@ -88,7 +107,10 @@ export function registerScheduleIpcHandlers(
   const deletedContract = scheduleIpcContracts[scheduleIpcChannels.setDeleted]
   ipcMain.handle(scheduleIpcChannels.setDeleted, (_event, input) => execute(
     input, (value) => deletedContract.input.parse(value),
-    (value) => gateway.schedules.setDeleted(value), (value) => deletedContract.output.parse(value)
+    async (value) => recalculateAfterSuccess(
+      await gateway.schedules.setDeleted(value),
+      options.onAlarmInputsChanged
+    ), (value) => deletedContract.output.parse(value)
   ))
   const searchContract = scheduleIpcContracts[scheduleIpcChannels.search]
   ipcMain.handle(scheduleIpcChannels.search, (_event, input) => execute(
@@ -120,7 +142,10 @@ export function registerScheduleIpcHandlers(
   const excludeContract = scheduleIpcContracts[scheduleIpcChannels.excludeOccurrences]
   ipcMain.handle(scheduleIpcChannels.excludeOccurrences, (_event, input) => execute(
     input, (value) => excludeContract.input.parse(value),
-    (value) => gateway.occurrences.excludeMany(value),
+    async (value) => recalculateAfterSuccess(
+      await gateway.occurrences.excludeMany(value),
+      options.onAlarmInputsChanged
+    ),
     (value) => excludeContract.output.parse(value)
   ))
   const todoContract = scheduleIpcContracts[scheduleIpcChannels.listTodos]
@@ -132,7 +157,10 @@ export function registerScheduleIpcHandlers(
   const doneContract = scheduleIpcContracts[scheduleIpcChannels.setOccurrenceDone]
   ipcMain.handle(scheduleIpcChannels.setOccurrenceDone, (_event, input) => execute(
     input, (value) => doneContract.input.parse(value),
-    ({ id, done }) => gateway.occurrences.setDone(id, done),
+    async ({ id, done }) => recalculateAfterSuccess(
+      await gateway.occurrences.setDone(id, done),
+      options.onAlarmInputsChanged
+    ),
     (value) => doneContract.output.parse(value)
   ))
   const getSettingsContract = scheduleIpcContracts[scheduleIpcChannels.getSettings]
@@ -143,7 +171,10 @@ export function registerScheduleIpcHandlers(
   const updateSettingsContract = scheduleIpcContracts[scheduleIpcChannels.updateSettings]
   ipcMain.handle(scheduleIpcChannels.updateSettings, (_event, input) => execute(
     input, (value) => updateSettingsContract.input.parse(value),
-    (value) => gateway.settings.update(value),
+    async (value) => recalculateAfterSuccess(
+      await gateway.settings.update(value),
+      options.onAlarmInputsChanged
+    ),
     (value) => updateSettingsContract.output.parse(value)
   ))
   const createRecordContract = scheduleIpcContracts[scheduleIpcChannels.createRecord]

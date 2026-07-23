@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { PlatformGateway } from '../../../src/contracts/platform.contract'
+import { defaultSettings } from '../../../src/contracts/settings.contract'
 import { createScheduleHostApi } from '../../../src-electron/preload/schedule-api'
-import { registerScheduleIpcHandlers } from '../../../src-electron/main/ipc/register-handlers'
+import {
+  registerScheduleIpcHandlers,
+  type ScheduleIpcHandlerOptions
+} from '../../../src-electron/main/ipc/register-handlers'
+import { scheduleIpcChannels } from '../../../src-electron/ipc/schedule-ipc'
 
 const schedule = {
   id: '0198f0de-8f7f-7000-8000-000000000001',
@@ -35,8 +40,10 @@ function createHarness(
   gateway: {
     schedules: Pick<PlatformGateway['schedules'], 'create' | 'findById' | 'list'> & Partial<PlatformGateway['schedules']>
     occurrences?: Partial<PlatformGateway['occurrences']>
+    settings?: Partial<PlatformGateway['settings']>
     notifications?: Partial<PlatformGateway['notifications']>
-  }
+  },
+  options: ScheduleIpcHandlerOptions = {}
 ) {
   const handlers = new Map<string, (_event: unknown, input: unknown) => Promise<unknown>>()
   registerScheduleIpcHandlers(
@@ -62,13 +69,11 @@ function createHarness(
         setDone: gateway.occurrences?.setDone ?? vi.fn()
       },
       settings: {
-        get: vi.fn(async () => ({ ok: true as const, value: {
-          timeZone: 'UTC', weekStart: 1 as const, todoAlarmEnabled: true, todoAlarmBeforeMinutes: 5,
-          eventAlarmEnabled: true, eventAlarmBeforeMinutes: 5, calendarMode: 'month' as const,
-          weekViewDays: 5, logicalDayStartHour: 0, logicalDayStartMinute: 0,
-          openAtLogin: false, focusMinutes: 25, smallBreakMinutes: 5, bigBreakMinutes: 20
-        } })),
-        update: vi.fn()
+        get: gateway.settings?.get ?? vi.fn(async () => ({
+          ok: true as const,
+          value: defaultSettings
+        })),
+        update: gateway.settings?.update ?? vi.fn()
       },
       records: {
         create: vi.fn(),
@@ -78,7 +83,8 @@ function createHarness(
       notifications: {
         show: gateway.notifications?.show ?? vi.fn(async () => ({ ok: true as const, value: undefined }))
       }
-    }
+    },
+    options
   )
 
   const api = createScheduleHostApi(async (channel, input) => {
@@ -222,5 +228,78 @@ describe('typed schedule IPC', () => {
     await expect(handlers.get('notification:show')?.({}, { title: '', body: 'Focus 2' }))
       .resolves.toMatchObject({ ok: false, error: { code: 'VALIDATION_FAILED' } })
     expect(show).toHaveBeenCalledWith({ title: 'Focus', body: 'Focus 2' })
+  })
+
+  it('recalculates only after successful alarm-affecting mutations', async () => {
+    const onAlarmInputsChanged = vi.fn()
+    const { scheduleComment: _scheduleComment, ...occurrenceResult } = occurrence
+    const { handlers } = createHarness({
+      schedules: {
+        create: vi.fn(async () => ({ ok: true as const, value: schedule })),
+        findById: vi.fn(),
+        list: vi.fn(),
+        update: vi.fn(async () => ({ ok: true as const, value: schedule })),
+        setDeleted: vi.fn(async () => ({ ok: true as const, value: undefined })),
+        setStarred: vi.fn(async () => ({ ok: true as const, value: schedule }))
+      },
+      occurrences: {
+        excludeMany: vi.fn(async () => ({ ok: true as const, value: undefined })),
+        setDone: vi.fn(async () => ({ ok: true as const, value: occurrenceResult })),
+        updateComment: vi.fn(async () => ({ ok: true as const, value: occurrenceResult }))
+      },
+      settings: {
+        update: vi.fn(async () => ({ ok: true as const, value: defaultSettings }))
+      }
+    }, { onAlarmInputsChanged })
+
+    const successfulInputs = [
+      [scheduleIpcChannels.create, {
+        title: '评审',
+        recurrenceCode: '2026-07-12 10:00'
+      }],
+      [scheduleIpcChannels.update, {
+        id: schedule.id,
+        title: '评审',
+        recurrenceCode: '2026-07-12 10:00'
+      }],
+      [scheduleIpcChannels.setDeleted, { id: schedule.id, deleted: true }],
+      [scheduleIpcChannels.excludeOccurrences, { ids: [occurrence.id] }],
+      [scheduleIpcChannels.setOccurrenceDone, { id: occurrence.id, done: true }],
+      [scheduleIpcChannels.updateSettings, { eventAlarmBeforeMinutes: 30 }]
+    ] as const
+    for (const [channel, input] of successfulInputs) {
+      await handlers.get(channel)?.({}, input)
+    }
+    expect(onAlarmInputsChanged).toHaveBeenCalledTimes(6)
+
+    await handlers.get(scheduleIpcChannels.setStarred)?.(
+      {},
+      { id: schedule.id, starred: true }
+    )
+    await handlers.get(scheduleIpcChannels.updateOccurrenceComment)?.(
+      {},
+      { id: occurrence.id, comment: 'note' }
+    )
+    expect(onAlarmInputsChanged).toHaveBeenCalledTimes(6)
+  })
+
+  it('does not recalculate after a failed alarm-affecting mutation', async () => {
+    const onAlarmInputsChanged = vi.fn()
+    const { handlers } = createHarness({
+      schedules: {
+        create: vi.fn(async () => ({
+          ok: false as const,
+          error: { code: 'PERSISTENCE_FAILED' as const, message: 'save failed' }
+        })),
+        findById: vi.fn(),
+        list: vi.fn()
+      }
+    }, { onAlarmInputsChanged })
+
+    await handlers.get(scheduleIpcChannels.create)?.({}, {
+      title: '评审',
+      recurrenceCode: '2026-07-12 10:00'
+    })
+    expect(onAlarmInputsChanged).not.toHaveBeenCalled()
   })
 })

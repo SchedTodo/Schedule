@@ -1,9 +1,16 @@
-import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  globalShortcut,
+  ipcMain,
+  powerMonitor,
+  shell
+} from 'electron'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { AlarmCoordinator } from '../../src/application/alarm-coordinator'
 import { ScheduleService } from '../../src/application/schedule-service'
-import { dueAlarms } from '../../src/application/alarm-scheduler'
 import { SystemClock } from '../../src/domain/shared/clock'
 import { CryptoIdGenerator } from '../../src/domain/shared/id-generator'
 import { initializeScheduleDatabase } from '../adapters/db/client'
@@ -19,6 +26,7 @@ import {
   resolveLaunchMode,
   type Disposable
 } from './desktop-lifecycle-controller'
+import { AlarmRuntime } from './alarm-runtime'
 import {
   createElectronShortcutPort,
   createElectronWindowPort
@@ -40,7 +48,16 @@ function registerSchedulePlatform(): readonly Disposable[] {
   const settingsRepository = new DrizzleSettingsRepository(connection.database)
   const notifier = new ElectronNotifier()
   const recordRepository = new DrizzleRecordRepository(connection.database, new CryptoIdGenerator())
-  const notified = new Set<string>()
+  const alarmRuntime = new AlarmRuntime({
+    coordinator: new AlarmCoordinator({
+      clock: new SystemClock(),
+      getSettings: () => settingsRepository.get(),
+      listCandidates: (query) => occurrenceRepository.listAlarmCandidates(query),
+      notify: async (input) => { notifier.notifyMessage(input) }
+    }),
+    powerMonitor,
+    reportError: (error) => { console.error('Electron alarm failed', error) }
+  })
   const service = new ScheduleService(repository, {
     clock: new SystemClock(),
     idGenerator: new CryptoIdGenerator(),
@@ -87,33 +104,12 @@ function registerSchedulePlatform(): readonly Disposable[] {
         return { ok: true, value: undefined }
       }
     }
+  }, {
+    onAlarmInputsChanged: () => { void alarmRuntime.request('mutation') }
   })
-  const alarmTimer = setInterval(() => {
-    void (async () => {
-      const now = new Date()
-      const settings = await settingsRepository.get()
-      if (!settings.ok) return
-      const end = new Date(now.getTime() + 2 * 86_400_000)
-      const [events, todos] = await Promise.all([
-        occurrenceRepository.listRange({ start: now.toISOString(), end: end.toISOString(), limit: 5000 }),
-        occurrenceRepository.listTodos({
-          now: now.toISOString(),
-          timeZone: settings.value.timeZone,
-          logicalDayStartHour: settings.value.logicalDayStartHour,
-          logicalDayStartMinute: settings.value.logicalDayStartMinute
-        })
-      ])
-      if (!events.ok || !todos.ok) return
-      for (const alarm of dueAlarms([...events.value, ...todos.value], settings.value, now.toISOString(), 30)) {
-        const key = `${alarm.occurrence.id}:${alarm.alarmAt}`
-        if (notified.has(key)) continue
-        notified.add(key)
-        notifier.notify(alarm)
-      }
-    })()
-  }, 30_000)
+  void alarmRuntime.start()
   return [
-    { dispose: () => { clearInterval(alarmTimer) } },
+    alarmRuntime,
     { dispose: () => { connection.sqlite.close() } }
   ]
 }
