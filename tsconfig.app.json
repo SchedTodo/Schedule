@@ -28,13 +28,5 @@
     "tests/unit/**/*.ts",
     "tests/contracts/**/*.ts",
     "tests/parser/**/*.ts"
-  ],
-  "exclude": [
-    "src/main",
-    "src/preload",
-    "src/prisma",
-    "src/renderer",
-    "src/test",
-    "src/utils"
   ]
 }

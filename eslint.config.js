@@ -9,13 +9,7 @@ export default defineConfig(
     'dist-web/**',
     'dist/**',
     'out/**',
-    'src/parser/generated/**',
-    'src/main/**',
-    'src/preload/**',
-    'src/prisma/**',
-    'src/renderer/**',
-    'src/test/**',
-    'src/utils/**'
+    'src/parser/generated/**'
   ]),
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
