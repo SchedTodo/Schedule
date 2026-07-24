@@ -2,7 +2,7 @@
 
 本文档是 Schedule v2 后续迁移工作的权威基线。它记录 `main` 与 `release/1.2.0` 之间仍需处理的用户可见差异、已批准的非目标和暂缓事项。后续设计、实施计划和验收应引用本文档；若其他旧计划与本文档冲突，以本文档为准。
 
-当前基线日期：2026-07-23。
+当前基线日期：2026-07-24。
 
 ## 状态与优先级
 
@@ -23,7 +23,7 @@
 | `GAP-03` 提醒与通知展示 | `已完成` | 统一重算、休眠补发、边界语义和本地化展示已落地 |
 | `GAP-04` 可重复测试时间基线 | `已完成` | 固定时钟、显式时区与跨时区复验已落地 |
 | `GAP-05` 发布与端到端验证 | `已完成` | Web/Electron E2E、Windows x64 NSIS 和打包应用冒烟已验收 |
-| `GAP-06` legacy 收口 | `待实施` | 直接建库已完成，legacy 源码与依赖清理尚未完成 |
+| `GAP-06` legacy 收口 | `已完成（2026-07-24）` | legacy 源码、配置和依赖已移除；v2 文档已收口 |
 
 ## 已批准决策
 
@@ -205,7 +205,7 @@ Remove-Item Env:TZ
 
 优先级：`P0`
 
-完成结论：Web E2E 已覆盖日程新增、编辑、删除、Todo 完成、月/周切换、解析错误、设置和专注流程；Electron E2E 已覆盖 SQLite 重启持久化、窗口安全边界、托盘、开机启动设置、通知 IPC 调用链和安全外链。Windows x64 NSIS 可通过 `package:win` 本地复现，打包应用从 `file:` 加载 v2 产物，renderer 不暴露 Node，且产物中未发现 legacy `src/main`、`src/preload` 或 `src/renderer` 路径。
+完成结论：Web E2E 已覆盖日程新增、编辑、删除、Todo 完成、月/周切换、解析错误、设置和专注流程；Electron E2E 已覆盖 SQLite 重启持久化、窗口安全边界、托盘、开机启动设置、通知 IPC 调用链和安全外链。Windows x64 NSIS 可通过 `package:win` 本地复现，打包应用从 `file:` 加载 v2 产物，renderer 不暴露 Node，且产物不包含 legacy 运行源码。
 
 验证结果：
 
@@ -228,18 +228,30 @@ Remove-Item Env:TZ
 
 ### GAP-06：完成 legacy 源码切换与文档收口
 
-状态：`待实施`
+状态：`已完成（2026-07-24）`
 
 优先级：`P2`
 
-部分进展：v2 已移除所有数据库迁移路径，新数据库只执行 `src-electron/adapters/db/schema.sql`；Database 页面也已切换为远程分页数据表。以下仍是本项的剩余验收范围：
+完成说明：
 
-验收标准：
+- 删除前已迁移 `Ctrl+1…7`：在新增对话框内向聚焦的 `rTime` 或 `exTime` 插入下一个周一至周日，避免删除旧源码时丢失该用户可见行为。
+- 已删除 `src/main/**`、`src/preload/**`、`src/renderer/**`、`src/prisma/**`、`src/test/timeParser.test.ts` 和 `src/utils/**`。
+- 已删除 legacy 别名、环境与构建配置：`electron.vite.config.ts`、`tsconfig.web.json`、`.env.development`、`.env.production`、`vite-env.d.ts` 与 `dev-app-update.yml`；`tsconfig.app.json` 和 `eslint.config.js` 已移除对应的 legacy 配置。
+- 已移除只被 legacy 使用的 `@vueuse/core` 与 `drizzle-kit`。v2 parser 兼容性测试刻意保留在 `tests/parser`，继续检验当前 ANTLR parser 的旧语义兼容性；它们不是 legacy 运行源码。
+- README、英文 README 和架构文档现只描述 v2 已实现能力、命令、数据库行为和批准的限制。
 
-- 删除不再参与 v2 运行的 `src/main/**`、`src/preload/**`、`src/renderer/**`、`src/prisma/**` 和旧解析器测试。
-- 删除仅被 legacy 代码使用的依赖、别名、环境变量和构建配置。
-- README 和架构文档只描述实际存在的 v2 命令、能力和限制。
-- 删除 legacy 源码前后运行同一套验证，证明 v2 不通过旧别名或遗留文件间接工作。
+验证证据：
+
+- 删除前，控制器以同一核心命令组记录：ESLint exit 0、Vue 类型检查 exit 0、46 个测试文件 / 253 项测试通过、Vite 构建 exit 0。
+- 删除后，Task 2 已实际通过 ESLint、Vue 类型检查和 Vite 构建；`tests/unit/test-time-baseline.test.ts` 与 `tests/unit/app-shell.test.ts` 的 focused structural verification 也已通过。Vite 仅报告既有的 chunk-size 警告。
+- 删除前后固定使用的完整核心验证命令如下；它们也是本次收口的最终验证清单。本条只记录已完成的删除后 focused verification，不虚构尚未记录的完整组合结果。
+
+```powershell
+.\node_modules\.bin\eslint.cmd .
+.\node_modules\.bin\vue-tsc.cmd --noEmit -p tsconfig.app.json
+.\node_modules\.bin\vitest.cmd run tests/unit tests/contracts tests/parser
+.\node_modules\.bin\vite.cmd build
+```
 
 ## 账户与身份边界
 
