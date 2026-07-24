@@ -22,7 +22,7 @@
 | `GAP-02` Electron 生命周期 | `已完成` | 窗口、托盘、启动、外链和退出行为已验收 |
 | `GAP-03` 提醒与通知展示 | `已完成` | 统一重算、休眠补发、边界语义和本地化展示已落地 |
 | `GAP-04` 可重复测试时间基线 | `已完成` | 固定时钟、显式时区与跨时区复验已落地 |
-| `GAP-05` 发布与端到端验证 | `待实施` | 已有部分 Electron E2E，尚无 Web E2E 和 Windows 打包链路 |
+| `GAP-05` 发布与端到端验证 | `已完成` | Web/Electron E2E、Windows x64 NSIS 和打包应用冒烟已验收 |
 | `GAP-06` legacy 收口 | `待实施` | 直接建库已完成，legacy 源码与依赖清理尚未完成 |
 
 ## 已批准决策
@@ -201,11 +201,22 @@ Remove-Item Env:TZ
 
 ### GAP-05：补齐发布与端到端验证
 
-状态：`待实施`
+状态：`已完成（2026-07-24）`
 
 优先级：`P0`
 
-部分进展：Electron 已有 `startup.spec.ts` 和 `schedule-ui.spec.ts`，覆盖启动安全边界和部分本地 UI 流程；仓库也保留 `electron-builder.yml`。但 `test:e2e:web` 指向的 `tests/e2e/web` 尚不存在，`package.json` 没有 electron-builder 依赖、Windows 打包命令或发布脚本，现有打包配置也尚未按 v2 产物验证，因此本项仍未关闭。
+完成结论：Web E2E 已覆盖日程新增、编辑、删除、Todo 完成、月/周切换、解析错误、设置和专注流程；Electron E2E 已覆盖 SQLite 重启持久化、窗口安全边界、托盘、开机启动设置、通知 IPC 调用链和安全外链。Windows x64 NSIS 可通过 `package:win` 本地复现，打包应用从 `file:` 加载 v2 产物，renderer 不暴露 Node，且产物中未发现 legacy `src/main`、`src/preload` 或 `src/renderer` 路径。
+
+验证结果：
+
+- `pnpm install --frozen-lockfile`
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test:unit`：46 个文件、253 项通过
+- `pnpm test:integration`：10 个文件、56 项通过
+- `pnpm build:web`
+- `pnpm build:electron`
+- `pnpm release:win`：5 项 Web E2E、10 项 Electron E2E、Windows x64 NSIS 和 1 项打包应用冒烟全部通过
 
 验收标准：
 
@@ -245,11 +256,9 @@ Remove-Item Env:TZ
 
 ## 执行顺序
 
-`GAP-01`、`GAP-02` 和 `GAP-04` 已完成。剩余工作默认按以下顺序推进；每一项应有独立设计、TDD 实施计划和验证结果：
+`GAP-01` 至 `GAP-05` 已完成。剩余工作默认按以下顺序推进；每一项应有独立设计、TDD 实施计划和验证结果：
 
-1. `GAP-03`：对齐提醒时间和通知展示。
-2. `GAP-05`：补齐发布和端到端验证。
-3. `GAP-06`：删除 legacy 实现并完成文档收口。
+1. `GAP-06`：删除 legacy 实现并完成文档收口。
 
 同步、账户和 Tauri 不在上述执行序列中，必须经用户重新批准后才能进入实施计划。
 
