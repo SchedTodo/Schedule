@@ -2,15 +2,15 @@
 
 [中文](README.md)
 
-Schedule is a local-first scheduling app. Its Web app runs in a browser, while Electron supplies local desktop capabilities. Data stays on the device; accounts, sign-in, and cross-device sync are not currently provided.
+Schedule is a local-first scheduling app. The standalone Web app uses `createInMemoryGateway`, so schedules, records, and settings reset on refresh; Electron supplies local desktop capabilities with durable SQLite and settings persistence. Accounts, sign-in, and cross-device sync are not currently provided.
 
 ## Implemented capabilities
 
 - Create, edit, star, delete, and restore Events and Todos. ANTLR schedule expressions support recurrence and exclusions.
 - Manage concrete occurrences: one-off exclusions, comments, and Todo completion.
 - Month, Week, Todo, detail, Database, Settings, and focus pages; Database presents results through paginated queries.
-- Persistent settings, a complete focus cycle with records, and reminder calculation.
-- Electron SQLite persistence, system notifications, tray background mode, and auto-start.
+- A complete focus cycle with records and reminder calculation.
+- Electron SQLite and settings persistence, system notifications, tray background mode, and auto-start.
 
 The in-app **Help** page contains schedule-expression examples. See the [architecture document](docs/architecture.md) for implementation boundaries.
 

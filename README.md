@@ -2,15 +2,15 @@
 
 [English](README.en.md)
 
-Schedule 是一个本地优先的日程应用：Web 可直接在浏览器运行，Electron 提供本地桌面能力。数据保存在本机；当前不提供账户、登录或跨设备同步。
+Schedule 是一个本地优先的日程应用：独立 Web 使用 `createInMemoryGateway`，日程、记录和设置会在刷新后重置；Electron 提供带有本地 SQLite 和设置持久化的桌面能力。当前不提供账户、登录或跨设备同步。
 
 ## 已实现能力
 
 - 创建、编辑、收藏、删除和恢复 Event、Todo；ANTLR 日程表达式支持重复规则和排除规则。
 - 管理具体时间片：单次排除、备注和 Todo 完成状态。
 - Month、Week、Todo、详情、Database、Settings 和专注页面；Database 通过分页查询展示数据。
-- 设置持久化、完整专注循环及专注记录、提醒计算。
-- Electron 的 SQLite 持久化、系统通知、托盘后台驻留和开机启动。
+- 完整专注循环及专注记录、提醒计算。
+- Electron 的 SQLite 和设置持久化、系统通知、托盘后台驻留和开机启动。
 
 应用内 **Help** 页面提供日程表达式示例；实现边界见[架构文档](docs/architecture.md)。
 

@@ -4,8 +4,10 @@ import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { NButton, NCard, NForm, NFormItem, NInput, NModal } from 'naive-ui'
 
 import type { CreateScheduleInput } from '../../../contracts/schedule.contract'
+import { Temporal } from '../../../domain/shared/temporal'
 
 const props = withDefaults(defineProps<{
+  timeZone: string
   loading?: boolean
   error?: string | null
   mode?: 'add' | 'edit'
@@ -75,11 +77,13 @@ function handleKeyboard(event: KeyboardEvent) {
     const field = focusedElement.getAttribute('aria-label')
     if (field !== 'rTime' && field !== 'exTime') return
 
-    const today = new Date()
     const weekday = Number(event.key)
-    const daysUntilWeekday = (weekday - today.getDay() + 7) % 7 || 7
-    today.setDate(today.getDate() + daysUntilWeekday)
-    const date = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`
+    const today = Temporal.Instant.fromEpochMilliseconds(Date.now())
+      .toZonedDateTimeISO(props.timeZone)
+      .toPlainDate()
+    const daysUntilWeekday = (weekday - today.dayOfWeek + 7) % 7 || 7
+    const nextDate = today.add({ days: daysUntilWeekday })
+    const date = `${nextDate.year}/${String(nextDate.month).padStart(2, '0')}/${String(nextDate.day).padStart(2, '0')}`
     const value = `${focusedElement.value.slice(0, focusedElement.selectionStart)}${date}${focusedElement.value.slice(focusedElement.selectionEnd)}`
 
     if (field === 'rTime') model.recurrenceCode = value

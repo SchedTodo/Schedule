@@ -2,11 +2,11 @@
 
 ## 依赖方向与组合
 
-`src` 是浏览器可运行且平台无关的产品层。Vue 组件只依赖稳定 DTO 与 `PlatformGateway`，不得接收 Electron、Drizzle、SQLite 驱动或 ANTLR context 类型。
+`src` 是浏览器可运行且平台无关的产品层。Vue 和其他 `src` 代码可依赖平台无关的契约、领域/应用代码，以及 `src` 内的纯 feature helper；Electron、Drizzle、SQLite 驱动、Node 或 ANTLR context 等宿主特定类型不得进入 Vue。
 
 - 浏览器入口 `src/main.ts` 在不存在宿主 API 时组合 `createInMemoryGateway`。
 - Electron 预加载层只暴露具名的 `scheduleHost` 方法；每次调用按 IPC 契约校验结果。
-- Electron 主进程注册对应的 IPC handler，并把调用交给 SQLite、通知、窗口和其他适配器。`src-electron` 只向内依赖 `src` 的契约、应用服务和端口。
+- Electron 主进程注册对应的 IPC handler，并把调用交给 SQLite、通知、窗口和其他适配器。`src-electron` 可向内依赖 `src` 的平台无关模块；`src` 永远不得依赖 `src-electron`。
 - `src/platform/host/host-gateway.ts` 先以 Zod 校验预加载 API 的形状，再将其映射为 `PlatformGateway`。
 
 主进程的 `scheduleIpcContracts` 校验 IPC 输入与服务返回结果，预加载层按同一契约校验 IPC 返回值，`host-gateway` 校验暴露的宿主 API 形状。设置持久化读取 JSON 后以 `SettingsDtoSchema` 校验，更新时以 `UpdateSettingsInputSchema` 校验输入；Vue 不直接访问宿主或数据库 API。

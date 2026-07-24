@@ -220,6 +220,7 @@ void refreshSettings()
             <ScheduleModal
               mode="edit"
               :initial-value="editValue"
+              :time-zone="timeZone"
               @submit="saveEdit"
             />
             <NPopconfirm @positive-click="removeSchedule">

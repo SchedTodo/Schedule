@@ -171,6 +171,7 @@ describe('home workspace', () => {
 
   it('uses the Add modal fields and keyboard shortcuts', async () => {
     const wrapper = mount(ScheduleModal, {
+      props: { timeZone: 'UTC' },
       global: { stubs: { teleport: true } }
     })
 
@@ -199,6 +200,7 @@ describe('home workspace', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-07-13T04:00:00.000Z'))
     const wrapper = mount(ScheduleModal, {
+      props: { timeZone: 'UTC' },
       global: { stubs: { teleport: true } }
     })
     const activeElement = vi.spyOn(document, 'activeElement', 'get')
@@ -233,6 +235,7 @@ describe('home workspace', () => {
 
   it('marks Name and rTime required and shows field errors before submitting', async () => {
     const wrapper = mount(ScheduleModal, {
+      props: { timeZone: 'UTC' },
       global: { stubs: { teleport: true } }
     })
 
@@ -256,7 +259,7 @@ describe('home workspace', () => {
       comment: 'Every day'
     }
     const wrapper = mount(ScheduleModal, {
-      props: { mode: 'edit', initialValue },
+      props: { mode: 'edit', initialValue, timeZone: 'UTC' },
       global: { stubs: { teleport: true } }
     })
 
