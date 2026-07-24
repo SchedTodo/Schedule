@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, ref } from 'vue'
-import { NButton, NButtonGroup, NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
+import { NAlert, NButton, NButtonGroup, NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { CreateScheduleInput } from '../contracts/schedule.contract'
@@ -114,6 +114,13 @@ void refreshTodos()
             @submit="create"
           />
         </div>
+        <NAlert
+          v-if="mutations.error.value"
+          type="error"
+          role="alert"
+        >
+          {{ mutations.error.value.message }}
+        </NAlert>
         <MonthScheduleView
           v-if="runtimeStore.homepage.priority === 'month'"
           :items="occurrenceRange.items.value"
