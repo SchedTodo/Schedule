@@ -1,27 +1,15 @@
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { expect, test, type ElectronApplication } from '@playwright/test'
 
-import { _electron as electron, expect, test } from '@playwright/test'
+import {
+  closeSchedule,
+  launchSchedule,
+  removeScheduleDirectory
+} from '../support/electron'
 
 test('creates and restores a schedule through the isolated host gateway', async () => {
-  const directory = mkdtempSync(join(tmpdir(), 'schedule-electron-ui-'))
-  const databasePath = join(directory, 'schedule.db')
-  const profilePath = join(directory, 'profile')
-  const launch = () =>
-    electron.launch({
-      args: [
-        `--user-data-dir=${profilePath}`,
-        '.'
-      ],
-      env: {
-        ...process.env,
-        SCHEDULE_DATABASE_PATH: databasePath,
-        SCHEDULE_DISABLE_TRAY: '1'
-      }
-    })
-
-  let application = await launch()
+  const first = await launchSchedule({ keepDirectory: true })
+  let application: ElectronApplication = first.application
+  let second: Awaited<ReturnType<typeof launchSchedule>> | undefined
   try {
     let window = await application.firstWindow()
     const deadline = new Date()
@@ -34,28 +22,23 @@ test('creates and restores a schedule through the isolated host gateway', async 
     await expect(window.getByRole('row', { name: /持久化周会/ })).toBeVisible()
     expect(await window.evaluate(() => typeof process)).toBe('undefined')
 
-    await application.close()
-    application = await launch()
+    await closeSchedule(first)
+    second = await launchSchedule({ directory: first.directory })
+    application = second.application
     window = await application.firstWindow()
     await expect(window.getByRole('row', { name: /持久化周会/ })).toBeVisible()
   } finally {
-    await application.close()
-    rmSync(directory, { recursive: true, force: true })
+    if (second) await closeSchedule(second)
+    else {
+      if (application.process().exitCode === null) await application.close()
+      removeScheduleDirectory(first.directory)
+    }
   }
 })
 
 test('renders a visible week grid and the schedule comment tooltip', async () => {
-  const directory = mkdtempSync(join(tmpdir(), 'schedule-electron-week-'))
-  const databasePath = join(directory, 'schedule.db')
-  const profilePath = join(directory, 'profile')
-  const application = await electron.launch({
-    args: [`--user-data-dir=${profilePath}`, '.'],
-    env: {
-      ...process.env,
-      SCHEDULE_DATABASE_PATH: databasePath,
-      SCHEDULE_DISABLE_TRAY: '1'
-    }
-  })
+  const launched = await launchSchedule()
+  const { application } = launched
 
   try {
     const window = await application.firstWindow()
@@ -100,7 +83,6 @@ test('renders a visible week grid and the schedule comment tooltip', async () =>
     await window.locator('.n-page-header__back').click()
     await expect(window.getByTestId('month-view')).toBeVisible()
   } finally {
-    await application.close()
-    rmSync(directory, { recursive: true, force: true })
+    await closeSchedule(launched)
   }
 })

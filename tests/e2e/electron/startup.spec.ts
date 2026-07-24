@@ -1,37 +1,9 @@
-import { _electron as electron, expect, test, type ElectronApplication } from '@playwright/test'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { expect, test } from '@playwright/test'
 
-interface LaunchedSchedule {
-  application: ElectronApplication
-  directory: string
-}
-
-async function launchSchedule(extraArgs: readonly string[] = []): Promise<LaunchedSchedule> {
-  const directory = mkdtempSync(join(tmpdir(), 'schedule-electron-startup-'))
-  const application = await electron.launch({
-    args: [
-      `--user-data-dir=${directory}`,
-      '.',
-      ...extraArgs
-    ],
-    env: {
-      ...process.env,
-      SCHEDULE_DISABLE_TRAY: '1',
-      SCHEDULE_DATABASE_PATH: ':memory:'
-    }
-  })
-  return { application, directory }
-}
-
-async function closeSchedule({ application, directory }: LaunchedSchedule): Promise<void> {
-  await application.close()
-  rmSync(directory, { recursive: true, force: true })
-}
+import { closeSchedule, launchSchedule } from '../support/electron'
 
 test('starts one visible maximized and isolated window from the standalone Web build', async () => {
-  const launched = await launchSchedule()
+  const launched = await launchSchedule({ databasePath: ':memory:' })
   const { application } = launched
   try {
     const window = await application.firstWindow()
@@ -78,7 +50,10 @@ test('starts one visible maximized and isolated window from the standalone Web b
 })
 
 test('keeps an autostart launch hidden and out of the foreground', async () => {
-  const launched = await launchSchedule(['--autostart'])
+  const launched = await launchSchedule({
+    databasePath: ':memory:',
+    extraArgs: ['--autostart']
+  })
   const { application } = launched
   try {
     await application.firstWindow()
@@ -98,7 +73,7 @@ test('keeps an autostart launch hidden and out of the foreground', async () => {
 })
 
 test('denies unsafe window.open requests without creating a child window', async () => {
-  const launched = await launchSchedule()
+  const launched = await launchSchedule({ databasePath: ':memory:' })
   const { application } = launched
   try {
     const window = await application.firstWindow()
@@ -110,8 +85,8 @@ test('denies unsafe window.open requests without creating a child window', async
 })
 
 test('exits when the user closes the window while the tray is disabled', async () => {
-  const launched = await launchSchedule()
-  const { application, directory } = launched
+  const launched = await launchSchedule({ databasePath: ':memory:' })
+  const { application } = launched
   const process = application.process()
   try {
     const window = await application.firstWindow()
@@ -122,7 +97,44 @@ test('exits when the user closes the window while the tray is disabled', async (
     await window.close()
     await exited
   } finally {
-    if (process.exitCode === null) await application.close()
-    rmSync(directory, { recursive: true, force: true })
+    await closeSchedule(launched)
+  }
+})
+
+test('hides on close while tray mode is active and restores on activate', async () => {
+  const launched = await launchSchedule({ databasePath: ':memory:', tray: true })
+  try {
+    await launched.application.firstWindow()
+    await launched.application.evaluate(({ BrowserWindow }) => {
+      BrowserWindow.getAllWindows()[0]?.close()
+    })
+    await expect
+      .poll(() =>
+        launched.application.evaluate(
+          ({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isVisible()
+        )
+      )
+      .toBe(false)
+    expect(launched.application.process().exitCode).toBeNull()
+
+    await launched.application.evaluate(({ app }) => {
+      app.emit('activate')
+    })
+    await expect
+      .poll(() =>
+        launched.application.evaluate(({ BrowserWindow }) => {
+          const window = BrowserWindow.getAllWindows()[0]
+          return (
+            window && {
+              visible: window.isVisible(),
+              maximized: window.isMaximized(),
+              focused: window.isFocused()
+            }
+          )
+        })
+      )
+      .toEqual({ visible: true, maximized: true, focused: true })
+  } finally {
+    await closeSchedule(launched)
   }
 })
