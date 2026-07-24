@@ -69,6 +69,22 @@ function handleKeyboard(event: KeyboardEvent) {
   if (!show.value && props.mode === 'add' && event.key === 'ArrowUp') open()
   else if (show.value && event.key === 'ArrowDown') show.value = false
   else if (show.value && event.key === 'Enter') void submit()
+  else if (show.value && /^[1-7]$/.test(event.key)) {
+    const focusedElement = document.activeElement
+    if (!(focusedElement instanceof HTMLTextAreaElement)) return
+    const field = focusedElement.getAttribute('aria-label')
+    if (field !== 'rTime' && field !== 'exTime') return
+
+    const today = new Date()
+    const weekday = Number(event.key)
+    const daysUntilWeekday = (weekday - today.getDay() + 7) % 7 || 7
+    today.setDate(today.getDate() + daysUntilWeekday)
+    const date = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`
+    const value = `${focusedElement.value.slice(0, focusedElement.selectionStart)}${date}${focusedElement.value.slice(focusedElement.selectionEnd)}`
+
+    if (field === 'rTime') model.recurrenceCode = value
+    else model.exclusionCode = value
+  }
 }
 
 onMounted(() => window.addEventListener('keydown', handleKeyboard))

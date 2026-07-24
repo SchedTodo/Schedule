@@ -7,6 +7,7 @@
       <dt>Ctrl + Arrow Up</dt><dd>Open Add schedule dialog</dd>
       <dt>Ctrl + Arrow Down</dt><dd>Close Add schedule dialog</dd>
       <dt>Ctrl + Enter</dt><dd>Confirm Add schedule dialog</dd>
+      <dt>Ctrl + 1/2/3/4/5/6/7</dt><dd>insert the next Monday through Sunday into the focused rTime or exTime field.</dd>
     </dl>
     <h2>Schedule Syntax</h2>
     <dl>

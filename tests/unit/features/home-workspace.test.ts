@@ -195,6 +195,42 @@ describe('home workspace', () => {
     ])
   })
 
+  it('inserts the next weekday into the focused rTime and exTime fields', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-13T04:00:00.000Z'))
+    const wrapper = mount(ScheduleModal, {
+      global: { stubs: { teleport: true } }
+    })
+    const activeElement = vi.spyOn(document, 'activeElement', 'get')
+
+    try {
+      await wrapper.get('button').trigger('click')
+      const recurrenceCode = wrapper.get('textarea[aria-label="rTime"]')
+      await recurrenceCode.setValue('start [remove] end')
+      const recurrenceTextarea = recurrenceCode.element as HTMLTextAreaElement
+      recurrenceTextarea.focus()
+      recurrenceTextarea.setSelectionRange(6, 14)
+      activeElement.mockReturnValue(recurrenceTextarea)
+      window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: '1' }))
+      await wrapper.vm.$nextTick()
+      expect(recurrenceTextarea.value).toBe('start 2026/07/20 end')
+
+      const exclusionCode = wrapper.get('textarea[aria-label="exTime"]')
+      await exclusionCode.setValue('except [remove] end')
+      const exclusionTextarea = exclusionCode.element as HTMLTextAreaElement
+      exclusionTextarea.focus()
+      exclusionTextarea.setSelectionRange(7, 15)
+      activeElement.mockReturnValue(exclusionTextarea)
+      window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: '1' }))
+      await wrapper.vm.$nextTick()
+      expect(exclusionTextarea.value).toBe('except 2026/07/20 end')
+    } finally {
+      wrapper.unmount()
+      activeElement.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
   it('marks Name and rTime required and shows field errors before submitting', async () => {
     const wrapper = mount(ScheduleModal, {
       global: { stubs: { teleport: true } }
