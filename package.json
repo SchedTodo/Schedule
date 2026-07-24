@@ -20,7 +20,7 @@
     "start:electron": "pnpm build:web && pnpm build:electron && electron .",
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.electron.json",
     "test:unit": "vitest run tests/unit tests/contracts tests/parser",
-    "test:e2e:web": "playwright test tests/e2e/web",
+    "test:e2e:web": "pnpm build:web && playwright test --config playwright.web.config.ts",
     "test:e2e:electron": "pnpm electron:rebuild-native && pnpm build:web && pnpm build:electron && playwright test tests/e2e/electron",
     "parser:generate": "java -jar tools/antlr/antlr-4.13.2-complete.jar -Dlanguage=TypeScript -visitor -no-listener -Xexact-output-dir -o src/parser/generated src/parser/grammar/Schedule.g4 && node tools/antlr/postprocess-generated.mjs",
     "parser:check-generated": "pnpm parser:generate && git diff --exit-code -- src/parser/generated",
