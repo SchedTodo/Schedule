@@ -9,7 +9,7 @@
 - Electron 主进程注册对应的 IPC handler，并把调用交给 SQLite、通知、窗口和其他适配器。`src-electron` 只向内依赖 `src` 的契约、应用服务和端口。
 - `src/platform/host/host-gateway.ts` 先以 Zod 校验预加载 API 的形状，再将其映射为 `PlatformGateway`。
 
-跨进程、持久化与网络形 DTO 均由 Zod 在边界校验；Vue 不直接访问宿主或数据库 API。
+主进程的 `scheduleIpcContracts` 校验 IPC 输入与服务返回结果，预加载层按同一契约校验 IPC 返回值，`host-gateway` 校验暴露的宿主 API 形状。设置持久化读取 JSON 后以 `SettingsDtoSchema` 校验，更新时以 `UpdateSettingsInputSchema` 校验输入；Vue 不直接访问宿主或数据库 API。
 
 ## 日程解析器
 

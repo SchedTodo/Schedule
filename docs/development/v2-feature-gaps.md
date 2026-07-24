@@ -243,8 +243,8 @@ Remove-Item Env:TZ
 验证证据：
 
 - 删除前，控制器以同一核心命令组记录：ESLint exit 0、Vue 类型检查 exit 0、46 个测试文件 / 253 项测试通过、Vite 构建 exit 0。
-- 删除后，Task 2 已实际通过 ESLint、Vue 类型检查和 Vite 构建；`tests/unit/test-time-baseline.test.ts` 与 `tests/unit/app-shell.test.ts` 的 focused structural verification 也已通过。Vite 仅报告既有的 chunk-size 警告。
-- 删除前后固定使用的完整核心验证命令如下；它们也是本次收口的最终验证清单。本条只记录已完成的删除后 focused verification，不虚构尚未记录的完整组合结果。
+- 删除后，控制器以完全相同的核心命令组复验并全部通过：ESLint exit 0、Vue 类型检查 exit 0、Vitest 46 个测试文件 / 254 项测试通过（139.03 秒）、Vite 构建 exit 0。Vite 仅报告既有的大于 500 kB chunk-size 警告。
+- 删除前后固定使用的完整核心验证命令如下。
 
 ```powershell
 .\node_modules\.bin\eslint.cmd .
