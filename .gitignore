@@ -7,6 +7,7 @@ test-results/
 dist
 dist-web
 dist-electron
+/release/
 out
 *.log*
 .vscode

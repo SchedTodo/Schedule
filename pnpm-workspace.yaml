@@ -1,8 +1,12 @@
 packages:
   - .
 
+overrides:
+  'app-builder-lib>@electron/get': 5.0.0
+
 allowBuilds:
   better-sqlite3: true
+  electron-winstaller: true
   esbuild: true
 
 onlyBuiltDependencies:

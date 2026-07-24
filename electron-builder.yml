@@ -2,6 +2,7 @@ appId: top.sicongchen.schedule
 productName: schedule
 directories:
   buildResources: build
+  output: release
 files:
   - dist-web/**
   - dist-electron/**
@@ -11,11 +12,12 @@ asarUnpack:
   - node_modules/better-sqlite3/**
 # afterSign: build/notarize.js
 win:
+  target:
+    - target: nsis
+      arch:
+        - x64
   executableName: schedule
   icon: 'resources/icon256.ico'
-  extraResources:
-    - from: resources
-      to: resources
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -25,25 +27,4 @@ nsis:
   oneClick: false
   menuCategory: false
   perMachine: false
-mac:
-  entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-dmg:
-  artifactName: ${name}-${version}.${ext}
-linux:
-  target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
-  category: Utility
-appImage:
-  artifactName: ${name}-${version}.${ext}
 npmRebuild: false
-# publish:
-#   provider: generic
-#   url: https://example.com/auto-updates

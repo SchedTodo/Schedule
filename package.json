@@ -10,7 +10,7 @@
     "node": ">=24",
     "pnpm": ">=11"
   },
-  "packageManager": "pnpm@11.11.0+sha512.4463f65fd80ed80d69bc1d4bf163ee94f605c7380fc318bb5b2ebe15f8cd12d49c51a4d59e951b401e764d3b6ca751cbf51bc50ed7001a6bcb4935e684c34882",
+  "packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72",
   "scripts": {
     "dev:web": "vite",
     "electron:download": "node tools/run-with-electron-mirror.mjs",
@@ -24,6 +24,9 @@
     "test:integration": "pnpm node:rebuild-native && vitest run tests/integration",
     "test:e2e:web": "pnpm build:web && playwright test --config playwright.web.config.ts",
     "test:e2e:electron": "pnpm electron:rebuild-native && pnpm build:web && pnpm build:electron && playwright test --config playwright.electron.config.ts tests/e2e/electron",
+    "package:win": "pnpm electron:rebuild-native && pnpm build:web && pnpm build:electron && node --use-env-proxy ./node_modules/electron-builder/cli.js --win nsis --x64 --publish never",
+    "test:package:win": "playwright test --config playwright.electron.config.ts tests/e2e/package",
+    "release:win": "pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:e2e:web && pnpm test:e2e:electron && pnpm package:win && pnpm test:package:win",
     "parser:generate": "java -jar tools/antlr/antlr-4.13.2-complete.jar -Dlanguage=TypeScript -visitor -no-listener -Xexact-output-dir -o src/parser/generated src/parser/grammar/Schedule.g4 && node tools/antlr/postprocess-generated.mjs",
     "parser:check-generated": "pnpm parser:generate && git diff --exit-code -- src/parser/generated",
     "lint": "eslint .",
@@ -31,39 +34,40 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build:web"
   },
   "dependencies": {
-    "@js-temporal/polyfill": "^0.5.1",
-    "@vicons/antd": "^0.13.0",
-    "@vicons/ionicons5": "^0.13.0",
-    "@vicons/tabler": "^0.13.0",
-    "@vueuse/core": "latest",
-    "antlr4": "4.13.2",
-    "better-sqlite3": "^12.11.1",
-    "drizzle-orm": "^0.45.2",
-    "naive-ui": "latest",
-    "pinia": "latest",
-    "vue": "latest",
-    "vue-router": "latest",
-    "zod": "latest"
+    "better-sqlite3": "^12.11.1"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.2.0",
+    "@js-temporal/polyfill": "^0.5.1",
     "@playwright/test": "latest",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "latest",
+    "@vicons/antd": "^0.13.0",
+    "@vicons/ionicons5": "^0.13.0",
+    "@vicons/tabler": "^0.13.0",
     "@vitejs/plugin-vue": "latest",
     "@vue/test-utils": "latest",
+    "@vueuse/core": "latest",
+    "antlr4": "4.13.2",
     "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2",
     "electron": "43.1.0",
+    "electron-builder": "^26.15.3",
     "eslint": "latest",
     "eslint-plugin-vue": "latest",
     "fast-check": "^4.9.0",
     "jsdom": "latest",
     "knip": "^6.26.0",
+    "naive-ui": "latest",
+    "pinia": "latest",
     "prettier": "^3.0.0",
     "typescript": "^6.0.0",
     "typescript-eslint": "latest",
     "vite": "^8.0.0",
     "vitest": "latest",
-    "vue-tsc": "latest"
+    "vue": "latest",
+    "vue-router": "latest",
+    "vue-tsc": "latest",
+    "zod": "latest"
   }
 }

@@ -6,7 +6,7 @@
 
 **Architecture:** Playwright uses one shared deterministic baseline with separate Web and Electron entry configurations. Browser-only journeys run against `vite preview` and the existing in-memory gateway; Electron tests cover only host capabilities, while a final packaged smoke test launches `release/win-unpacked/schedule.exe`. electron-builder consumes only `dist-web`, `dist-electron`, declared runtime dependencies, and resources.
 
-**Tech Stack:** Node.js 24 LTS, pnpm 11.11.0, TypeScript 6, Playwright, Electron 43.1.0, electron-builder, Vite 8, Vue 3, Vitest, NSIS.
+**Tech Stack:** Node.js 24 LTS, pnpm 11.17.0, TypeScript 6, Playwright, Electron 43.1.0, electron-builder, Vite 8, Vue 3, Vitest, NSIS.
 
 ## Global Constraints
 
@@ -666,7 +666,7 @@ Run:
 pnpm add --save-dev electron-builder
 ```
 
-Expected: `package.json` and `pnpm-lock.yaml` change; `packageManager` remains exactly pinned to pnpm 11.11.0.
+Expected: `package.json` and `pnpm-lock.yaml` change; `packageManager` remains exactly pinned. During execution, pnpm 11.11.0 reproducibly stalled on this dependency graph, so the pin was upgraded to pnpm 11.17.0 before adding electron-builder.
 
 - [ ] **Step 3: Replace unapproved builder targets with the Windows-only configuration**
 
@@ -779,7 +779,7 @@ Schedule v2 当前只验证 Windows x64 NSIS。本流程不包含签名、上传
 ## 环境
 
 - Node.js 24 LTS
-- `package.json#packageManager` 固定的 pnpm 11.11.0
+- `package.json#packageManager` 固定的 pnpm 11.17.0
 - Windows 桌面会话；Electron E2E 和产物冒烟必须允许启动 GUI 子进程
 
 ## 安装依赖
