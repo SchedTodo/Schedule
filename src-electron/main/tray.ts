@@ -38,6 +38,7 @@ const electronTrayFactory: TrayFactory = {
   buildMenu: (template) => Menu.buildFromTemplate([...template])
 }
 
+/** 创建应用托盘，绑定显示、退出菜单以及双击显示行为。 */
 export function createApplicationTray(
   iconPath: string,
   actions: TrayActions,

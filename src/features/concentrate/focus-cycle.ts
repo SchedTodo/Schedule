@@ -47,12 +47,14 @@ export class FocusCycle {
     this.#remainingMs = this.durationFor('focus')
   }
 
+  /** 从当前阶段开始或恢复计时；重复启动不会重置剩余时间。 */
   start(): void {
     if (this.#running) return
     this.#running = true
     this.#lastMs = this.now()
   }
 
+  /** 结算暂停时刻前的耗时与阶段切换，然后停止计时。 */
   pause(): FocusCycleTransition[] {
     const transitions = this.tick()
     this.#running = false
@@ -60,6 +62,11 @@ export class FocusCycle {
     return transitions
   }
 
+  /**
+   * 将上次采样后的耗时推进到周期状态中，并返回期间跨过的全部阶段边界。
+   *
+   * 一次 tick 可能跨越多个阶段，因此不能只切换一次。
+   */
   tick(): FocusCycleTransition[] {
     if (!this.#running || this.#lastMs === undefined) return []
     const current = this.now()
@@ -81,6 +88,7 @@ export class FocusCycle {
     return transitions
   }
 
+  /** 返回当前阶段、累计专注时长和阶段进度的只读快照。 */
   snapshot(): FocusCycleSnapshot {
     const current = stages[this.#index]!
     const duration = this.durationFor(current.stage)

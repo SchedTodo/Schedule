@@ -11,6 +11,7 @@ export interface OccurrenceWallTime {
   readonly minute: number
 }
 
+/** 将 UTC instant 转换为指定时区中的日期和墙上时钟。 */
 export function occurrenceWallTime(instant: string, timeZone: string): OccurrenceWallTime {
   const value = Temporal.Instant.from(instant).toZonedDateTimeISO(timeZone)
   return {
@@ -20,6 +21,7 @@ export function occurrenceWallTime(instant: string, timeZone: string): Occurrenc
   }
 }
 
+/** 返回指定时区中的今天，允许注入当前 instant 以便稳定测试。 */
 export function todayInTimeZone(
   timeZone: string,
   now: Temporal.Instant = Temporal.Now.instant()
@@ -27,6 +29,7 @@ export function todayInTimeZone(
   return now.toZonedDateTimeISO(timeZone).toPlainDate().toString()
 }
 
+/** 构造覆盖当前月前后各一周的 occurrence 查询范围。 */
 export function calendarRange(
   timeZone: string,
   now: Temporal.Instant = Temporal.Now.instant()
@@ -59,6 +62,7 @@ export function formatWallClock(value: OccurrenceWallTime): string {
   return `${String(value.hour).padStart(2, '0')}:${String(value.minute).padStart(2, '0')}`
 }
 
+/** 按时间精度标记格式化墙上时钟，未知的时或分显示为问号。 */
 export function formatMarkedWallClock(
   instant: string,
   mark: KnownTimeMark,
@@ -69,6 +73,7 @@ export function formatMarkedWallClock(
   return `${mark[0] === '1' ? hour : '?'}:${mark[1] === '1' ? minute : '?'}`
 }
 
+/** 格式化 occurrence 的起止墙上时间；Todo 仅显示截止时间。 */
 export function formatOccurrenceRange(
   item: ScheduleOccurrenceDto,
   timeZone: string
@@ -84,6 +89,7 @@ function formatUtcDateTime(instant: string, mark: KnownTimeMark): string {
   return `${value.year}/${value.month}/${value.day} ${hour}:${minute}`
 }
 
+/** 将 occurrence 序列化为 UTC 排除规则，保留未知时间分量。 */
 export function serializeOccurrenceExclusion(item: ScheduleOccurrenceDto): string {
   const end = formatUtcDateTime(item.end, item.endMark)
   if (item.start === null) return `${end} UTC`

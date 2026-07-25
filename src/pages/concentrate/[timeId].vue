@@ -46,11 +46,13 @@ function formatTotal(milliseconds: number) {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
 }
 
+/** 推进专注会话并同步页面快照。 */
 function refresh() {
   session?.tick()
   snapshot.value = session?.snapshot()
 }
 
+/** 在运行和暂停状态之间切换当前专注会话。 */
 function toggle() {
   if (!session) return
   if (session.snapshot().running) session.pause()
@@ -58,6 +60,7 @@ function toggle() {
   refresh()
 }
 
+/** 切换关联 Todo，并先结算前一个 Todo 的有效专注区间。 */
 async function selectTodo(value: string | number | null) {
   const id = value === null ? '' : String(value)
   const todo = todos.value.find((candidate) => candidate.id === id)
@@ -66,6 +69,7 @@ async function selectTodo(value: string | number | null) {
   refresh()
 }
 
+/** 加载可选 Todo，并按路由参数恢复初始选择。 */
 async function load() {
   const settingsResult = await platform.settings.get()
   const values = settingsResult.ok ? settingsResult.value : defaultSettings

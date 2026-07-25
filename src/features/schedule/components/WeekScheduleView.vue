@@ -29,6 +29,7 @@ const days = computed(() => Array.from({ length: props.dayCount }, (_, offset) =
   return date.toISOString().slice(0, 10)
 }))
 
+/** 判断 occurrence 是否归属于指定逻辑日，而不是简单按自然日比较。 */
 function occursOn(item: CalendarOccurrenceDto, day: string): boolean {
   return item.start !== null && logicalDateForInstant(
     item.start,
@@ -41,6 +42,7 @@ function occursOn(item: CalendarOccurrenceDto, day: string): boolean {
 function timeLabel(item: CalendarOccurrenceDto): string {
   return formatOccurrenceRange(item, props.timeZone)
 }
+/** 根据 occurrence 在逻辑日中的时间位置计算周视图卡片布局。 */
 function eventStyle(item: CalendarOccurrenceDto) {
   if (item.start === null) return {}
   const start = occurrenceWallTime(item.start, props.timeZone)
@@ -61,10 +63,12 @@ function eventStyle(item: CalendarOccurrenceDto) {
   }
 }
 
+/** 记录拖拽起点，使卡片拖动时只改变视觉偏移。 */
 function handleDragStart(event: DragEvent, item: CalendarOccurrenceDto): void {
   dragStartOffsets.set(item.id, event.offsetY)
 }
 
+/** 清除拖拽视觉偏移；当前交互不会修改 occurrence 时间。 */
 function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
   const startOffset = dragStartOffsets.get(item.id) ?? event.offsetY
   dragOffsets.set(item.id, (dragOffsets.get(item.id) ?? 0) + event.offsetY - startOffset)

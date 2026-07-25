@@ -3,6 +3,7 @@ export interface ScheduleDatePresentation {
   readonly timeLabel: string
 }
 
+/** 从日程代码中提取首个完整日期和时间，供轻量预览使用。 */
 export function parseFirstScheduleDate(code: string): ScheduleDatePresentation | null {
   const match = /(\d{4})[-/](\d{1,2})[-/](\d{1,2})\s+(\d{1,2}):(\d{2})/.exec(code)
   if (!match) return null

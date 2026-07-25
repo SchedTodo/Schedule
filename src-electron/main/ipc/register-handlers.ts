@@ -25,6 +25,11 @@ const internalError: AppErrorDto = {
   message: '日程操作失败'
 }
 
+/**
+ * 在 IPC 边界依次校验输入、执行平台操作并校验输出。
+ *
+ * 契约错误和未捕获的内部错误会转换为稳定的 AppResult，避免异常穿透进程边界。
+ */
 async function execute<TInput, TValue>(
   input: unknown,
   parseInput: (value: unknown) => TInput,
@@ -45,6 +50,7 @@ async function execute<TInput, TValue>(
   }
 }
 
+/** 仅在平台操作成功后通知提醒运行时重新计算候选。 */
 function recalculateAfterSuccess<T>(
   result: AppResult<T>,
   callback: (() => void) | undefined
@@ -53,6 +59,7 @@ function recalculateAfterSuccess<T>(
   return result
 }
 
+/** 注册全部 Schedule IPC handler，并为每个通道绑定对应输入输出契约。 */
 export function registerScheduleIpcHandlers(
   ipcMain: IpcMainRegistrar,
   gateway: PlatformGateway,

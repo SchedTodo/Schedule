@@ -16,6 +16,7 @@ type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
 export class DrizzleSettingsRepository {
   constructor(private readonly database: ScheduleDatabase) {}
 
+  /** 读取并校验设置；首次访问时写入默认设置。 */
   async get(): Promise<AppResult<SettingsDto>> {
     try {
       const row = this.database.select().from(appSettings).where(eq(appSettings.id, 1)).get()
@@ -29,6 +30,7 @@ export class DrizzleSettingsRepository {
     }
   }
 
+  /** 校验增量设置、与现值合并后执行 upsert。 */
   async update(input: UpdateSettingsInput): Promise<AppResult<SettingsDto>> {
     const parsed = UpdateSettingsInputSchema.safeParse(input)
     if (!parsed.success) return { ok: false, error: { code: 'VALIDATION_FAILED', message: '设置数据无效' } }

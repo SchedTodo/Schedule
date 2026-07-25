@@ -20,6 +20,7 @@ export interface WindowOpenTarget {
   setWindowOpenHandler(handler: WindowOpenHandler): void
 }
 
+/** 创建默认隐藏且启用上下文隔离、沙箱的主窗口配置。 */
 export function createMainWindowOptions(preloadPath: string): BrowserWindowConstructorOptions {
   return {
     show: false,
@@ -32,6 +33,7 @@ export function createMainWindowOptions(preloadPath: string): BrowserWindowConst
   }
 }
 
+/** 拦截渲染器新窗口请求，交给系统外部链接处理器并始终拒绝内嵌打开。 */
 export function installWindowOpenHandler(
   target: WindowOpenTarget,
   links: ExternalLinkOpener,
@@ -43,6 +45,7 @@ export function installWindowOpenHandler(
   })
 }
 
+/** 开发时加载 Vite 地址，生产时以 file URL 加载构建后的 Web 入口。 */
 export async function loadMainWindow(
   window: WindowLoader,
   developmentUrl: string | undefined,

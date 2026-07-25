@@ -45,6 +45,7 @@ export interface HostScheduleApi {
   showNotification(input: NotificationInput): Promise<AppResult<void>>
 }
 
+/** 创建仅接受函数值的 Zod 校验器，用于验证预加载桥接方法。 */
 function method<T extends (...arguments_: never[]) => unknown>() {
   return z.custom<T>((value) => typeof value === 'function')
 }

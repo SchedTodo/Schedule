@@ -8,6 +8,7 @@ export interface ScheduledAlarm {
 
 export type DueAlarm = ScheduledAlarm
 
+/** 根据 occurrence 类型、完成状态和提醒设置生成有效的提醒计划。 */
 export function scheduledAlarms(
   occurrences: readonly ScheduleOccurrenceDto[],
   settings: SettingsDto
@@ -34,6 +35,7 @@ export function alarmKey(alarm: ScheduledAlarm): string {
   return `${alarm.occurrence.id}:${alarm.alarmAt}`
 }
 
+/** 判断提醒触发点是否落在左开右闭的检查时间窗内。 */
 export function isAlarmDue(
   alarm: ScheduledAlarm,
   previous: string,
@@ -43,6 +45,7 @@ export function isAlarmDue(
   return alarmTime > Date.parse(previous) && alarmTime <= Date.parse(current)
 }
 
+/** 返回从指定时刻开始、给定轮询周期内到期的提醒。 */
 export function dueAlarms(
   occurrences: readonly ScheduleOccurrenceDto[],
   settings: SettingsDto,

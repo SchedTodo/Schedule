@@ -28,6 +28,7 @@ if (gateway) {
 function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
   preferences.update({ [key]: value })
 }
+/** 持久化单项应用设置，并仅在宿主确认成功后更新页面状态。 */
 async function updateSetting<K extends keyof SettingsDto>(key: K, value: SettingsDto[K]) {
   if (!gateway) return
   const result = await gateway.settings.update({ [key]: value })

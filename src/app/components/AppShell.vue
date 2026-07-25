@@ -25,6 +25,7 @@ const activePath = computed(() => {
   return navigation.some(({ path }) => path === route.path) ? route.path : '/'
 })
 
+/** 处理 Ctrl+左右方向键，在应用的顶级页面之间循环切换。 */
 function handleKeyboard(event: KeyboardEvent) {
   if (!event.ctrlKey || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return
   const current = navigation.findIndex(({ path }) => path === activePath.value)

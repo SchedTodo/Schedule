@@ -76,6 +76,7 @@ const editValue = computed<CreateScheduleInput>(() => {
   }
 })
 
+/** 加载当前日程所有可见 occurrence，并按详情页规则排序。 */
 async function refreshOccurrences() {
   const result = await platform.occurrences.listVisibleBySchedule(scheduleId)
   if (result.ok) {
@@ -84,6 +85,7 @@ async function refreshOccurrences() {
   }
 }
 
+/** 加载当前日程关联的专注记录。 */
 async function refreshRecords() {
   const result = await platform.records.listBySchedule(scheduleId)
   if (result.ok) records.value = [...result.value]
@@ -94,6 +96,7 @@ async function refreshSettings() {
   if (result.ok) timeZone.value = result.value.timeZone
 }
 
+/** 切换当前日程收藏状态，并用宿主返回值更新详情模型。 */
 async function toggleStar() {
   const schedule = detail.schedule.value
   if (!schedule || schedule.deleted) return
@@ -105,6 +108,7 @@ async function toggleStar() {
   else mutationError.value = result.error.message
 }
 
+/** 保存编辑内容，随后刷新日程详情和 occurrence。 */
 async function saveEdit(input: CreateScheduleInput) {
   const result = await platform.schedules.update({ id: scheduleId, ...input })
   if (result.ok) {
@@ -113,12 +117,14 @@ async function saveEdit(input: CreateScheduleInput) {
   } else mutationError.value = result.error.message
 }
 
+/** 软删除当前日程，并返回首页。 */
 async function removeSchedule() {
   const result = await platform.schedules.setDeleted({ id: scheduleId, deleted: true })
   if (result.ok) await router.push({ name: 'database' })
   else mutationError.value = result.error.message
 }
 
+/** 批量排除选中的 occurrence，成功后清空选择并刷新详情数据。 */
 async function excludeSelected() {
   if (checkedRowKeys.value.length === 0) return
   const result = await platform.occurrences.excludeMany({
@@ -130,6 +136,7 @@ async function excludeSelected() {
   } else mutationError.value = result.error.message
 }
 
+/** 更新单个 occurrence 的备注并刷新详情列表。 */
 async function updateComment(id: string, comment: string) {
   const result = await platform.occurrences.updateComment(id, comment)
   if (result.ok) await refreshOccurrences()

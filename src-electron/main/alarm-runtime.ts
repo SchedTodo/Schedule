@@ -29,6 +29,7 @@ export class AlarmRuntime {
 
   constructor(private readonly dependencies: AlarmRuntimeDependencies) {}
 
+  /** 注册系统恢复监听和定时轮询，并执行首次提醒计算。 */
   start(): Promise<void> {
     if (this.started || this.disposed) return this.pending
     this.started = true
@@ -39,6 +40,9 @@ export class AlarmRuntime {
     return this.request('initialize')
   }
 
+  /**
+   * 将提醒重算串行追加到任务链，避免轮询、恢复和数据变更并发修改协调器状态。
+   */
   request(reason: AlarmRecalculationReason): Promise<void> {
     if (this.disposed) return this.pending
     this.pending = this.pending
@@ -52,6 +56,7 @@ export class AlarmRuntime {
     return this.pending
   }
 
+  /** 停止轮询并移除电源恢复监听；重复释放不会产生副作用。 */
   dispose(): void {
     if (this.disposed) return
     this.disposed = true

@@ -48,6 +48,11 @@ function currentDate(context: EvaluationContext): Temporal.PlainDate {
   return context.now.toZonedDateTimeISO(context.defaultTimeZone).toPlainDate()
 }
 
+/**
+ * 求值完整日期、缺少年份的日期以及相对日期糖。
+ *
+ * 缺少年份且未提供范围基准时，会选择不早于当前日期的最近同月日。
+ */
 function evaluateDate(
   source: string,
   context: EvaluationContext,
@@ -85,6 +90,7 @@ function evaluateDate(
   throw new Error(`Invalid date: ${source}`)
 }
 
+/** 将时间文本求值为具体或带未知精度标记的时分结构。 */
 function evaluateTime(source: string): EvaluatedTime {
   if (source === 's' || source === 'start') return { hour: 0, minute: 0 }
   if (source === 'e' || source === 'end') return { hour: 23, minute: 59 }
@@ -103,6 +109,7 @@ function evaluateTime(source: string): EvaluatedTime {
   return { hour, minute }
 }
 
+/** 解析 IANA 时区或通过注入解析器解析缩写；歧义和未知缩写均视为无效。 */
 function resolveTimeZone(value: string | undefined, context: EvaluationContext): string {
   if (value === undefined) return context.defaultTimeZone
   if (value === 'UTC') return value
@@ -131,6 +138,7 @@ const byRanges: Readonly<Record<string, readonly [number, number, boolean]>> = {
   setpos: [1, 366, true]
 }
 
+/** 校验频率选项以及各 BY 值的范围和正负号约束。 */
 function validateRecurrence(statement: ScheduleStatementAst): void {
   const frequency = statement.frequency
   if (frequency?.hasDuplicateOptions === true) {
@@ -156,6 +164,7 @@ function validateRecurrence(statement: ScheduleStatementAst): void {
   }
 }
 
+/** 将一条 AST 语句求值为已补齐日期、时区与默认频率的领域规范。 */
 function evaluateStatement(
   statement: ScheduleStatementAst,
   context: EvaluationContext
@@ -194,6 +203,7 @@ function evaluateStatement(
   }
 }
 
+/** 求值完整 AST，并把抛出的日期、时间、时区或重复规则错误归类为诊断。 */
 export function evaluateSchedule(
   ast: ScheduleDocumentAst,
   context: EvaluationContext

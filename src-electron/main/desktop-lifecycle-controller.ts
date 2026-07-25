@@ -36,6 +36,7 @@ export interface DesktopLifecycleDependencies {
   development: boolean
 }
 
+/** 根据 Electron 启动参数区分正常启动和后台自启动。 */
 export function resolveLaunchMode(argv: readonly string[]): LaunchMode {
   return argv.includes('--autostart') ? 'autostart' : 'normal'
 }
@@ -46,6 +47,7 @@ export class DesktopLifecycleController {
 
   constructor(private readonly dependencies: DesktopLifecycleDependencies) {}
 
+  /** 安装窗口生命周期处理，并仅在开发环境注册 F5 刷新快捷键。 */
   start(mode: LaunchMode): void {
     const window = this.dependencies.window
     window.onReadyToShow(() => {
@@ -65,6 +67,7 @@ export class DesktopLifecycleController {
     }
   }
 
+  /** 恢复、显示、最大化并聚焦主窗口。 */
   showMainWindow(): void {
     const window = this.dependencies.window
     if (window.isMinimized()) window.restore()
@@ -73,18 +76,21 @@ export class DesktopLifecycleController {
     window.focus()
   }
 
+  /** 后台模式下阻止窗口关闭并将其隐藏；退出流程中不再拦截。 */
   hideMainWindow(event?: PreventableEvent): void {
     if (this.quitting) return
     event?.preventDefault()
     this.dependencies.window.hide()
   }
 
+  /** 标记退出状态并请求 Electron 应用退出。 */
   quit(): void {
     if (this.quitting) return
     this.quitting = true
     this.dependencies.requestAppQuit()
   }
 
+  /** 幂等释放快捷键和全部已注册资源，单个资源失败不阻断其余清理。 */
   dispose(): void {
     this.quitting = true
     if (this.disposed) return
@@ -96,6 +102,7 @@ export class DesktopLifecycleController {
     }
   }
 
+  /** 执行单项清理并把异常交给统一错误报告器。 */
   private tryDispose(dispose: () => void): void {
     try {
       dispose()

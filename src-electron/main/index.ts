@@ -39,6 +39,9 @@ const mainDirectory = dirname(fileURLToPath(import.meta.url))
 const preloadPath = resolve(mainDirectory, '../preload/index.cjs')
 const webEntryPath = resolve(mainDirectory, '../../dist-web/index.html')
 
+/**
+ * 组装数据库、仓储、应用服务、IPC 和提醒运行时，并返回需要随应用释放的资源。
+ */
 function registerSchedulePlatform(): readonly Disposable[] {
   const databasePath =
     process.env.SCHEDULE_DATABASE_PATH ?? resolve(app.getPath('userData'), 'schedule-v2.db')
@@ -65,6 +68,7 @@ function registerSchedulePlatform(): readonly Disposable[] {
     weekStartsOn: 1,
     resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
   }, occurrenceRepository)
+  /** 按数据库中的最新设置创建写操作服务，避免长期缓存时区和周起始日。 */
   async function configuredService() {
     const current = await settingsRepository.get()
     const settings = current.ok ? current.value : undefined

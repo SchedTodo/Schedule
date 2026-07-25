@@ -37,6 +37,7 @@ const rules: FormRules = {
   recurrenceCode: [{ required: true, message: 'Please input rTime', trigger: ['input', 'blur'] }]
 }
 
+/** 按新增或编辑模式恢复弹窗草稿，并清空上次校验信息。 */
 function resetDraft() {
   Object.assign(model, props.initialValue ?? {
     title: '',
@@ -46,11 +47,13 @@ function resetDraft() {
   })
 }
 
+/** 打开弹窗并根据当前模式重置草稿与校验状态。 */
 function open() {
   resetDraft()
   show.value = true
 }
 
+/** 校验草稿并等待父组件完成保存，成功后关闭弹窗。 */
 async function submit() {
   try {
     await formRef.value?.validate()
@@ -66,6 +69,7 @@ async function submit() {
   show.value = false
 }
 
+/** 实现 Ctrl+Enter 提交和 Escape 关闭的键盘交互。 */
 function handleKeyboard(event: KeyboardEvent) {
   if (!event.ctrlKey) return
   if (!show.value && props.mode === 'add' && event.key === 'ArrowUp') open()

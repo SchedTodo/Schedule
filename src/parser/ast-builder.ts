@@ -27,6 +27,7 @@ function buildTimes(context: TimeRangeContext): readonly [string, string?] {
   return values[1] === undefined ? [first] : [first, values[1]]
 }
 
+/** 从语法树提取频率及其选项，并保留重复选项供语义校验报告。 */
 function buildFrequency(context: FrequencyContext): NonNullable<ScheduleStatementAst['frequency']> {
   let interval: number | undefined
   let count: number | undefined
@@ -53,6 +54,7 @@ function buildFrequency(context: FrequencyContext): NonNullable<ScheduleStatemen
   }
 }
 
+/** 将各 BY 子句转换为按类型索引的数值数组。 */
 function buildBy(context: ByClauseContext | null): Readonly<Record<string, readonly number[]>> {
   if (context === null) return {}
 
@@ -64,6 +66,7 @@ function buildBy(context: ByClauseContext | null): Readonly<Record<string, reado
   )
 }
 
+/** 将单条 ANTLR 语句节点转换为不依赖解析器上下文的 AST。 */
 function buildStatement(context: StatementContext): ScheduleStatementAst {
   const timeZoneContext = context.timeZone() as TimeZoneContext | null
   const frequencyContext = context.frequency() as FrequencyContext | null
@@ -78,6 +81,7 @@ function buildStatement(context: StatementContext): ScheduleStatementAst {
   }
 }
 
+/** 将完整文档语法树转换为平台无关的日程 AST。 */
 export function buildScheduleAst(context: DocumentContext): ScheduleDocumentAst {
   return {
     statements: context.statement_list().map(buildStatement)

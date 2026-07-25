@@ -18,6 +18,7 @@ const colors = [
   '#808000'
 ] as const
 
+/** 根据用户配置的逻辑日起点，将 instant 归属到对应的逻辑日期。 */
 export function logicalDateForInstant(
   instant: string,
   timeZone: string,
@@ -30,6 +31,7 @@ export function logicalDateForInstant(
   return wall.toPlainDate().subtract({ days: beforeStart ? 1 : 0 }).toString()
 }
 
+/** 将日程 ID 稳定映射到固定调色板，保证跨渲染颜色一致。 */
 export function scheduleColor(scheduleId: string): string {
   let hash = 0
   for (const character of scheduleId) {

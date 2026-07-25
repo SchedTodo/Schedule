@@ -37,6 +37,11 @@ const validationError = {
   message: '日程数据无效'
 }
 
+/**
+ * 创建供浏览器模式和测试使用的内存平台网关。
+ *
+ * 该实现遵循与宿主网关相同的契约，并在内存中维护日程、occurrence、设置和专注记录。
+ */
 export function createInMemoryGateway(
   seed: readonly ScheduleDto[] = [],
   dependencies: InMemoryGatewayDependencies = {
@@ -72,6 +77,7 @@ export function createInMemoryGateway(
 
   return {
     schedules: {
+      /** 校验并创建日程，同时展开和保存其 occurrence。 */
       async create(input) {
         const parsed = CreateScheduleInputSchema.safeParse(input)
         if (!parsed.success) return { ok: false, error: validationError }
@@ -119,6 +125,7 @@ export function createInMemoryGateway(
         }
       },
 
+      /** 按查询条件过滤未删除日程，并应用偏移量分页。 */
       async list(query) {
         const parsed = ScheduleListQuerySchema.safeParse(query)
         if (!parsed.success) return { ok: false, error: validationError }
@@ -135,6 +142,9 @@ export function createInMemoryGateway(
         return { ok: true, value: Object.freeze(matches.slice(offset, offset + limit)) }
       },
 
+      /**
+       * 更新日程及其 occurrence；时间身份未变化的实例会保留备注和完成状态。
+       */
       async update(input) {
         const parsed = UpdateScheduleInputSchema.safeParse(input)
         if (!parsed.success) return { ok: false, error: validationError }
@@ -201,6 +211,7 @@ export function createInMemoryGateway(
         return { ok: true, value: undefined }
       },
 
+      /** 按删除、类型、收藏和关键字条件返回远程分页模型。 */
       async searchPage(query) {
         const parsed = ScheduleSearchQuerySchema.safeParse(query)
         if (!parsed.success) return { ok: false, error: validationError }
@@ -227,6 +238,7 @@ export function createInMemoryGateway(
       }
     },
     occurrences: {
+      /** 返回指定半开时间范围内可见、未完成的事件 occurrence。 */
       async listRange(query) {
         const parsed = OccurrenceRangeQuerySchema.safeParse(query)
         if (!parsed.success) return { ok: false, error: validationError }
@@ -262,6 +274,7 @@ export function createInMemoryGateway(
         occurrences[index] = updated
         return { ok: true, value: updated }
       },
+      /** 批量排除同一日程的 occurrence，并把排除项追加到日程规则。 */
       async excludeMany(input) {
         const parsed = ExcludeOccurrencesInputSchema.safeParse(input)
         if (!parsed.success) return { ok: false, error: validationError }
@@ -289,6 +302,9 @@ export function createInMemoryGateway(
         }
         return { ok: true, value: undefined }
       },
+      /**
+       * 返回逻辑日相关的 Todo：每个日程保留首个未过期实例，并补入窗口内其余实例。
+       */
       async listTodos(query) {
         const { start: logicalStart, end: logicalEnd } = todoLogicalDayRange(query)
         const candidates = occurrences
@@ -316,6 +332,7 @@ export function createInMemoryGateway(
       async get() {
         return { ok: true, value: settings }
       },
+      /** 校验并合并设置；浏览器存储可用时同步持久化。 */
       async update(input) {
         const parsed = UpdateSettingsInputSchema.safeParse(input)
         if (!parsed.success) return { ok: false, error: validationError }
@@ -327,6 +344,7 @@ export function createInMemoryGateway(
       }
     },
     records: {
+      /** 校验并创建专注记录。 */
       async create(input) {
         const parsed = CreateConcentrationRecordInputSchema.safeParse(input)
         if (!parsed.success) return { ok: false, error: validationError }
@@ -337,6 +355,7 @@ export function createInMemoryGateway(
       async listBySchedule(scheduleId) {
         return { ok: true, value: records.filter((value) => value.scheduleId === scheduleId) }
       },
+      /** 删除指定专注记录，不存在时返回 NOT_FOUND。 */
       async delete(id) {
         const index = records.findIndex((value) => value.id === id)
         if (index < 0) return { ok: false, error: { code: 'NOT_FOUND', message: '专注记录不存在' } }

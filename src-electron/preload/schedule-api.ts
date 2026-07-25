@@ -52,6 +52,11 @@ export interface ScheduleHostApi {
   showNotification(input: NotificationInput): Promise<AppResult<void>>
 }
 
+/**
+ * 创建渲染进程可调用的宿主 API。
+ *
+ * 每个方法只通过命名 IPC 通道通信，并在返回渲染进程前再次校验主进程响应。
+ */
 export function createScheduleHostApi(invoke: IpcInvoke): ScheduleHostApi {
   return {
     async createSchedule(input) {

@@ -35,6 +35,7 @@ const pagination = reactive<PaginationProps>({
   }
 })
 
+/** 按当前筛选和远程分页状态刷新数据库日程列表。 */
 async function refresh() {
   const result = await platform.schedules.searchPage({
     search: search.value,
@@ -55,6 +56,7 @@ async function refresh() {
   }
 }
 
+/** 恢复软删除日程并刷新当前页，避免触发表格行导航。 */
 async function restore(id: string) {
   await platform.schedules.setDeleted({ id, deleted: false })
   await refresh()
@@ -64,6 +66,7 @@ function toggleStarFilter() {
   starredOnly.value = !starredOnly.value
 }
 
+/** 渲染删除状态，并为已删除行提供内联恢复操作。 */
 function renderDeleted(item: SchedulePageItemDto) {
   return h('div', { class: 'database-deleted-content' }, [
     h(NTag, { type: 'error' }, { default: () => String(item.deleted) }),
@@ -126,6 +129,7 @@ const columns: DataTableColumns<SchedulePageItemDto> = [
   { title: 'Star', key: 'starred', render: renderStar }
 ]
 
+/** 为数据行绑定详情页导航属性。 */
 function rowProps(item: SchedulePageItemDto) {
   return {
     onClick: () => void router.push({ name: 'schedule-detail', params: { id: item.id } })

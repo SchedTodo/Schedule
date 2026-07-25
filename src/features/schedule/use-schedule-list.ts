@@ -4,6 +4,7 @@ import type { AppErrorDto } from '../../contracts/result'
 import type { PlatformGateway } from '../../contracts/platform.contract'
 import type { ScheduleDto, ScheduleListQuery } from '../../contracts/schedule.contract'
 
+/** 管理日程列表查询及其加载、错误状态，并忽略过期响应。 */
 export function useScheduleList(
   gateway: PlatformGateway,
   initialQuery: ScheduleListQuery
@@ -14,6 +15,7 @@ export function useScheduleList(
   const query = shallowRef<ScheduleListQuery>({ ...initialQuery })
   let requestToken = 0
 
+  /** 按当前查询重新加载列表，并丢弃已经过期的异步响应。 */
   async function refresh(): Promise<void> {
     const token = ++requestToken
     loading.value = true

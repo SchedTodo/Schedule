@@ -2,6 +2,7 @@ import { Temporal } from '../../domain/shared/temporal'
 
 export type TodoTone = 'expired' | 'done' | 'today' | 'tomorrow' | 'future'
 
+/** 按截止 instant、完成状态和用户时区计算 Todo 的展示色调。 */
 export function todoTone(
   end: string,
   done: boolean,
@@ -19,6 +20,7 @@ export function todoTone(
   return 'future'
 }
 
+/** 将 Todo 截止 instant 格式化为指定时区中的月日和时分。 */
 export function formatTodoDeadline(end: string, timeZone: string): string {
   const value = Temporal.Instant.from(end).toZonedDateTimeISO(timeZone)
   const pad = (part: number) => String(part).padStart(2, '0')

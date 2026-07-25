@@ -7,6 +7,7 @@ import router from '../router'
 import { platformGatewayKey } from './injection-keys'
 import '../assets/styles/main.css'
 
+/** 创建 Vue 应用并安装平台网关、Pinia 与路由。 */
 export function bootstrapApplication(gateway: PlatformGateway): VueApp<Element> {
   return createApp(App).provide(platformGatewayKey, gateway).use(createPinia()).use(router)
 }

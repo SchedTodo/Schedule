@@ -47,6 +47,7 @@ export class Schedule {
     Object.freeze(this)
   }
 
+  /** 校验标题并使用注入的时钟与 ID 生成器创建不可变日程实体。 */
   static create(input: CreateSchedule, dependencies: ScheduleDependencies): Schedule {
     if (input.title.trim().length === 0) {
       throw new Error('SCHEDULE_TITLE_EMPTY')

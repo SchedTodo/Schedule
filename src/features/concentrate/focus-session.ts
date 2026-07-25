@@ -47,6 +47,7 @@ export class FocusSession {
     this.#cycle = new FocusCycle(durations, dependencies.now)
   }
 
+  /** 启动专注周期，并在已选择 Todo 时开始记录专注区间。 */
   start(): void {
     if (this.#cycle.snapshot().running) return
     this.#cycle.start()
@@ -55,6 +56,7 @@ export class FocusSession {
     }
   }
 
+  /** 暂停周期并关闭当前正在记录的专注区间。 */
   pause(): void {
     if (!this.#cycle.snapshot().running) return
     this.#processTransitions(this.#cycle.pause())
@@ -69,6 +71,7 @@ export class FocusSession {
     return this.#cycle.snapshot()
   }
 
+  /** 切换关联 Todo，先结算并保存旧 Todo 的区间，再为新 Todo 开始计时。 */
   async selectTodo(todo: SelectedTodo | undefined): Promise<void> {
     this.tick()
     const previousScheduleId = this.#selectedTodo?.scheduleId
@@ -80,6 +83,7 @@ export class FocusSession {
     }
   }
 
+  /** 结算当前状态并保存所有尚未刷新的合格专注记录。 */
   async dispose(): Promise<void> {
     this.tick()
     this.#closeActive(this.dependencies.now())
@@ -88,6 +92,7 @@ export class FocusSession {
     this.#selectedTodo = undefined
   }
 
+  /** 处理阶段切换通知，并在专注与休息边界正确开合记录区间。 */
   #processTransitions(transitions: readonly FocusCycleTransition[]): void {
     for (const transition of transitions) {
       this.#closeActive(transition.atMs)
@@ -98,6 +103,7 @@ export class FocusSession {
     }
   }
 
+  /** 关闭活动区间并暂存，空区间或倒序区间不会写入。 */
   #closeActive(endMs: number): void {
     if (this.#activeStartMs === undefined || !this.#selectedTodo) return
     if (endMs > this.#activeStartMs) {
@@ -110,6 +116,7 @@ export class FocusSession {
     this.#activeStartMs = undefined
   }
 
+  /** 保存指定 Todo 超过最小时长的区间，并从待处理队列移除它们。 */
   async #flush(scheduleId: string): Promise<void> {
     const selected = this.#intervals.filter((value) => value.scheduleId === scheduleId)
     this.#intervals = this.#intervals.filter((value) => value.scheduleId !== scheduleId)

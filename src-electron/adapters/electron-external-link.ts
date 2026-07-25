@@ -5,6 +5,7 @@ export interface ExternalShell {
 export class ElectronExternalLink {
   constructor(private readonly shell: ExternalShell) {}
 
+  /** 仅允许通过系统浏览器打开 HTTPS 链接，拒绝其他协议。 */
   async open(value: string): Promise<void> {
     const url = new URL(value)
     if (url.protocol !== 'https:') {
@@ -13,4 +14,3 @@ export class ElectronExternalLink {
     await this.shell.openExternal(url.toString())
   }
 }
-

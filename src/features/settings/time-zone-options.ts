@@ -10,6 +10,7 @@ function runtimeTimeZones(): readonly string[] {
     : []
 }
 
+/** 合并运行时、系统和当前时区，去重排序后生成选择器选项。 */
 export function createTimeZoneOptions(
   currentTimeZone: string,
   supportedTimeZones: readonly string[] = runtimeTimeZones(),

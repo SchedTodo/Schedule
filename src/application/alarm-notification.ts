@@ -15,6 +15,7 @@ function localDate(instant: string, timeZone: string): string {
   return `${value.year}-${pad(value.month)}-${pad(value.day)}`
 }
 
+/** 按精度标记格式化本地时分，未知分量以问号显示。 */
 function localMarkedTime(
   instant: string,
   mark: KnownTimeMark,
@@ -26,6 +27,7 @@ function localMarkedTime(
   return `${hour}:${minute}`
 }
 
+/** 按用户时区和时间精度标记，生成适合通知正文显示的 occurrence 时间范围。 */
 function occurrenceTime(
   occurrence: ScheduleOccurrenceDto,
   timeZone: string
@@ -47,6 +49,7 @@ function occurrenceTime(
     : `${startDate} ${startTime}–${endDate} ${endTime}`
 }
 
+/** 将计划提醒转换为系统通知使用的标题和正文。 */
 export function notificationForAlarm(
   alarm: ScheduledAlarm,
   timeZone: string

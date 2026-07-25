@@ -4,6 +4,7 @@ import type { AppErrorDto, AppResult } from '../../contracts/result'
 import type { PlatformGateway } from '../../contracts/platform.contract'
 import type { CreateScheduleInput, ScheduleDto } from '../../contracts/schedule.contract'
 
+/** 封装日程写操作的加载与错误状态，并在成功后触发调用方刷新。 */
 export function useScheduleMutations(
   gateway: PlatformGateway,
   afterMutation: () => void | Promise<void>
@@ -11,6 +12,7 @@ export function useScheduleMutations(
   const loading = shallowRef(false)
   const error = shallowRef<AppErrorDto | null>(null)
 
+  /** 创建日程，并在成功时等待调用方完成后续刷新。 */
   async function createSchedule(
     input: CreateScheduleInput
   ): Promise<AppResult<ScheduleDto>> {

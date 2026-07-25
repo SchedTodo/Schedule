@@ -51,6 +51,7 @@ export const scheduleIpcChannels = {
 
 export const FindScheduleByIdInputSchema = z.object({ id: z.uuid() }).strict()
 
+/** 为指定成功值模式构造严格的 AppResult IPC 输出契约。 */
 function appResultSchema<T extends z.ZodType>(value: T) {
   return z.discriminatedUnion('ok', [
     z.object({ ok: z.literal(true), value }).strict(),

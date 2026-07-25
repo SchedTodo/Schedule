@@ -10,6 +10,7 @@ type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
 
 export class DrizzleRecordRepository {
   constructor(private readonly database: ScheduleDatabase, private readonly ids: IdGenerator) {}
+  /** 校验并持久化一条新的专注记录。 */
   async create(input: CreateConcentrationRecordInput): Promise<AppResult<ConcentrationRecordDto>> {
     const parsed = CreateConcentrationRecordInputSchema.safeParse(input)
     if (!parsed.success) return { ok: false, error: { code: 'VALIDATION_FAILED', message: '专注记录无效' } }
@@ -22,6 +23,7 @@ export class DrizzleRecordRepository {
       return { ok: true, value }
     } catch { return { ok: false, error: { code: 'PERSISTENCE_FAILED', message: '专注记录保存失败' } } }
   }
+  /** 按开始时间升序返回指定日程的未删除专注记录。 */
   async listBySchedule(scheduleId: string): Promise<AppResult<readonly ConcentrationRecordDto[]>> {
     try {
       const rows = this.database.select().from(concentrationRecords)
@@ -33,6 +35,7 @@ export class DrizzleRecordRepository {
       })) }
     } catch { return { ok: false, error: { code: 'PERSISTENCE_FAILED', message: '专注记录读取失败' } } }
   }
+  /** 软删除指定专注记录。 */
   async delete(id: string): Promise<AppResult<void>> {
     try {
       const result = this.database.update(concentrationRecords).set({ deletedAt: new Date() })

@@ -33,6 +33,7 @@ function browserStorage(): PreferencesStorage | undefined {
 export const usePreferencesStore = defineStore('preferences', {
   state: (): Preferences => ({ ...defaults }),
   actions: {
+    /** 从浏览器存储恢复通过契约校验的偏好，损坏数据保持默认值。 */
     hydrate(storage: PreferencesStorage | undefined = browserStorage()) {
       const serialized = storage?.getItem(storageKey)
       if (!serialized) return
@@ -41,9 +42,10 @@ export const usePreferencesStore = defineStore('preferences', {
         const parsed = PreferencesSchema.safeParse(JSON.parse(serialized))
         if (parsed.success) this.$patch(parsed.data)
       } catch {
-        // Invalid client preferences fall back to stable defaults.
+        // 无效的客户端偏好继续使用稳定默认值。
       }
     },
+    /** 合并并持久化通过契约校验的偏好字段。 */
     update(
       update: PreferencesUpdate,
       storage: PreferencesStorage | undefined = browserStorage()

@@ -33,6 +33,7 @@ const activeButtonStyle = {
 const nowInstant = computed(() => props.now === undefined
   ? Temporal.Now.instant()
   : Temporal.Instant.from(props.now))
+/** 根据“隐藏过期”和“隐藏完成”开关筛选侧栏数据。 */
 const visibleItems = computed(() => props.items.filter((item) => {
   if (hideExpired.value && tone(item) === 'expired') return false
   if (hideDone.value && item.done) return false
@@ -49,6 +50,7 @@ function title(value: string) {
   }, value)
 }
 
+/** 将 Todo 展示状态转换为表格行样式类名。 */
 function rowClassName(item: ScheduleOccurrenceDto): string {
   const classes: string[] = []
   if (item.done) classes.push('row-done')

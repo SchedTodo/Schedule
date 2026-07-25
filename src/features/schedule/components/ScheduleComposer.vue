@@ -16,6 +16,7 @@ const recurrenceCode = ref('')
 const comment = ref('')
 const validationMessage = ref('')
 
+/** 校验表单并向父组件提交规范化的创建输入。 */
 function submit() {
   const normalizedTitle = title.value.trim()
   if (normalizedTitle === '') {

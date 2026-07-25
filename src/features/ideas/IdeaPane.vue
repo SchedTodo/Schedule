@@ -10,6 +10,7 @@ const storageKey = 'schedule-v2-ideas'
 const show = ref(false)
 const ideas = ref(typeof localStorage === 'undefined' ? '' : (localStorage.getItem(storageKey) ?? ''))
 
+/** 更新灵感草稿并在浏览器存储可用时立即持久化。 */
 function updateIdeas(value: string) {
   ideas.value = value
   localStorage.setItem(storageKey, value)

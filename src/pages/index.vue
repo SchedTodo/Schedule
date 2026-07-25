@@ -39,6 +39,7 @@ async function create(input: CreateScheduleInput) {
   await mutations.createSchedule(input)
   await refreshTodos()
 }
+/** 按当前设置加载逻辑日范围内需要展示的 Todo。 */
 async function refreshTodos() {
   const settings = await platform.settings.get()
   if (settings.ok) {
@@ -53,6 +54,7 @@ async function refreshTodos() {
   })
   if (result.ok) todos.value = result.value
 }
+/** 更新 occurrence 完成状态，并重新加载 Todo 列表。 */
 async function setDone(id: string, done: boolean) {
   await platform.occurrences.setDone(id, done)
   await refreshTodos()

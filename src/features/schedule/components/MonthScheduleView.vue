@@ -7,6 +7,7 @@ import OccurrenceTooltip from './OccurrenceTooltip.vue'
 
 const props = defineProps<{ items: readonly CalendarOccurrenceDto[]; timeZone: string }>()
 const emit = defineEmits<{ select: [id: string] }>()
+/** 按指定时区的本地日期索引 occurrence，供月历单元格直接查询。 */
 const indexed = computed(() => {
   const result = new Map<string, CalendarOccurrenceDto[]>()
   for (const item of props.items) {

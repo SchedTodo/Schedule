@@ -15,6 +15,7 @@ export type ParseResult<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly diagnostics: readonly Diagnostic[] }
 
+/** 执行词法分析、语法分析、AST 构建和语义求值的完整解析流水线。 */
 export function parseSchedule(
   source: string,
   context: EvaluationContext
@@ -40,6 +41,7 @@ export function parseSchedule(
   return evaluateSchedule(buildScheduleAst(tree), context)
 }
 
+/** 解析日程代码并序列化为稳定的规范格式。 */
 export function normalizeSchedule(
   source: string,
   context: EvaluationContext
@@ -57,6 +59,11 @@ export interface NormalizedScheduleOccurrences {
   readonly kind: 'event' | 'todo'
 }
 
+/**
+ * 规范化重复与排除规则，展开 occurrence，并标记两组规则的交集。
+ *
+ * 同一日程内的所有语句必须具有相同类型，排除规则类型也必须与重复规则一致。
+ */
 export function normalizeScheduleOccurrences(
   recurrenceCode: string,
   exclusionCode: string,
@@ -104,6 +111,7 @@ export function normalizeScheduleOccurrences(
   }
 }
 
+/** 规范化规则并仅返回最终展开的 occurrence 草稿。 */
 export function expandScheduleOccurrences(
   recurrenceCode: string,
   exclusionCode: string,

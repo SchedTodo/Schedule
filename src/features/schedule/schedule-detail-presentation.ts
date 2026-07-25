@@ -5,6 +5,7 @@ function effectiveInstant(value: ScheduleOccurrenceDto): string {
   return value.start ?? value.end
 }
 
+/** 按指定时区和精度标记格式化 occurrence 日期时间。 */
 export function formatOccurrenceDateTime(
   instant: string,
   mark: KnownTimeMark,
@@ -16,6 +17,7 @@ export function formatOccurrenceDateTime(
   return `${value.year}/${value.month}/${value.day} ${hour}:${minute}`
 }
 
+/** 按 occurrence 的有效时间返回指定时区中的本地化星期名称。 */
 export function occurrenceWeekday(
   value: ScheduleOccurrenceDto,
   timeZone: string,
@@ -25,6 +27,7 @@ export function occurrenceWeekday(
     .format(new Date(effectiveInstant(value)))
 }
 
+/** 判断 occurrence 的本地日期是否早于指定时区中的今天。 */
 export function isPastOccurrence(
   value: ScheduleOccurrenceDto,
   timeZone: string,
@@ -37,6 +40,7 @@ export function isPastOccurrence(
   return Temporal.PlainDate.compare(date, today) < 0
 }
 
+/** 将未过期 occurrence 排在前面，并在各组内按有效时间升序排列。 */
 export function sortDetailOccurrences(
   values: readonly ScheduleOccurrenceDto[],
   timeZone: string,

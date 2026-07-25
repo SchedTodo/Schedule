@@ -32,6 +32,9 @@ export class ScheduleService implements ScheduleGateway {
     private readonly occurrenceRepository?: OccurrenceRepository
   ) {}
 
+  /**
+   * 校验并创建日程；存在时间规则时同步规范化规则并原子保存展开后的 occurrence。
+   */
   async create(input: Parameters<ScheduleGateway['create']>[0]) {
     const parsed = CreateScheduleInputSchema.safeParse(input)
     if (!parsed.success) {
@@ -106,6 +109,12 @@ export class ScheduleService implements ScheduleGateway {
     return this.repository.list(query)
   }
 
+  /**
+   * 更新未删除的日程，并在规则变化时重新展开 occurrence。
+   *
+   * 与旧 occurrence 时间键一致的记录会保留 ID、备注和完成状态，避免编辑规则时
+   * 丢失用户已经写入的实例级数据。
+   */
   async update(input: Parameters<ScheduleGateway['update']>[0]) {
     const parsed = UpdateScheduleInputSchema.safeParse(input)
     if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程数据无效' } }
@@ -160,6 +169,7 @@ export class ScheduleService implements ScheduleGateway {
     }))
   }
 
+  /** 校验收藏请求，并禁止收藏已经软删除的日程。 */
   async setStarred(input: Parameters<ScheduleGateway['setStarred']>[0]) {
     const parsed = SetScheduleStarredInputSchema.safeParse(input)
     if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '收藏状态无效' } }
@@ -172,12 +182,14 @@ export class ScheduleService implements ScheduleGateway {
     return this.repository.setStarred(parsed.data.id, parsed.data.starred, this.dependencies.clock.now().toString())
   }
 
+  /** 校验并更新日程的软删除状态。 */
   async setDeleted(input: Parameters<ScheduleGateway['setDeleted']>[0]) {
     const parsed = SetScheduleDeletedInputSchema.safeParse(input)
     if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '删除状态无效' } }
     return this.repository.setDeleted(parsed.data.id, parsed.data.deleted, this.dependencies.clock.now().toString())
   }
 
+  /** 校验分页搜索条件后交由仓储执行查询。 */
   searchPage(query: Parameters<ScheduleGateway['searchPage']>[0]) {
     const parsed = ScheduleSearchQuerySchema.safeParse(query)
     if (!parsed.success) return Promise.resolve({ ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '查询条件无效' } })

@@ -28,6 +28,7 @@ function persistenceError(error: unknown): AppErrorDto {
 export class DrizzleScheduleRepository implements ScheduleRepository {
   constructor(private readonly database: ScheduleDatabase) {}
 
+  /** 新增或覆盖日程行，并在覆盖时恢复其未删除状态。 */
   async save(schedule: ScheduleDto): Promise<AppResult<ScheduleDto>> {
     try {
       const row = scheduleDtoToRow(schedule)
@@ -54,6 +55,11 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
     }
   }
 
+  /**
+   * 在同一事务中保存日程及其全部 occurrence。
+   *
+   * 不再出现在目标集合中的旧 occurrence 会被软删除，保留历史记录而不污染当前查询。
+   */
   async saveWithOccurrences(
     schedule: ScheduleDto,
     occurrences: readonly ScheduleOccurrenceDto[]
@@ -136,6 +142,7 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
     }
   }
 
+  /** 按类型和标题过滤未删除日程，并按更新时间倒序分页。 */
   async list(query: ScheduleListQuery): Promise<AppResult<readonly ScheduleDto[]>> {
     try {
       const conditions: SQL[] = [isNull(schedules.deletedAt)]
@@ -158,6 +165,7 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
     }
   }
 
+  /** 软删除日程并同步更新时间。 */
   async deleteById(id: string, deletedAt: string): Promise<AppResult<void>> {
     try {
       const timestamp = new Date(deletedAt)
@@ -172,6 +180,7 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
     }
   }
 
+  /** 更新收藏状态，并返回数据库中的最新日程。 */
   async setStarred(id: string, starred: boolean, updatedAt: string): Promise<AppResult<ScheduleDto>> {
     try {
       const changed = this.database.update(schedules)
@@ -184,6 +193,7 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
     }
   }
 
+  /** 在同一事务中同步日程、occurrence 和专注记录的软删除状态。 */
   async setDeleted(id: string, deleted: boolean, updatedAt: string): Promise<AppResult<void>> {
     try {
       const timestamp = new Date(updatedAt)
@@ -207,6 +217,7 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
     }
   }
 
+  /** 按数据库页筛选条件查询日程，并可进一步按 occurrence 时间范围过滤。 */
   async searchPage(query: ScheduleSearchQuery) {
     try {
       const conditions: SQL[] = []

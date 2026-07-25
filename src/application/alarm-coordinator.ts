@@ -41,6 +41,12 @@ export class AlarmCoordinator {
 
   constructor(private readonly dependencies: AlarmCoordinatorDependencies) {}
 
+  /**
+   * 重新计算当前应触发的提醒，并确保同一提醒在进程生命周期内只发送一次。
+   *
+   * `mutation` 会额外补发因数据变更而刚进入候选集、但触发时间已经到达的提醒；
+   * 常规轮询则只处理上次检查到本次检查之间跨过触发点的提醒。
+   */
   async recalculate(reason: AlarmRecalculationReason): Promise<AppResult<void>> {
     const checkedAt = this.dependencies.clock.now().toString()
     if (this.lastCheckedAt === undefined) this.lastCheckedAt = checkedAt

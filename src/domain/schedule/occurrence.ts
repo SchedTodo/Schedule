@@ -26,6 +26,7 @@ function isoInstant(
   return date.toZonedDateTime({ timeZone, plainTime: plainTime(time) }).toInstant().toString()
 }
 
+/** 判断日期是否满足 BYMONTH、BYDAY 等全部 BY 约束。 */
 function matchesBy(date: Temporal.PlainDate, by: EvaluatedStatement['by']): boolean {
   if (by.month && !by.month.includes(date.month)) return false
   if (by.monthday && !by.monthday.some((value) =>
@@ -39,6 +40,7 @@ function matchesBy(date: Temporal.PlainDate, by: EvaluatedStatement['by']): bool
   return true
 }
 
+/** 判断日期相对起始日是否落在重复频率和间隔上。 */
 function matchesFrequency(
   date: Temporal.PlainDate,
   start: Temporal.PlainDate,
@@ -63,6 +65,7 @@ function matchesFrequency(
   }
 }
 
+/** 按 RFC 风格的正负位置选择候选日期，并去重后保持时间顺序。 */
 function selectPositions(
   values: readonly Temporal.PlainDate[],
   positions: readonly number[] | undefined
@@ -77,6 +80,11 @@ function selectPositions(
   return [...selected.values()].sort(Temporal.PlainDate.compare)
 }
 
+/**
+ * 按月收集候选日期，并在每个月内部应用 BYSETPOS。
+ *
+ * BYSETPOS 必须作用于单月候选集，不能在整个日期范围上统一截取。
+ */
 function monthlyDates(
   statement: EvaluatedStatement,
   start: Temporal.PlainDate,
@@ -114,6 +122,7 @@ function monthlyDates(
   return values
 }
 
+/** 展开语句覆盖范围内所有满足频率与 BY 规则的日期。 */
 function dates(statement: EvaluatedStatement): readonly Temporal.PlainDate[] {
   const start = Temporal.PlainDate.from(statement.startDate)
   if (statement.endDate === undefined) return [start]
@@ -134,6 +143,7 @@ function dates(statement: EvaluatedStatement): readonly Temporal.PlainDate[] {
   return values
 }
 
+/** 将单条已求值语句展开为 UTC occurrence 草稿，并处理跨午夜的结束时间。 */
 function expandStatement(statement: EvaluatedStatement): readonly ScheduleOccurrenceDraft[] {
   return dates(statement).map((date) => {
     const endDate =
@@ -156,10 +166,12 @@ function expandStatement(statement: EvaluatedStatement): readonly ScheduleOccurr
   })
 }
 
+/** 合并日程规范中各语句展开出的 occurrence 草稿。 */
 export function expandScheduleSpec(spec: ScheduleSpec): readonly ScheduleOccurrenceDraft[] {
   return spec.statements.flatMap(expandStatement)
 }
 
+/** 生成用于比较 occurrence 时间身份的稳定键，不包含用户可编辑字段。 */
 export function occurrenceKey(occurrence: ScheduleOccurrenceDraft): string {
   return JSON.stringify([
     occurrence.start,

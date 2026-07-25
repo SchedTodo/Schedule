@@ -1,6 +1,11 @@
 import type { TodoOccurrenceQuery } from '../../contracts/occurrence.contract'
 import { Temporal } from '../shared/temporal'
 
+/**
+ * 计算 Todo 查询使用的逻辑日时间窗。
+ *
+ * 时间窗覆盖“昨天逻辑日起点”到“明天逻辑日起点”，以容纳跨自然日的当前逻辑日。
+ */
 export function todoLogicalDayRange(query: TodoOccurrenceQuery): {
   readonly start: number
   readonly end: number

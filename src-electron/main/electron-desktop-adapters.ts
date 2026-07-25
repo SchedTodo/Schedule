@@ -7,6 +7,7 @@ export interface ElectronShortcutRegistry {
   unregisterAll(): void
 }
 
+/** 将 BrowserWindow 适配为不向应用层暴露 Electron 类型的窗口端口。 */
 export function createElectronWindowPort(window: BrowserWindow): WindowPort {
   return {
     onReadyToShow: (handler) => { window.on('ready-to-show', handler) },
@@ -24,6 +25,7 @@ export function createElectronWindowPort(window: BrowserWindow): WindowPort {
   }
 }
 
+/** 将 Electron 全局快捷键注册器适配为生命周期控制器端口。 */
 export function createElectronShortcutPort(shortcuts: ElectronShortcutRegistry): ShortcutPort {
   return {
     register: (accelerator, handler) => shortcuts.register(accelerator, handler),

@@ -21,6 +21,7 @@ const occurrenceFields = {
 export const ScheduleOccurrenceDtoSchema = z
   .object(occurrenceFields)
   .strict()
+  // occurrence 可以没有开始时间，但一旦存在，结束时间不得早于开始时间。
   .superRefine((value, context) => {
     if (value.start !== null && Date.parse(value.start) > Date.parse(value.end)) {
       context.addIssue({

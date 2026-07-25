@@ -17,6 +17,7 @@ export interface Diagnostic {
   readonly severity: 'error' | 'warning'
 }
 
+/** 将 ANTLR 的一基行号和零基列号转换为源码绝对偏移。 */
 function offsetAt(source: string, line: number, column: number): number {
   const lines = source.split(/\r?\n/u)
   let offset = 0
@@ -35,6 +36,7 @@ export class SyntaxDiagnosticListener<TSymbol extends Token | number> extends Er
     super()
   }
 
+  /** 将词法器或解析器错误转换为统一且带源码范围的诊断。 */
   override syntaxError(
     recognizer: Recognizer<TSymbol>,
     offendingSymbol: TSymbol,
@@ -66,6 +68,7 @@ export class SyntaxDiagnosticListener<TSymbol extends Token | number> extends Er
   }
 }
 
+/** 创建无法精确定位到语法 token 的文档级语义诊断。 */
 export function semanticDiagnostic(
   code: Exclude<DiagnosticCode, 'UNEXPECTED_TOKEN'>,
   message: string

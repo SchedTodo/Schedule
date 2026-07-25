@@ -1,6 +1,7 @@
 import type { PlatformGateway } from '../../contracts/platform.contract'
 import { HostScheduleApiSchema } from './host-api'
 
+/** 校验宿主暴露的 API，并适配为 Web 层只依赖的 PlatformGateway。 */
 export function createHostGateway(host: unknown): PlatformGateway {
   const api = HostScheduleApiSchema.parse(host)
   return {
