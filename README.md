@@ -14,6 +14,44 @@ Schedule 是一个本地优先的日程应用：独立 Web 使用 `createInMemor
 
 应用内 **Help** 页面提供日程表达式示例；实现边界见[架构文档](docs/architecture.md)。
 
+## 架构
+
+```mermaid
+flowchart LR
+  subgraph Web["src · 平台无关 Web 应用"]
+    UI["Vue 页面与功能组件"]
+    Gateway["PlatformGateway"]
+    Memory["浏览器内存网关"]
+    HostGateway["宿主网关"]
+    Core["应用服务、领域模型<br/>ANTLR 日程解析器"]
+
+    UI --> Gateway
+    Gateway -->|"独立 Web"| Memory
+    Gateway -->|"Electron"| HostGateway
+    Memory --> Core
+  end
+
+  subgraph Electron["src-electron · Electron 宿主"]
+    Preload["Preload<br/>具名 scheduleHost API"]
+    IPC["Zod IPC 契约与处理器"]
+    Services["应用服务与提醒协调"]
+    Repositories["Drizzle 仓储"]
+    SQLite[("本地 SQLite")]
+    Desktop["通知、窗口、托盘<br/>开机启动"]
+
+    Preload --> IPC
+    IPC --> Services
+    Services --> Core
+    Services --> Repositories
+    Repositories --> SQLite
+    Services --> Desktop
+  end
+
+  HostGateway --> Preload
+```
+
+`src` 不依赖 Electron、Node 或数据库驱动；Electron 通过经过 Zod 校验的具名 IPC 契约接入平台无关核心。独立 Web 使用内存网关，Electron 使用 SQLite 持久化。更完整的边界与生命周期说明见[架构文档](docs/architecture.md)。
+
 ## 快捷键
 
 | 快捷键 | 行为 |
