@@ -3,7 +3,7 @@ import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
 import {
   scheduleIpcChannels,
   scheduleIpcContracts
-} from '../../ipc/schedule-ipc'
+} from '../../ipc-contracts/schedule-ipc'
 
 type IpcHandler = (event: unknown, input: unknown) => Promise<unknown>
 

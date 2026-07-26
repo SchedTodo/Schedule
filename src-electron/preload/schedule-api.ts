@@ -24,7 +24,7 @@ import {
   type SetScheduleStarredInput,
   type UpdateScheduleInput
 } from '../../src/contracts/schedule.contract'
-import { scheduleIpcChannels, scheduleIpcContracts } from '../ipc/schedule-ipc'
+import { scheduleIpcChannels, scheduleIpcContracts } from '../ipc-contracts/schedule-ipc'
 
 export type IpcInvoke = (channel: string, input: unknown) => Promise<unknown>
 type CreateScheduleRequest = z.input<typeof CreateScheduleInputSchema>

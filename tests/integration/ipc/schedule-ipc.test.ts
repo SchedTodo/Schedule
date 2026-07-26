@@ -7,7 +7,7 @@ import {
   registerScheduleIpcHandlers,
   type ScheduleIpcHandlerOptions
 } from '../../../src-electron/main/ipc/register-handlers'
-import { scheduleIpcChannels } from '../../../src-electron/ipc/schedule-ipc'
+import { scheduleIpcChannels } from '../../../src-electron/ipc-contracts/schedule-ipc'
 
 const schedule = {
   id: '0198f0de-8f7f-7000-8000-000000000001',
