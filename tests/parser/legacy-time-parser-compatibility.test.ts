@@ -167,44 +167,48 @@ describe('scheduleService', () => {
   })
   test('paseTimeCodeDateSugar1', () => {
     const { rTimes: times } = parseTimeCodes('tdy 22:00 America/Chicago;', '')
+    const now = DateTime.now().setZone('America/Chicago')
     expect(times.length).toEqual(1)
     for (const time of times) {
       const tEnd = DateTime.fromISO(time.end).setZone('America/Chicago')
-      expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(DateTime.now().toFormat('yyyy/M/d 22:00'))
+      expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(now.toFormat('yyyy/M/d 22:00'))
     }
   })
   test('paseTimeCodeDateSugar2', () => {
     const { rTimes: times } = parseTimeCodes('tmr 22:00 America/Chicago;', '')
+    const now = DateTime.now().setZone('America/Chicago')
     expect(times.length).toEqual(1)
     for (const time of times) {
       const tEnd = DateTime.fromISO(time.end).setZone('America/Chicago')
       expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(
-        DateTime.now().plus({ day: 1 }).toFormat('yyyy/M/d 22:00')
+        now.plus({ day: 1 }).toFormat('yyyy/M/d 22:00')
       )
     }
   })
   test('paseTimeCodeDateSugar3', () => {
     const { rTimes: times } = parseTimeCodes('7/10 22:00 America/Chicago;', '')
+    const now = DateTime.now().setZone('America/Chicago')
     expect(times.length).toEqual(1)
     for (const time of times) {
       const tEnd = DateTime.fromISO(time.end).setZone('America/Chicago')
-      if (DateTime.now().month > 7 || (DateTime.now().month == 7 && DateTime.now().day > 10)) {
-        expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(`${DateTime.now().year + 1}/7/10 22:00`)
+      if (now.month > 7 || (now.month == 7 && now.day > 10)) {
+        expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(`${now.year + 1}/7/10 22:00`)
       } else {
-        expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(`${DateTime.now().year}/7/10 22:00`)
+        expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(`${now.year}/7/10 22:00`)
       }
     }
   })
   test('paseTimeCodeDateSugar4', () => {
     const { rTimes: times } = parseTimeCodes('7/20-30 22:00 America/Chicago;', '')
+    const now = DateTime.now().setZone('America/Chicago')
     expect(times.length).toEqual(11)
     let day = 20
     for (const time of times) {
       const tEnd = DateTime.fromISO(time.end).setZone('America/Chicago')
-      if (DateTime.now().month > 7 || (DateTime.now().month == 7 && DateTime.now().day > day)) {
-        expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(`${DateTime.now().year + 1}/7/${day} 22:00`)
+      if (now.month > 7 || (now.month == 7 && now.day > day)) {
+        expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(`${now.year + 1}/7/${day} 22:00`)
       } else {
-        expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(`${DateTime.now().year}/7/${day} 22:00`)
+        expect(tEnd.toFormat('yyyy/M/d HH:mm')).toEqual(`${now.year}/7/${day} 22:00`)
       }
       ++day
     }

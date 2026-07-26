@@ -20,9 +20,9 @@ import type { TimeZoneResolution } from '../parser/evaluator'
 export interface ScheduleServiceDependencies {
   readonly clock: Clock
   readonly idGenerator: IdGenerator
-  readonly defaultTimeZone?: string
-  readonly weekStartsOn?: 1 | 2 | 3 | 4 | 5 | 6 | 7
-  readonly resolveTimeZoneAbbreviation?: (value: string) => TimeZoneResolution
+  readonly defaultTimeZone: string
+  readonly weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7
+  readonly resolveTimeZoneAbbreviation: (value: string) => TimeZoneResolution
 }
 
 /**
@@ -52,12 +52,7 @@ export class ScheduleService implements ScheduleGateway {
 
     let kind: 'event' | 'todo' = parsed.data.recurrenceCode === '' ? 'todo' : 'event'
     let normalized: NormalizedScheduleOccurrences | undefined
-    if (
-      parsed.data.recurrenceCode !== '' &&
-      this.dependencies.defaultTimeZone !== undefined &&
-      this.dependencies.weekStartsOn !== undefined &&
-      this.dependencies.resolveTimeZoneAbbreviation !== undefined
-    ) {
+    if (parsed.data.recurrenceCode !== '') {
       const result = normalizeScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
         now: this.dependencies.clock.now(),
         defaultTimeZone: this.dependencies.defaultTimeZone,
@@ -133,7 +128,7 @@ export class ScheduleService implements ScheduleGateway {
     }
     let kind: 'event' | 'todo' = parsed.data.recurrenceCode === '' ? 'todo' : found.value.kind
     let normalized: NormalizedScheduleOccurrences | undefined
-    if (parsed.data.recurrenceCode !== '' && this.dependencies.defaultTimeZone !== undefined && this.dependencies.weekStartsOn !== undefined && this.dependencies.resolveTimeZoneAbbreviation !== undefined) {
+    if (parsed.data.recurrenceCode !== '') {
       const result = normalizeScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
         now: this.dependencies.clock.now(), defaultTimeZone: this.dependencies.defaultTimeZone,
         weekStartsOn: this.dependencies.weekStartsOn,

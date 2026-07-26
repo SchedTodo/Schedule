@@ -26,6 +26,33 @@ const second: ScheduleDto = {
 }
 
 describe('createInMemoryGateway', () => {
+  it('normalizes relative dates with explicit or configured time zones', async () => {
+    let sequence = 0
+    const gateway = createInMemoryGateway([], {
+      clock: new FixedClock('2026-07-12T16:30:00Z'),
+      idGenerator: { next: () => `10000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}` }
+    })
+    await gateway.settings.update({ timeZone: 'Asia/Shanghai' })
+
+    const configured = await gateway.schedules.create({
+      title: 'Shanghai',
+      recurrenceCode: 'tdy 10:00;',
+      exclusionCode: '',
+      comment: ''
+    })
+    const explicit = await gateway.schedules.create({
+      title: 'Chicago',
+      recurrenceCode: 'tdy 10:00 America/Chicago;',
+      exclusionCode: '',
+      comment: ''
+    })
+
+    expect(configured.ok && configured.value.recurrenceCode)
+      .toBe('2026/7/13 10:00 Asia/Shanghai;')
+    expect(explicit.ok && explicit.value.recurrenceCode)
+      .toBe('2026/7/12 10:00 America/Chicago;')
+  })
+
   it('normalizes create defaults with injected time and id', async () => {
     const gateway = createInMemoryGateway([], {
       clock: new FixedClock('2026-07-11T08:00:00Z'),

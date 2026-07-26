@@ -43,12 +43,15 @@ describe('ScheduleService', () => {
     const repository = repositoryWith()
     const service = new ScheduleService(repository, {
       clock: new FixedClock('2026-07-11T08:00:00Z'),
-      idGenerator: { next: () => '0198f0de-8f7f-7000-8000-000000000001' }
+      idGenerator: { next: () => '0198f0de-8f7f-7000-8000-000000000001' },
+      defaultTimeZone: 'UTC',
+      weekStartsOn: 1,
+      resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
     })
 
     const result = await service.create({
       title: ' 周会 ',
-      recurrenceCode: '2026-07-12 10:00',
+      recurrenceCode: '',
       exclusionCode: '',
       comment: ''
     })
@@ -57,9 +60,9 @@ describe('ScheduleService', () => {
       ok: true,
       value: {
         id: '0198f0de-8f7f-7000-8000-000000000001',
-        kind: 'event',
+        kind: 'todo',
         title: '周会',
-        recurrenceCode: '2026-07-12 10:00',
+        recurrenceCode: '',
         exclusionCode: '',
         comment: '',
         starred: false,
@@ -117,6 +120,39 @@ describe('ScheduleService', () => {
       title: 'Deadline', recurrenceCode: '2026/7/13 10:00;', exclusionCode: '', comment: ''
     })
     expect(result.ok && result.value.kind).toBe('todo')
+  })
+
+  it('persists relative recurrence and exclusion dates in their effective time zone', async () => {
+    let sequence = 0
+    const repository = repositoryWith()
+    const service = new ScheduleService(repository, {
+      clock: new FixedClock('2026-07-12T16:30:00Z'),
+      idGenerator: { next: () => `10000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}` },
+      defaultTimeZone: 'Asia/Shanghai',
+      weekStartsOn: 1,
+      resolveTimeZoneAbbreviation: (value) => value === 'CST'
+        ? { kind: 'resolved', timeZone: 'America/Chicago' }
+        : { kind: 'unknown' }
+    })
+
+    const result = await service.create({
+      title: 'Review',
+      recurrenceCode: 'tdy-tmr 10:00-11:00 America/Chicago;',
+      exclusionCode: 'tmr 10:00-11:00 CST;',
+      comment: ''
+    })
+
+    expect(result.ok && result.value).toMatchObject({
+      recurrenceCode: '2026/7/12-2026/7/13 10:00-11:00 America/Chicago;',
+      exclusionCode: '2026/7/13 10:00-11:00 America/Chicago;'
+    })
+    expect(repository.saveWithOccurrences).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recurrenceCode: '2026/7/12-2026/7/13 10:00-11:00 America/Chicago;',
+        exclusionCode: '2026/7/13 10:00-11:00 America/Chicago;'
+      }),
+      expect.any(Array)
+    )
   })
 
   it('restores matching historical occurrences with their identity and user state', async () => {
@@ -189,7 +225,10 @@ describe('ScheduleService', () => {
     })
     const service = new ScheduleService(repository, {
       clock: new FixedClock('2026-07-11T08:00:00Z'),
-      idGenerator: { next: () => '0198f0de-8f7f-7000-8000-000000000001' }
+      idGenerator: { next: () => '0198f0de-8f7f-7000-8000-000000000001' },
+      defaultTimeZone: 'UTC',
+      weekStartsOn: 1,
+      resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
     })
 
     await expect(
@@ -213,7 +252,10 @@ describe('ScheduleService', () => {
     })
     const service = new ScheduleService(repository, {
       clock: new FixedClock('2026-07-12T08:00:00Z'),
-      idGenerator: { next: () => '20000000-0000-4000-8000-000000000001' }
+      idGenerator: { next: () => '20000000-0000-4000-8000-000000000001' },
+      defaultTimeZone: 'UTC',
+      weekStartsOn: 1,
+      resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
     })
 
     await expect(service.update({

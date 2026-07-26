@@ -5,7 +5,11 @@ import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { ScheduleService } from '../../../src/application/schedule-service'
+import { FixedClock } from '../../../src/domain/shared/clock'
+import { DrizzleOccurrenceRepository } from '../../../src-electron/adapters/db/occurrence-repository'
 import { DrizzleScheduleRepository } from '../../../src-electron/adapters/db/schedule-repository'
+import { databaseSchema } from '../../../src-electron/adapters/db/schema'
 
 describe('Drizzle schedule management', () => {
   let sqlite: Database.Database
@@ -14,9 +18,61 @@ describe('Drizzle schedule management', () => {
   beforeEach(() => {
     sqlite = new Database(':memory:')
     sqlite.exec(readFileSync(new URL('../../../src-electron/adapters/db/schema.sql', import.meta.url), 'utf8'))
-    repository = new DrizzleScheduleRepository(drizzle(sqlite))
+    repository = new DrizzleScheduleRepository(drizzle(sqlite, { schema: databaseSchema }))
   })
   afterEach(() => sqlite.close())
+
+  it('persists relative dates as absolute dates across later edits', async () => {
+    let sequence = 0
+    const database = drizzle(sqlite, { schema: databaseSchema })
+    const occurrenceRepository = new DrizzleOccurrenceRepository(database)
+    const dependencies = {
+      idGenerator: {
+        next: () => `10000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`
+      },
+      defaultTimeZone: 'Asia/Shanghai',
+      weekStartsOn: 1 as const,
+      resolveTimeZoneAbbreviation: (value: string) => value === 'CST'
+        ? { kind: 'resolved' as const, timeZone: 'America/Chicago' }
+        : { kind: 'unknown' as const }
+    }
+    const createService = new ScheduleService(repository, {
+      ...dependencies,
+      clock: new FixedClock('2026-07-12T16:30:00Z')
+    }, occurrenceRepository)
+    const created = await createService.create({
+      title: 'Review',
+      recurrenceCode: 'tdy-tmr 10:00-11:00 America/Chicago;',
+      exclusionCode: 'tmr 10:00-11:00 CST;',
+      comment: ''
+    })
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+
+    const persisted = sqlite.prepare(
+      'SELECT recurrence_code, exclusion_code FROM schedule WHERE id = ?'
+    ).get(created.value.id)
+    expect(persisted).toEqual({
+      recurrence_code: '2026/7/12-2026/7/13 10:00-11:00 America/Chicago;',
+      exclusion_code: '2026/7/13 10:00-11:00 America/Chicago;'
+    })
+
+    const updateService = new ScheduleService(repository, {
+      ...dependencies,
+      clock: new FixedClock('2026-07-20T16:30:00Z')
+    }, occurrenceRepository)
+    await updateService.update({
+      id: created.value.id,
+      title: created.value.title,
+      recurrenceCode: created.value.recurrenceCode,
+      exclusionCode: created.value.exclusionCode,
+      comment: created.value.comment
+    })
+
+    expect(sqlite.prepare(
+      'SELECT recurrence_code, exclusion_code FROM schedule WHERE id = ?'
+    ).get(created.value.id)).toEqual(persisted)
+  })
 
   it('stars, soft deletes, restores, and pages schedules', async () => {
     const schedule = {

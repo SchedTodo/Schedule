@@ -27,6 +27,29 @@ describe('normalizeSchedule', () => {
     })
   })
 
+  it('resolves relative dates in each statement effective time zone', () => {
+    const result = normalizeSchedule(
+      'tdy 10:00 Asia/Shanghai;tdy 10:00 America/Chicago;tmr 10:00 CST;',
+      context
+    )
+
+    expect(result.ok && result.value.code).toBe(
+      '2026/7/13 10:00 Asia/Shanghai;' +
+      '2026/7/12 10:00 America/Chicago;' +
+      '2026/7/13 10:00 America/Chicago;'
+    )
+  })
+
+  it('uses the effective time zone for relative date ranges', () => {
+    const result = normalizeSchedule(
+      'tdy-tmr 10:00-11:00 America/Chicago;',
+      context
+    )
+
+    expect(result.ok && result.value.code)
+      .toBe('2026/7/12-2026/7/13 10:00-11:00 America/Chicago;')
+  })
+
   it('keeps explicit zones and resolves abbreviations to full identifiers', () => {
     const explicit = normalizeSchedule('2026/7/13 10:00 America/Chicago;', context)
     const abbreviated = normalizeSchedule('2026/7/13 10:00 CST;', context)

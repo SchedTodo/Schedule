@@ -44,8 +44,8 @@ export type EvaluationResult =
   | { readonly ok: true; readonly value: ScheduleSpec }
   | { readonly ok: false; readonly diagnostics: readonly Diagnostic[] }
 
-function currentDate(context: EvaluationContext): Temporal.PlainDate {
-  return context.now.toZonedDateTimeISO(context.defaultTimeZone).toPlainDate()
+function currentDate(context: EvaluationContext, timeZone: string): Temporal.PlainDate {
+  return context.now.toZonedDateTimeISO(timeZone).toPlainDate()
 }
 
 /**
@@ -56,10 +56,11 @@ function currentDate(context: EvaluationContext): Temporal.PlainDate {
 function evaluateDate(
   source: string,
   context: EvaluationContext,
+  timeZone: string,
   base?: Temporal.PlainDate
 ): Temporal.PlainDate {
-  if (source === 'tdy') return currentDate(context)
-  if (source === 'tmr') return currentDate(context).add({ days: 1 })
+  if (source === 'tdy') return currentDate(context, timeZone)
+  if (source === 'tmr') return currentDate(context, timeZone).add({ days: 1 })
 
   const parts = source.split('/').map(Number)
   if (parts.length === 3) {
@@ -71,7 +72,7 @@ function evaluateDate(
   if (parts.length === 2) {
     const month = parts[0]!
     const day = parts[1]!
-    const reference = base ?? currentDate(context)
+    const reference = base ?? currentDate(context, timeZone)
     let date = Temporal.PlainDate.from(
       { year: reference.year, month, day },
       { overflow: 'reject' }
@@ -170,11 +171,12 @@ function evaluateStatement(
   context: EvaluationContext
 ): EvaluatedStatement {
   validateRecurrence(statement)
-  const startDate = evaluateDate(statement.dates[0], context)
+  const timeZone = resolveTimeZone(statement.timeZone, context)
+  const startDate = evaluateDate(statement.dates[0], context, timeZone)
   const endDate =
     statement.dates[1] === undefined
       ? undefined
-      : evaluateDate(statement.dates[1], context, startDate)
+      : evaluateDate(statement.dates[1], context, timeZone, startDate)
   const firstTime = evaluateTime(statement.times[0])
   const secondTime =
     statement.times[1] === undefined ? undefined : evaluateTime(statement.times[1])
@@ -192,7 +194,7 @@ function evaluateStatement(
     ...(endDate === undefined ? {} : { endDate: endDate.toString() }),
     startTime: secondTime === undefined ? null : firstTime,
     endTime: secondTime ?? firstTime,
-    timeZone: resolveTimeZone(statement.timeZone, context),
+    timeZone,
     frequency: {
       unit: statement.frequency?.unit ?? 'daily',
       interval: statement.frequency?.interval ?? 1,
