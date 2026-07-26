@@ -8,6 +8,7 @@ import { concentrationRecords, databaseSchema } from './schema'
 
 type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
 
+/** 使用 Drizzle 和 SQLite 持久化、查询及软删除 Todo 专注记录。 */
 export class DrizzleRecordRepository {
   constructor(private readonly database: ScheduleDatabase, private readonly ids: IdGenerator) {}
   /** 校验并持久化一条新的专注记录。 */

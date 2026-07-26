@@ -34,10 +34,19 @@ function notificationFor(transition: FocusCycleTransition): NotificationInput {
     : { title: 'Take a break', body: 'Big Break' }
 }
 
+/**
+ * 协调一次专注会话中的周期推进、阶段通知与 Todo 专注记录。
+ *
+ * 会话把 `FocusCycle` 产生的阶段边界转换为外部副作用，并暂存有效专注区间；
+ * 切换 Todo 或释放会话时才通过注入端口持久化这些区间。
+ */
 export class FocusSession {
   readonly #cycle: FocusCycle
+  /** 当前接收专注时长的 Todo；休息阶段仍保留选择但不累计区间。 */
   #selectedTodo: SelectedTodo | undefined
+  /** 正在进行的专注区间起点；暂停或进入休息阶段时清空。 */
   #activeStartMs: number | undefined
+  /** 已闭合但尚未交给持久化端口的专注区间。 */
   #intervals: FocusInterval[] = []
 
   constructor(

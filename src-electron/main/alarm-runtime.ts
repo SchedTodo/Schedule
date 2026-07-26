@@ -18,7 +18,14 @@ export interface AlarmRuntimeDependencies {
   readonly reportError: (error: unknown) => void
 }
 
+/**
+ * 把提醒协调器接入 Electron 的运行时事件。
+ *
+ * 运行时负责首次计算、定时轮询和系统恢复监听，并将所有重算请求串行化；
+ * 提醒是否到期及如何去重仍由平台无关的协调器决定。
+ */
 export class AlarmRuntime {
+  /** 串联全部重算请求，避免共享协调器状态被并发修改。 */
   private pending: Promise<void> = Promise.resolve()
   private timer: ReturnType<typeof setInterval> | undefined
   private started = false

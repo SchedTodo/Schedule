@@ -29,7 +29,14 @@ function offsetAt(source: string, line: number, column: number): number {
   return offset + column
 }
 
+/**
+ * 收集 ANTLR 词法与语法错误，并转换为统一的源码诊断。
+ *
+ * 监听器优先使用 token 自带的范围；没有可用 token 时，根据行列位置计算
+ * 绝对偏移，使调用方无需暴露或理解 ANTLR 的错误对象。
+ */
 export class SyntaxDiagnosticListener<TSymbol extends Token | number> extends ErrorListener<TSymbol> {
+  /** 按 ANTLR 回调顺序收集的解析诊断。 */
   readonly diagnostics: Diagnostic[] = []
 
   constructor(private readonly source: string) {

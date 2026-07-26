@@ -34,9 +34,18 @@ const notificationFailure = {
   message: '系统通知发送失败'
 }
 
+/**
+ * 计算并投递当前应触发的日程提醒。
+ *
+ * 协调器只依赖平台无关的查询、通知端口和时钟；它维护本次进程中的检查窗口与
+ * 去重状态，但不负责决定轮询频率或监听系统恢复事件。
+ */
 export class AlarmCoordinator {
+  /** 上一次成功完成提醒计算的时刻，用作常规轮询窗口的左边界。 */
   private lastCheckedAt: string | undefined
+  /** 上次计算得到的候选键，用于识别数据变更后新进入候选集的提醒。 */
   private knownKeys = new Set<string>()
+  /** 本进程中已经成功投递的提醒键，防止同一提醒重复通知。 */
   private readonly notifiedKeys = new Set<string>()
 
   constructor(private readonly dependencies: AlarmCoordinatorDependencies) {}

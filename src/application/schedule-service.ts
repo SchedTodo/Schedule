@@ -25,6 +25,12 @@ export interface ScheduleServiceDependencies {
   readonly resolveTimeZoneAbbreviation?: (value: string) => TimeZoneResolution
 }
 
+/**
+ * 执行日程相关的应用用例，并实现渲染进程使用的日程网关。
+ *
+ * 服务负责输入校验、领域实体创建、时间规则规范化及 occurrence 对账；
+ * 实际持久化由注入的仓储完成，因此该层不依赖 Electron 或数据库实现。
+ */
 export class ScheduleService implements ScheduleGateway {
   constructor(
     private readonly repository: ScheduleRepository,

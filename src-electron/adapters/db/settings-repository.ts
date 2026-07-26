@@ -13,6 +13,11 @@ import { appSettings, databaseSchema } from './schema'
 
 type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
 
+/**
+ * 使用 SQLite 单行 JSON 存储应用设置。
+ *
+ * 仓储在读取和更新边界执行 Zod 校验，并在首次读取时初始化默认设置。
+ */
 export class DrizzleSettingsRepository {
   constructor(private readonly database: ScheduleDatabase) {}
 

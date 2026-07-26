@@ -25,6 +25,12 @@ function persistenceError(error: unknown): AppErrorDto {
   }
 }
 
+/**
+ * 使用 Drizzle 和 SQLite 实现日程仓储端口。
+ *
+ * 除基本读写外，该仓储还定义日程与 occurrence、专注记录之间的事务边界，
+ * 并把数据库异常转换为稳定的应用错误。
+ */
 export class DrizzleScheduleRepository implements ScheduleRepository {
   constructor(private readonly database: ScheduleDatabase) {}
 

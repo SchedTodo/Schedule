@@ -41,8 +41,16 @@ export function resolveLaunchMode(argv: readonly string[]): LaunchMode {
   return argv.includes('--autostart') ? 'autostart' : 'normal'
 }
 
+/**
+ * 协调 Electron 主窗口、全局快捷键与应用退出生命周期。
+ *
+ * 控制器通过窄端口表达宿主操作，负责普通启动和后台启动的窗口差异、
+ * 后台模式下的隐藏行为，以及幂等的资源释放。
+ */
 export class DesktopLifecycleController {
+  /** 已进入显式退出流程；为真时窗口关闭事件不再被转为隐藏。 */
   private quitting = false
+  /** 防止快捷键和宿主资源被重复释放。 */
   private disposed = false
 
   constructor(private readonly dependencies: DesktopLifecycleDependencies) {}

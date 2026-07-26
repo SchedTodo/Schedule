@@ -33,11 +33,21 @@ const stages: ReadonlyArray<{ stage: FocusStage; focusNumber: FocusNumber }> = [
   { stage: 'bigBreak', focusNumber: 4 }
 ]
 
+/**
+ * 驱动四轮专注与休息交替的纯内存状态机。
+ *
+ * 状态推进只依赖注入的毫秒时钟，不直接创建定时器或执行通知等副作用；
+ * 调用方通过 `tick` 获取跨过的阶段边界并处理外部行为。
+ */
 export class FocusCycle {
+  /** 当前在固定阶段序列中的位置。 */
   #index = 0
   #running = false
+  /** 当前阶段尚未消耗的毫秒数。 */
   #remainingMs: number
+  /** 本周期内已经实际经过的专注毫秒数，不包含休息时间。 */
   #cumulativeFocusMs = 0
+  /** 上一次结算状态的时钟采样值。 */
   #lastMs: number | undefined
 
   constructor(

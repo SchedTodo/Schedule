@@ -51,6 +51,12 @@ function persistenceError(error: unknown): AppErrorDto {
   }
 }
 
+/**
+ * 使用 Drizzle 和 SQLite 持久化日程 occurrence。
+ *
+ * 仓储负责数据库行与稳定 DTO 之间的映射，并实现可见范围、提醒候选、
+ * 逻辑日 Todo、排除和实例级状态等查询与事务边界。
+ */
 export class DrizzleOccurrenceRepository implements OccurrenceRepository {
   constructor(private readonly database: ScheduleDatabase) {}
 

@@ -18,6 +18,12 @@ export interface ScheduleDependencies {
   readonly idGenerator: IdGenerator
 }
 
+/**
+ * 表示创建完成后不可变的日程领域实体。
+ *
+ * 实体在创建入口统一校验标题、生成标识和审计时间；时间规则只作为领域值保存，
+ * 其解析、规范化及持久化由应用服务负责。
+ */
 export class Schedule {
   readonly id: string
   readonly kind: ScheduleKind
