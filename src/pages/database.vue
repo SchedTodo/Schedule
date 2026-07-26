@@ -161,7 +161,7 @@ watch(
           <NInput
             v-model:value="search"
             class="database-search"
-            placeholder="Search Name or Comment..."
+            placeholder="Search Name or Comment (space: AND, |: OR)..."
             :input-props="{ id: 'database-search' }"
             clearable
           />

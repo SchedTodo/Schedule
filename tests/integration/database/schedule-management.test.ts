@@ -139,6 +139,87 @@ describe('Drizzle schedule management', () => {
     expect(deletedOnly.ok && deletedOnly.value.items.map(({ id }) => id)).toEqual([deleted.id])
   })
 
+  it('combines text conditions and sorts database pages deterministically', async () => {
+    const base = {
+      kind: 'event' as const,
+      recurrenceCode: '2026/7/13 10:00-11:00;',
+      exclusionCode: '',
+      starred: true,
+      createdAt: '2026-07-11T08:00:00Z'
+    }
+    const sameTimeFirstId = {
+      ...base,
+      id: '10000000-0000-4000-8000-000000000001',
+      title: '项目',
+      comment: '复盘',
+      updatedAt: '2026-07-11T09:00:00Z'
+    }
+    const sameTimeSecondId = {
+      ...base,
+      id: '10000000-0000-4000-8000-000000000002',
+      title: 'C++ 项目',
+      comment: '复盘',
+      updatedAt: '2026-07-11T09:00:00Z'
+    }
+    const recent = {
+      ...base,
+      id: '10000000-0000-4000-8000-000000000003',
+      title: '项目会议',
+      comment: '',
+      updatedAt: '2026-07-12T08:00:00Z'
+    }
+    await repository.save(sameTimeSecondId)
+    await repository.save(recent)
+    await repository.save(sameTimeFirstId)
+
+    const firstPage = await repository.searchPage({
+      search: '项目 会议 | 复盘',
+      starred: true,
+      kind: 'event',
+      page: 1,
+      pageSize: 2
+    })
+    expect(firstPage.ok && firstPage.value).toMatchObject({
+      total: 3,
+      items: [
+        { id: recent.id },
+        { id: sameTimeFirstId.id }
+      ]
+    })
+
+    const secondPage = await repository.searchPage({
+      search: '项目 会议|复盘',
+      starred: true,
+      kind: 'event',
+      page: 2,
+      pageSize: 2
+    })
+    expect(secondPage.ok && secondPage.value.items.map(({ id }) => id))
+      .toEqual([sameTimeSecondId.id])
+
+    const literalPlus = await repository.searchPage({
+      search: 'c++',
+      page: 1,
+      pageSize: 10
+    })
+    expect(literalPlus.ok && literalPlus.value.items.map(({ id }) => id))
+      .toEqual([sameTimeSecondId.id])
+
+    const emptyOperators = await repository.searchPage({
+      search: ' | || ',
+      page: 1,
+      pageSize: 10
+    })
+    expect(emptyOperators.ok && emptyOperators.value.total).toBe(3)
+
+    const noMatch = await repository.searchPage({
+      search: '不存在',
+      page: 1,
+      pageSize: 10
+    })
+    expect(noMatch.ok && noMatch.value.total).toBe(0)
+  })
+
   it('restores desired rows and soft deletes occurrences no longer generated', async () => {
     const schedule = {
       id: '10000000-0000-4000-8000-000000000001', kind: 'event' as const,

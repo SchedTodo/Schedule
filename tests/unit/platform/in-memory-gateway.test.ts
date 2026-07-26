@@ -127,6 +127,72 @@ describe('createInMemoryGateway', () => {
     ).resolves.toEqual({ ok: true, value: [second] })
   })
 
+  it('combines database search terms and sorts before pagination', async () => {
+    const recent = {
+      ...first,
+      id: '0198f0de-8f7f-7000-8000-000000000003',
+      title: '项目会议',
+      comment: '',
+      updatedAt: '2026-07-12T08:00:00Z'
+    }
+    const sameTimeFirstId = {
+      ...first,
+      title: '项目',
+      comment: '复盘',
+      updatedAt: '2026-07-11T08:00:00Z'
+    }
+    const sameTimeSecondId = {
+      ...second,
+      title: 'C++ 项目',
+      comment: '复盘',
+      updatedAt: '2026-07-11T08:00:00Z'
+    }
+    const gateway = createInMemoryGateway([sameTimeSecondId, recent, sameTimeFirstId])
+
+    const firstPage = await gateway.schedules.searchPage({
+      search: '项目 会议 | 复盘',
+      page: 1,
+      pageSize: 2
+    })
+    expect(firstPage.ok && firstPage.value).toMatchObject({
+      total: 3,
+      items: [
+        { id: recent.id },
+        { id: sameTimeFirstId.id }
+      ]
+    })
+
+    const secondPage = await gateway.schedules.searchPage({
+      search: '项目 会议|复盘',
+      page: 2,
+      pageSize: 2
+    })
+    expect(secondPage.ok && secondPage.value.items.map(({ id }) => id))
+      .toEqual([sameTimeSecondId.id])
+
+    const literalPlus = await gateway.schedules.searchPage({
+      search: 'c++',
+      page: 1,
+      pageSize: 10
+    })
+    expect(literalPlus.ok && literalPlus.value.items.map(({ id }) => id))
+      .toEqual([sameTimeSecondId.id])
+
+    const emptyOperators = await gateway.schedules.searchPage({
+      search: ' | || ',
+      page: 1,
+      pageSize: 10
+    })
+    expect(emptyOperators.ok && emptyOperators.value.total).toBe(3)
+
+    const noMatch = await gateway.schedules.searchPage({
+      search: '不存在',
+      page: 1,
+      pageSize: 10
+    })
+    expect(noMatch.ok && noMatch.value.total).toBe(0)
+  })
+
   it('looks up schedules and returns immutable list snapshots', async () => {
     const gateway = createInMemoryGateway([first])
 

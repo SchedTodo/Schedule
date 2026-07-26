@@ -21,6 +21,10 @@ import { SystemClock } from '../../domain/shared/clock'
 import type { IdGenerator } from '../../domain/shared/id-generator'
 import { CryptoIdGenerator } from '../../domain/shared/id-generator'
 import { todoLogicalDayRange } from '../../domain/schedule/logical-day'
+import {
+  matchesScheduleSearch,
+  parseScheduleSearch
+} from '../../domain/schedule/schedule-search'
 import { serializeOccurrenceExclusion } from '../../features/schedule/occurrence-time'
 import {
   expandScheduleOccurrences,
@@ -215,6 +219,7 @@ export function createInMemoryGateway(
       async searchPage(query) {
         const parsed = ScheduleSearchQuerySchema.safeParse(query)
         if (!parsed.success) return { ok: false, error: validationError }
+        const searchGroups = parseScheduleSearch(parsed.data.search)
         const matches = schedules.filter((schedule) => {
           if (
             parsed.data.deleted !== undefined &&
@@ -222,9 +227,11 @@ export function createInMemoryGateway(
           ) return false
           if (parsed.data.kind && schedule.kind !== parsed.data.kind) return false
           if (parsed.data.starred !== undefined && schedule.starred !== parsed.data.starred) return false
-          const search = parsed.data.search.toLocaleLowerCase()
-          return search === '' || schedule.title.toLocaleLowerCase().includes(search) || schedule.comment.toLocaleLowerCase().includes(search)
-        })
+          return matchesScheduleSearch(searchGroups, schedule.title, schedule.comment)
+        }).sort((left, right) =>
+          Date.parse(right.updatedAt) - Date.parse(left.updatedAt) ||
+          left.id.localeCompare(right.id)
+        )
         const offset = (parsed.data.page - 1) * parsed.data.pageSize
         return {
           ok: true,

@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, isNull, like, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, isNotNull, isNull, like, or, type SQL } from 'drizzle-orm'
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 
 import type {
@@ -9,6 +9,7 @@ import type {
 } from '../../../src/contracts/schedule.contract'
 import type { AppErrorDto, AppResult } from '../../../src/contracts/result'
 import type { ScheduleOccurrenceDto } from '../../../src/contracts/occurrence.contract'
+import { parseScheduleSearch } from '../../../src/domain/schedule/schedule-search'
 import type { ScheduleRepository } from '../../../src/platform/ports'
 import { scheduleDtoToRow, scheduleRowToDetailDto, scheduleRowToDto } from './schedule-mapper'
 import { concentrationRecords, databaseSchema, scheduleOccurrences, schedules } from './schema'
@@ -232,9 +233,15 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
       }
       if (query.kind !== undefined) conditions.push(eq(schedules.kind, query.kind))
       if (query.starred !== undefined) conditions.push(eq(schedules.starred, query.starred))
-      if (query.search !== '') conditions.push(like(schedules.title, `%${query.search}%`))
+      for (const alternatives of parseScheduleSearch(query.search)) {
+        const searchCondition = or(...alternatives.flatMap((term) => [
+          like(schedules.title, `%${term}%`),
+          like(schedules.comment, `%${term}%`)
+        ]))
+        if (searchCondition !== undefined) conditions.push(searchCondition)
+      }
       let rows = this.database.select().from(schedules).where(and(...conditions))
-        .orderBy(desc(schedules.updatedAt)).all()
+        .orderBy(desc(schedules.updatedAt), asc(schedules.id)).all()
       if (query.start !== undefined || query.end !== undefined) {
         const occurrenceRows = this.database.select({ scheduleId: scheduleOccurrences.scheduleId, start: scheduleOccurrences.start, end: scheduleOccurrences.end })
           .from(scheduleOccurrences).where(isNull(scheduleOccurrences.deletedAt)).all()

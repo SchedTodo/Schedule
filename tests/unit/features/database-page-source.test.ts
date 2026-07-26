@@ -6,6 +6,10 @@ import { describe, expect, it } from 'vitest'
 const source = readFileSync(resolve(process.cwd(), 'src/pages/database.vue'), 'utf8')
 
 describe('Database page source', () => {
+  it('documents the search operators in the input hint', () => {
+    expect(source).toContain('Search Name or Comment (space: AND, |: OR)...')
+  })
+
   it('lets the search field fill the remaining filter width', () => {
     expect(source).toContain('class="database-search"')
     expect(source).toContain('.database-search {')
