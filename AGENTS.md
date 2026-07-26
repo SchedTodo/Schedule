@@ -4,7 +4,7 @@
 
 - `release/1.2.0` is the immutable legacy reference. Do not rewrite, rebase, force-push, or add v2 work to it.
 - `main` is the Schedule v2 development line.
-- Follow `docs/superpowers/plans/2026-07-11-schedule-v2-rebuild.md` for the active rebuild.
+- Follow `docs/architecture.md` for the completed v2 rebuild design, decisions, and current boundaries.
 - Keep `src` browser-runnable and platform-independent.
 - Put Electron-only code in `src-electron`; future Tauri code belongs in `src-tauri`.
 - Do not introduce TanStack Query unless a later approved design explicitly adopts it.
