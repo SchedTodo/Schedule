@@ -2,8 +2,12 @@
 import type { CalendarOccurrenceDto } from '../../../contracts/occurrence.contract'
 import { NEmpty } from 'naive-ui'
 import { computed, reactive } from 'vue'
-import { formatOccurrenceRange, occurrenceWallTime } from '../occurrence-time'
-import { logicalDateForInstant, scheduleColor } from '../week-presentation'
+import { formatOccurrenceRange } from '../occurrence-time'
+import {
+  scheduleColor,
+  type WeekEventSegment,
+  weekSegmentsForOccurrence
+} from '../week-presentation'
 import OccurrenceTooltip from './OccurrenceTooltip.vue'
 
 const props = withDefaults(defineProps<{
@@ -28,32 +32,26 @@ const days = computed(() => Array.from({ length: props.dayCount }, (_, offset) =
   date.setUTCDate(date.getUTCDate() + offset)
   return date.toISOString().slice(0, 10)
 }))
-
-/** 判断 occurrence 是否归属于指定逻辑日，而不是简单按自然日比较。 */
-function occursOn(item: CalendarOccurrenceDto, day: string): boolean {
-  return item.start !== null && logicalDateForInstant(
-    item.start,
+const segments = computed(() => props.items.flatMap((item) =>
+  weekSegmentsForOccurrence(
+    item,
     props.timeZone,
     props.startHour,
     props.startMinute
-  ) === day
-}
+  )
+))
 
 function timeLabel(item: CalendarOccurrenceDto): string {
   return formatOccurrenceRange(item, props.timeZone)
 }
-/** 根据 occurrence 在逻辑日中的时间位置计算周视图卡片布局。 */
-function eventStyle(item: CalendarOccurrenceDto) {
-  if (item.start === null) return {}
-  const start = occurrenceWallTime(item.start, props.timeZone)
-  const wallMinutes = start.hour * 60 + start.minute
-  const logicalStartMinutes = props.startHour * 60 + props.startMinute
-  const startMinutes = (wallMinutes - logicalStartMinutes + 1440) % 1440
-  const duration = Math.max(30, (Date.parse(item.end) - Date.parse(item.start)) / 60_000)
+/** 根据分段在逻辑日中的时间位置计算周视图卡片布局。 */
+function eventStyle(segment: WeekEventSegment) {
+  const { item } = segment
+  const duration = Math.max(30, segment.durationMinutes)
   const color = scheduleColor(item.scheduleId)
   const isHovered = hovered.has(item.id)
   return {
-    insetBlockStart: `calc(4.8vh + ${(startMinutes / 1440) * 100}% + ${dragOffsets.get(item.id) ?? 0}px)`,
+    insetBlockStart: `calc(4.8vh + ${(segment.startMinutes / 1440) * 100}% + ${dragOffsets.get(item.id) ?? 0}px)`,
     blockSize: `${Math.max(2, (duration / 1440) * 100)}%`,
     backgroundColor: `${color}${isHovered ? '90' : '65'}`,
     border: `1.5px solid ${color}`,
@@ -89,28 +87,29 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
     >
       <header>{{ day.replaceAll('-', '/') }}</header>
       <OccurrenceTooltip
-        v-for="item in items.filter((value) => occursOn(value, day))"
-        :key="item.id"
-        :item="item"
+        v-for="segment in segments.filter((value) => value.logicalDate === day)"
+        :key="segment.key"
+        :item="segment.item"
         :time-zone="timeZone"
       >
         <button
-          :data-occurrence-id="item.id"
+          :data-occurrence-id="segment.item.id"
+          :data-segment-date="segment.logicalDate"
           class="event-card"
           draggable="true"
-          :style="eventStyle(item)"
-          @click="emit('select', item.scheduleId)"
-          @mouseenter="hovered.add(item.id)"
-          @mouseleave="hovered.delete(item.id)"
-          @dragstart="handleDragStart($event, item)"
-          @dragend="handleDragEnd($event, item)"
+          :style="eventStyle(segment)"
+          @click="emit('select', segment.item.scheduleId)"
+          @mouseenter="hovered.add(segment.item.id)"
+          @mouseleave="hovered.delete(segment.item.id)"
+          @dragstart="handleDragStart($event, segment.item)"
+          @dragend="handleDragEnd($event, segment.item)"
         >
-          <span>{{ item.title }}</span>
-          <span>{{ timeLabel(item) }}</span>
+          <span>{{ segment.item.title }}</span>
+          <span>{{ timeLabel(segment.item) }}</span>
         </button>
       </OccurrenceTooltip>
       <NEmpty
-        v-if="!items.some((value) => occursOn(value, day))"
+        v-if="!segments.some((value) => value.logicalDate === day)"
         data-testid="no-events"
         class="day-empty"
         description="No Events"

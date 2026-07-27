@@ -113,6 +113,41 @@ describe('occurrence calendar views', () => {
     expect(wrapper.get('[data-occurrence-id]').text()).toContain('09-全天值班')
   })
 
+  it('renders a crossing occurrence as centered same-color cards in both logical days', () => {
+    const crossing: CalendarOccurrenceDto = {
+      ...occurrences[0]!,
+      title: '跨日值班',
+      start: '2026-07-13T20:00:00Z',
+      end: '2026-07-14T08:00:00Z'
+    }
+    const wrapper = mount(WeekScheduleView, {
+      props: {
+        items: [crossing],
+        timeZone: 'UTC',
+        startDate: '2026-07-13',
+        dayCount: 2,
+        startHour: 6
+      }
+    })
+    const cards = wrapper.findAll('[data-occurrence-id]')
+
+    expect(cards).toHaveLength(2)
+    expect(cards.map((card) => card.attributes('data-segment-date')))
+      .toEqual(['2026-07-13', '2026-07-14'])
+    expect(cards.map((card) => card.text()))
+      .toEqual(['跨日值班20:00–08:00', '跨日值班20:00–08:00'])
+    expect(cards[0]!.attributes('style')).toContain('58.3333%')
+    expect(cards[0]!.attributes('style')).toContain('41.66666666666667%')
+    expect(cards[1]!.attributes('style')).toContain('0%')
+    expect(cards[1]!.attributes('style')).toContain('8.333333333333332%')
+    const backgrounds = cards.map((card) =>
+      (card.attributes('style') ?? '').match(/background-color: [^;]+/)?.[0]
+    )
+    expect(backgrounds[0]).toBeDefined()
+    expect(backgrounds[0]).toBe(backgrounds[1])
+    expect(wrapper.findAllComponents(OccurrenceTooltip)).toHaveLength(2)
+  })
+
   it('uses a translucent schedule color and strengthens it on hover', async () => {
     const wrapper = mount(WeekScheduleView, {
       props: { items: [occurrences[0]!], timeZone: 'UTC', startDate: '2026-07-13', dayCount: 1 }
