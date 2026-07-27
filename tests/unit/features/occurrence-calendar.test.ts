@@ -56,6 +56,43 @@ describe('occurrence calendar views', () => {
     expect(wrapper.get('.schedule-time').text()).toBe('10:00')
   })
 
+  it('renders relative event time and toggles only from the time control', async () => {
+    const wrapper = mount(MonthScheduleView, {
+      props: {
+        items: [occurrences[0]!],
+        timeZone: 'UTC',
+        timeDisplayMode: 'relative',
+        now: '2026-07-13T08:00:00Z'
+      }
+    })
+
+    expect(wrapper.get('.schedule-time').text()).toBe('in 2h')
+    await wrapper.get('.schedule-time').trigger('click')
+
+    expect(wrapper.emitted('toggle-time')).toEqual([[occurrences[0]!.id]])
+    expect(wrapper.emitted('select')).toBeUndefined()
+    await wrapper.setProps({ timeDisplayOverrides: [occurrences[0]!.id] })
+    expect(wrapper.get('.schedule-time').text()).toBe('10:00')
+  })
+
+  it('keeps unknown event starts absolute and non-toggleable', async () => {
+    const wrapper = mount(WeekScheduleView, {
+      props: {
+        items: [{ ...occurrences[0]!, startMark: '10' }],
+        timeZone: 'UTC',
+        startDate: '2026-07-13',
+        dayCount: 1,
+        timeDisplayMode: 'relative',
+        now: '2026-07-13T08:00:00Z'
+      }
+    })
+
+    expect(wrapper.get('.event-time').text()).toBe('10:?–11:00')
+    expect(wrapper.get('.event-time').attributes('disabled')).toBeDefined()
+    await wrapper.get('.event-time').trigger('click')
+    expect(wrapper.emitted('toggle-time')).toBeUndefined()
+  })
+
   it('uses occurrence IDs for week cards and selects the owning schedule', async () => {
     const wrapper = mount(WeekScheduleView, {
       props: { items: occurrences, timeZone: 'UTC', startDate: '2026-07-12' }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { NButton, NButtonGroup, NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { useOperationFeedback } from '../app/app-feedback'
@@ -35,12 +35,39 @@ const activeButtonStyle = {
 }
 const sidebarCollapsed = ref(false)
 const todos = ref<readonly ScheduleOccurrenceDto[]>([])
+const displayNow = ref(new Date().toISOString())
 const appSettings = ref({ ...defaultSettings })
 const occurrenceRange = useOccurrenceRange(
   gateway,
   calendarRange(appSettings.value.timeZone),
   showResult
 )
+let relativeTimeTimer: ReturnType<typeof setInterval> | undefined
+
+function effectiveTimeMode(id: string) {
+  const { timeDisplayMode, timeDisplayOverrides } = runtimeStore.homepage
+  if (!timeDisplayOverrides.includes(id)) return timeDisplayMode
+  return timeDisplayMode === 'clock' ? 'relative' : 'clock'
+}
+
+const hasVisibleRelativeTime = computed(() => [
+  ...occurrenceRange.items.value.filter((item) => item.startMark === '11'),
+  ...todos.value.filter((item) => item.endMark === '11')
+].some((item) => effectiveTimeMode(item.id) === 'relative'))
+
+watch(hasVisibleRelativeTime, (visible) => {
+  if (relativeTimeTimer !== undefined) clearInterval(relativeTimeTimer)
+  relativeTimeTimer = undefined
+  if (!visible) return
+  displayNow.value = new Date().toISOString()
+  relativeTimeTimer = setInterval(() => {
+    displayNow.value = new Date().toISOString()
+  }, 60_000)
+}, { immediate: true })
+
+onBeforeUnmount(() => {
+  if (relativeTimeTimer !== undefined) clearInterval(relativeTimeTimer)
+})
 
 function select(id: string) {
   void router.push({ name: 'schedule-detail', params: { id } })
@@ -94,9 +121,13 @@ void refreshTodos()
       <TodoSidebar
         :items="todos"
         :time-zone="appSettings.timeZone"
+        :time-display-mode="runtimeStore.homepage.timeDisplayMode"
+        :time-display-overrides="runtimeStore.homepage.timeDisplayOverrides"
+        :now="displayNow"
         @select="select"
         @done="setDone"
         @concentrate="concentrate"
+        @toggle-time="runtimeStore.toggleOccurrenceTime"
       />
     </NLayoutSider>
     <NLayoutContent
@@ -122,6 +153,22 @@ void refreshTodos()
               week
             </NButton>
           </NButtonGroup>
+          <NButtonGroup class="segmented-control">
+            <NButton
+              data-time-mode="clock"
+              :style="runtimeStore.homepage.timeDisplayMode === 'clock' ? activeButtonStyle : undefined"
+              @click="runtimeStore.setTimeDisplayMode('clock')"
+            >
+              time
+            </NButton>
+            <NButton
+              data-time-mode="relative"
+              :style="runtimeStore.homepage.timeDisplayMode === 'relative' ? activeButtonStyle : undefined"
+              @click="runtimeStore.setTimeDisplayMode('relative')"
+            >
+              relative
+            </NButton>
+          </NButtonGroup>
           <ScheduleModal
             :loading="mutations.loading.value"
             :time-zone="appSettings.timeZone"
@@ -132,7 +179,11 @@ void refreshTodos()
           v-if="runtimeStore.homepage.priority === 'month'"
           :items="occurrenceRange.items.value"
           :time-zone="appSettings.timeZone"
+          :time-display-mode="runtimeStore.homepage.timeDisplayMode"
+          :time-display-overrides="runtimeStore.homepage.timeDisplayOverrides"
+          :now="displayNow"
           @select="select"
+          @toggle-time="runtimeStore.toggleOccurrenceTime"
         />
         <WeekScheduleView
           v-else
@@ -142,7 +193,11 @@ void refreshTodos()
           :day-count="appSettings.weekViewDays"
           :start-hour="appSettings.logicalDayStartHour"
           :start-minute="appSettings.logicalDayStartMinute"
+          :time-display-mode="runtimeStore.homepage.timeDisplayMode"
+          :time-display-overrides="runtimeStore.homepage.timeDisplayOverrides"
+          :now="displayNow"
           @select="select"
+          @toggle-time="runtimeStore.toggleOccurrenceTime"
         />
       </div>
     </NLayoutContent>

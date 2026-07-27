@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, type Pinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { NLayoutSider } from 'naive-ui'
@@ -124,6 +124,51 @@ describe('home workspace', () => {
     const weekStyle = wrapper.get('button[data-view="week"]').attributes('style')
     expect(weekStyle).toContain('background-color: var(--color-control-pressed-background)')
     expect(weekStyle).toContain('box-shadow: var(--shadow-control-pressed)')
+  })
+
+  it('keeps runtime time mode and clears item overrides on global changes', async () => {
+    const pinia = createPinia()
+    const wrapper = await mountHome([], pinia)
+    const runtime = useRuntimeStore(pinia)
+
+    expect(wrapper.get('button[data-time-mode="clock"]').attributes('style'))
+      .toContain('background-color: var(--color-control-pressed-background)')
+    await wrapper.get('button[data-time-mode="relative"]').trigger('click')
+    expect(runtime.homepage.timeDisplayMode).toBe('relative')
+
+    runtime.toggleOccurrenceTime(eventOccurrence.id)
+    expect(runtime.homepage.timeDisplayOverrides).toEqual([eventOccurrence.id])
+    await wrapper.get('button[data-time-mode="clock"]').trigger('click')
+    expect(runtime.homepage.timeDisplayMode).toBe('clock')
+    expect(runtime.homepage.timeDisplayOverrides).toEqual([])
+  })
+
+  it('refreshes visible relative event time once per minute', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(TEST_NOW))
+    const platform = testGateway()
+    vi.spyOn(platform.occurrences, 'listRange').mockResolvedValue({
+      ok: true,
+      value: [{
+        ...eventOccurrence,
+        start: '2026-07-13T04:02:00Z',
+        end: '2026-07-13T05:02:00Z'
+      }]
+    })
+    const wrapper = await mountHome([], createPinia(), platform)
+
+    try {
+      await flushPromises()
+      await wrapper.get('button[data-time-mode="relative"]').trigger('click')
+      expect(wrapper.get('.schedule-time').text()).toBe('in 2m')
+
+      await vi.advanceTimersByTimeAsync(60_000)
+      await wrapper.vm.$nextTick()
+      expect(wrapper.get('.schedule-time').text()).toBe('in 1m')
+    } finally {
+      wrapper.unmount()
+      vi.useRealTimers()
+    }
   })
 
   it('completes individual Todo occurrences and filters done rows', async () => {

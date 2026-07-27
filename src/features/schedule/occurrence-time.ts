@@ -11,6 +11,40 @@ export interface OccurrenceWallTime {
   readonly minute: number
 }
 
+export type TimeDisplayMode = 'clock' | 'relative'
+export type RelativeTimeKind = 'event' | 'todo'
+
+/** 将目标时刻相对当前时刻格式化为紧凑英文文案。 */
+export function formatRelativeTime(
+  target: string,
+  now: string,
+  kind: RelativeTimeKind
+): string {
+  const difference = Date.parse(target) - Date.parse(now)
+  if (difference === 0) return 'now'
+
+  const future = difference > 0
+  const absolute = Math.abs(difference)
+  if (absolute < 60_000) {
+    if (kind === 'todo') return future ? 'due soon' : 'just overdue'
+    return future ? 'starting soon' : 'just started'
+  }
+
+  let minutes = Math.floor(absolute / 60_000)
+  const days = Math.floor(minutes / 1440)
+  minutes -= days * 1440
+  const hours = Math.floor(minutes / 60)
+  minutes -= hours * 60
+  const duration = [
+    days === 0 ? '' : `${days}d`,
+    hours === 0 ? '' : `${hours}h`,
+    minutes === 0 ? '' : `${minutes}m`
+  ].filter(Boolean).join(' ')
+
+  if (future) return `in ${duration}`
+  return kind === 'todo' ? `overdue ${duration}` : `${duration} ago`
+}
+
 /** 将 UTC instant 转换为指定时区中的日期和墙上时钟。 */
 export function occurrenceWallTime(instant: string, timeZone: string): OccurrenceWallTime {
   const value = Temporal.Instant.from(instant).toZonedDateTimeISO(timeZone)

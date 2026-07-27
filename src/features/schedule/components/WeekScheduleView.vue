@@ -2,7 +2,11 @@
 import type { CalendarOccurrenceDto } from '../../../contracts/occurrence.contract'
 import { NEmpty } from 'naive-ui'
 import { computed, reactive } from 'vue'
-import { formatOccurrenceRange } from '../occurrence-time'
+import {
+  formatOccurrenceRange,
+  formatRelativeTime,
+  type TimeDisplayMode
+} from '../occurrence-time'
 import {
   scheduleColor,
   type WeekEventSegment,
@@ -17,13 +21,22 @@ const props = withDefaults(defineProps<{
   dayCount?: number
   startHour?: number
   startMinute?: number
+  timeDisplayMode?: TimeDisplayMode
+  timeDisplayOverrides?: readonly string[]
+  now?: string
 }>(), {
   startDate: () => new Date().toISOString().slice(0, 10),
   dayCount: 5,
   startHour: 0,
-  startMinute: 0
+  startMinute: 0,
+  timeDisplayMode: 'clock',
+  timeDisplayOverrides: () => [],
+  now: () => new Date().toISOString()
 })
-const emit = defineEmits<{ select: [id: string] }>()
+const emit = defineEmits<{
+  select: [id: string]
+  'toggle-time': [id: string]
+}>()
 const dragStartOffsets = reactive(new Map<string, number>())
 const dragOffsets = reactive(new Map<string, number>())
 const hovered = reactive(new Set<string>())
@@ -42,6 +55,13 @@ const segments = computed(() => props.items.flatMap((item) =>
 ))
 
 function timeLabel(item: CalendarOccurrenceDto): string {
+  const overridden = props.timeDisplayOverrides.includes(item.id)
+  const relative = overridden
+    ? props.timeDisplayMode === 'clock'
+    : props.timeDisplayMode === 'relative'
+  if (relative && item.start !== null && item.startMark === '11') {
+    return formatRelativeTime(item.start, props.now, 'event')
+  }
   return formatOccurrenceRange(item, props.timeZone)
 }
 /** 根据分段在逻辑日中的时间位置计算周视图卡片布局。 */
@@ -92,7 +112,7 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
         :item="segment.item"
         :time-zone="timeZone"
       >
-        <button
+        <div
           :data-occurrence-id="segment.item.id"
           :data-segment-date="segment.logicalDate"
           class="event-card"
@@ -104,9 +124,23 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
           @dragstart="handleDragStart($event, segment.item)"
           @dragend="handleDragEnd($event, segment.item)"
         >
-          <span>{{ segment.item.title }}</span>
-          <span>{{ timeLabel(segment.item) }}</span>
-        </button>
+          <button
+            type="button"
+            class="event-name"
+            @click.stop="emit('select', segment.item.scheduleId)"
+          >
+            {{ segment.item.title }}
+          </button>
+          <button
+            type="button"
+            class="event-time"
+            :disabled="segment.item.startMark !== '11'"
+            :aria-label="`Toggle time display for ${segment.item.title}`"
+            @click.stop="emit('toggle-time', segment.item.id)"
+          >
+            {{ timeLabel(segment.item) }}
+          </button>
+        </div>
       </OccurrenceTooltip>
       <NEmpty
         v-if="!segments.some((value) => value.logicalDate === day)"
@@ -123,7 +157,9 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
 .day-card { position: relative; min-block-size: 0; overflow: hidden; border: 1px solid var(--color-border); border-radius: 4px; text-align: center; word-break: break-word; }
 .day-card header { block-size: 4.8vh; line-height: 4.8vh; padding: 0; border-block-end: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); }
 .event-card { position: absolute; inset-inline: 0; display: flex; align-items: center; justify-content: space-between; inline-size: 100%; padding-inline: 10px; overflow: hidden; border-radius: 4px; box-sizing: border-box; color: inherit; cursor: pointer; }
-.event-card span:first-child { min-inline-size: 50%; overflow: hidden; text-align: start; text-overflow: ellipsis; white-space: nowrap; }
-.event-card span:last-child { min-inline-size: 40px; max-inline-size: 50%; text-align: end; white-space: nowrap; }
+.event-name, .event-time { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.event-name { min-inline-size: 50%; overflow: hidden; text-align: start; text-overflow: ellipsis; white-space: nowrap; }
+.event-time { min-inline-size: 40px; max-inline-size: 60%; color: var(--color-primary); text-align: end; white-space: nowrap; }
+.event-time:disabled { color: inherit; cursor: default; }
 .day-empty { position: absolute; inset-block-start: 50%; inset-inline: 0; transform: translateY(-50%); }
 </style>

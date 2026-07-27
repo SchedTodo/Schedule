@@ -68,16 +68,30 @@ describe('Todo sidebar', () => {
     expect(wrapper.get('.row-tdy').text()).toContain('07-13 23:30')
   })
 
-  it('opens details from both name and deadline', async () => {
+  it('opens details from the name and toggles time from the deadline', async () => {
     const wrapper = mountSidebar()
 
     await wrapper.get('[data-action="name"]').trigger('click')
     await wrapper.get('[data-action="deadline"]').trigger('click')
 
-    expect(wrapper.emitted('select')).toEqual([
-      [items[0].scheduleId],
-      [items[0].scheduleId]
-    ])
+    expect(wrapper.emitted('select')).toEqual([[items[0].scheduleId]])
+    expect(wrapper.emitted('toggle-time')).toEqual([[items[0].id]])
+  })
+
+  it('renders relative Todo deadlines and leaves unknown deadlines absolute', () => {
+    const wrapper = mount(TodoSidebar, {
+      props: {
+        items: [items[0], { ...items[1], endMark: '10' }],
+        timeZone: TEST_TIME_ZONE,
+        now: TEST_NOW,
+        timeDisplayMode: 'relative'
+      }
+    })
+
+    const deadlines = wrapper.findAll('[data-action="deadline"]')
+    expect(deadlines[0]!.text()).toBe('overdue 1m')
+    expect(deadlines[1]!.text()).toBe('07-13 23:30')
+    expect(deadlines[1]!.attributes('disabled')).toBeDefined()
   })
 
   it('uses the legacy Play action and emits completion changes', async () => {

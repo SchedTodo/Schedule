@@ -5,6 +5,7 @@ import { Temporal } from '@js-temporal/polyfill'
 import {
   calendarRange,
   formatMarkedWallClock,
+  formatRelativeTime,
   occurrenceWallTime,
   serializeOccurrenceExclusion
 } from '../../../src/features/schedule/occurrence-time'
@@ -32,6 +33,27 @@ describe('occurrenceWallTime', () => {
 
   it('preserves unknown minute marks in wall-clock labels', () => {
     expect(formatMarkedWallClock('2026-07-15T02:00:00Z', '10', 'Asia/Shanghai')).toBe('10:?')
+  })
+
+  it('formats future and past event differences with compact non-zero units', () => {
+    const now = '2026-07-13T04:00:00Z'
+
+    expect(formatRelativeTime('2026-07-15T07:04:00Z', now, 'event'))
+      .toBe('in 2d 3h 4m')
+    expect(formatRelativeTime('2026-07-12T23:00:00Z', now, 'event'))
+      .toBe('5h ago')
+    expect(formatRelativeTime('2026-07-11T01:56:00Z', now, 'todo'))
+      .toBe('overdue 2d 2h 4m')
+  })
+
+  it('uses semantic labels at and within one minute of the target', () => {
+    const now = '2026-07-13T04:00:00Z'
+
+    expect(formatRelativeTime(now, now, 'event')).toBe('now')
+    expect(formatRelativeTime('2026-07-13T04:00:30Z', now, 'event')).toBe('starting soon')
+    expect(formatRelativeTime('2026-07-13T03:59:30Z', now, 'event')).toBe('just started')
+    expect(formatRelativeTime('2026-07-13T04:00:30Z', now, 'todo')).toBe('due soon')
+    expect(formatRelativeTime('2026-07-13T03:59:30Z', now, 'todo')).toBe('just overdue')
   })
 
   it('serializes concrete event and Todo exclusions in legacy UTC form', () => {
