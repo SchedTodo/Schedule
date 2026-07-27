@@ -17,6 +17,7 @@ import {
 import { Star } from '@vicons/ionicons5'
 import { useRoute, useRouter } from 'vue-router'
 
+import { useOperationFeedback } from '../../app/app-feedback'
 import { platformGatewayKey } from '../../app/injection-keys'
 import type { ScheduleOccurrenceDto } from '../../contracts/occurrence.contract'
 import type { ConcentrationRecordDto } from '../../contracts/record.contract'
@@ -36,17 +37,17 @@ import { useScheduleDetail } from '../../features/schedule/use-schedule-detail'
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
 const platform = gateway
+const { showResult } = useOperationFeedback()
 const route = useRoute()
 const router = useRouter()
 const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
 if (!id) throw new Error('Schedule id is required')
 const scheduleId = id
-const detail = useScheduleDetail(platform, scheduleId)
+const detail = useScheduleDetail(platform, scheduleId, showResult)
 const timeZone = ref(defaultSettings.timeZone)
 const occurrences = ref<ScheduleOccurrenceDto[]>([])
 const records = ref<ConcentrationRecordDto[]>([])
 const checkedRowKeys = ref<DataTableRowKey[]>([])
-const mutationError = ref<string | null>(null)
 const pagination = reactive({
   page: 1,
   pageSize: 5,
@@ -79,7 +80,7 @@ const editValue = computed<CreateScheduleInput>(() => {
 /** 加载当前日程所有可见 occurrence，并按详情页规则排序。 */
 async function refreshOccurrences() {
   const result = await platform.occurrences.listVisibleBySchedule(scheduleId)
-  if (result.ok) {
+  if (showResult(result)) {
     occurrences.value = [...result.value]
     checkedRowKeys.value = []
   }
@@ -88,12 +89,12 @@ async function refreshOccurrences() {
 /** 加载当前日程关联的专注记录。 */
 async function refreshRecords() {
   const result = await platform.records.listBySchedule(scheduleId)
-  if (result.ok) records.value = [...result.value]
+  if (showResult(result)) records.value = [...result.value]
 }
 
 async function refreshSettings() {
   const result = await platform.settings.get()
-  if (result.ok) timeZone.value = result.value.timeZone
+  if (showResult(result)) timeZone.value = result.value.timeZone
 }
 
 /** 切换当前日程收藏状态，并用宿主返回值更新详情模型。 */
@@ -104,24 +105,21 @@ async function toggleStar() {
     id: scheduleId,
     starred: !schedule.starred
   })
-  if (result.ok) await detail.refresh()
-  else mutationError.value = result.error.message
+  if (showResult(result)) await detail.refresh()
 }
 
 /** 保存编辑内容，随后刷新日程详情和 occurrence。 */
 async function saveEdit(input: CreateScheduleInput) {
   const result = await platform.schedules.update({ id: scheduleId, ...input })
-  if (result.ok) {
-    mutationError.value = null
+  if (showResult(result, { success: true })) {
     await Promise.all([detail.refresh(), refreshOccurrences()])
-  } else mutationError.value = result.error.message
+  }
 }
 
 /** 软删除当前日程，并返回首页。 */
 async function removeSchedule() {
   const result = await platform.schedules.setDeleted({ id: scheduleId, deleted: true })
-  if (result.ok) await router.push({ name: 'database' })
-  else mutationError.value = result.error.message
+  if (showResult(result, { success: true })) await router.push({ name: 'database' })
 }
 
 /** 批量排除选中的 occurrence，成功后清空选择并刷新详情数据。 */
@@ -130,17 +128,15 @@ async function excludeSelected() {
   const result = await platform.occurrences.excludeMany({
     ids: checkedRowKeys.value.map(String)
   })
-  if (result.ok) {
-    mutationError.value = null
+  if (showResult(result, { success: true })) {
     await Promise.all([detail.refresh(), refreshOccurrences()])
-  } else mutationError.value = result.error.message
+  }
 }
 
 /** 更新单个 occurrence 的备注并刷新详情列表。 */
 async function updateComment(id: string, comment: string) {
   const result = await platform.occurrences.updateComment(id, comment)
-  if (result.ok) await refreshOccurrences()
-  else mutationError.value = result.error.message
+  if (showResult(result, { success: true })) await refreshOccurrences()
 }
 
 const columns: DataTableColumns<ScheduleOccurrenceDto> = [
@@ -188,21 +184,8 @@ void refreshSettings()
       v-if="detail.loading.value"
       description="Loading"
     />
-    <NAlert
-      v-else-if="detail.error.value"
-      type="error"
-    >
-      {{ detail.error.value.message }}
-    </NAlert>
+    <div v-else-if="detail.error.value" />
     <template v-else-if="detail.schedule.value">
-      <NAlert
-        v-if="mutationError"
-        type="error"
-        closable
-        @close="mutationError = null"
-      >
-        {{ mutationError }}
-      </NAlert>
       <NCard segmented>
         <template #header>
           <b>Info</b>

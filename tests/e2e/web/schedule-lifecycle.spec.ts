@@ -31,6 +31,7 @@ test('shows a parser error instead of silently closing the workflow', async ({ p
     recurrenceCode: 'not a schedule expression'
   })
 
-  await expect(page.getByRole('alert')).toContainText('日程数据无效')
+  await expect(page.locator('.n-notification')).toContainText('日程数据无效')
+  await expect(page.getByRole('alert')).toHaveCount(0)
   await expect(page.getByText('无效日程', { exact: true })).toHaveCount(0)
 })

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { inject, ref } from 'vue'
-import { NAlert, NButton, NButtonGroup, NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
+import { NButton, NButtonGroup, NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
 import { useRouter } from 'vue-router'
+import { useOperationFeedback } from '../app/app-feedback'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { CreateScheduleInput } from '../contracts/schedule.contract'
 import type { ScheduleOccurrenceDto } from '../contracts/occurrence.contract'
@@ -21,8 +22,13 @@ if (!gateway) throw new Error('Platform gateway is not available')
 const platform = gateway
 const router = useRouter()
 const runtimeStore = useRuntimeStore()
-const list = useScheduleList(gateway, { offset: 0, limit: 200 })
-const mutations = useScheduleMutations(gateway, list.refresh)
+const { showResult } = useOperationFeedback()
+const list = useScheduleList(gateway, { offset: 0, limit: 200 }, showResult)
+const mutations = useScheduleMutations(
+  gateway,
+  list.refresh,
+  (result) => showResult(result, { success: true })
+)
 const activeButtonStyle = {
   backgroundColor: 'var(--color-control-pressed-background)',
   boxShadow: 'var(--shadow-control-pressed)'
@@ -30,18 +36,23 @@ const activeButtonStyle = {
 const sidebarCollapsed = ref(false)
 const todos = ref<readonly ScheduleOccurrenceDto[]>([])
 const appSettings = ref({ ...defaultSettings })
-const occurrenceRange = useOccurrenceRange(gateway, calendarRange(appSettings.value.timeZone))
+const occurrenceRange = useOccurrenceRange(
+  gateway,
+  calendarRange(appSettings.value.timeZone),
+  showResult
+)
 
 function select(id: string) {
   void router.push({ name: 'schedule-detail', params: { id } })
 }
 async function create(input: CreateScheduleInput) {
-  await mutations.createSchedule(input)
-  await refreshTodos()
+  const result = await mutations.createSchedule(input)
+  if (result.ok) await refreshTodos()
 }
 /** 按当前设置加载逻辑日范围内需要展示的 Todo。 */
 async function refreshTodos() {
   const settings = await platform.settings.get()
+  showResult(settings)
   if (settings.ok) {
     appSettings.value = settings.value
     await occurrenceRange.refresh(calendarRange(settings.value.timeZone))
@@ -52,12 +63,12 @@ async function refreshTodos() {
     logicalDayStartHour: settings.ok ? settings.value.logicalDayStartHour : 0,
     logicalDayStartMinute: settings.ok ? settings.value.logicalDayStartMinute : 0
   })
-  if (result.ok) todos.value = result.value
+  if (showResult(result)) todos.value = result.value
 }
 /** 更新 occurrence 完成状态，并重新加载 Todo 列表。 */
 async function setDone(id: string, done: boolean) {
-  await platform.occurrences.setDone(id, done)
-  await refreshTodos()
+  const result = await platform.occurrences.setDone(id, done)
+  if (showResult(result)) await refreshTodos()
 }
 function concentrate(id: string) {
   void router.push({ name: 'concentrate', params: { timeId: id } })
@@ -117,13 +128,6 @@ void refreshTodos()
             @submit="create"
           />
         </div>
-        <NAlert
-          v-if="mutations.error.value"
-          type="error"
-          role="alert"
-        >
-          {{ mutations.error.value.message }}
-        </NAlert>
         <MonthScheduleView
           v-if="runtimeStore.homepage.priority === 'month'"
           :items="occurrenceRange.items.value"

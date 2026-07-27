@@ -4,12 +4,14 @@ import { h, inject, reactive, ref, watch } from 'vue'
 import { NButton, NCard, NDataTable, NDatePicker, NIcon, NInput, NSelect, NTag } from 'naive-ui'
 import type { DataTableColumns, PaginationProps } from 'naive-ui'
 import { useRouter } from 'vue-router'
+import { useOperationFeedback } from '../app/app-feedback'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { ScheduleKind, SchedulePageItemDto } from '../contracts/schedule.contract'
 
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
 const platform = gateway
+const { showResult } = useOperationFeedback()
 const router = useRouter()
 const search = ref('')
 const kind = ref<ScheduleKind | null>(null)
@@ -50,7 +52,7 @@ async function refresh() {
     page: pagination.page ?? 1,
     pageSize: pagination.pageSize ?? 10
   })
-  if (result.ok) {
+  if (showResult(result)) {
     items.value = [...result.value.items]
     pagination.itemCount = result.value.total
   }
@@ -58,8 +60,8 @@ async function refresh() {
 
 /** 恢复软删除日程并刷新当前页，避免触发表格行导航。 */
 async function restore(id: string) {
-  await platform.schedules.setDeleted({ id, deleted: false })
-  await refresh()
+  const result = await platform.schedules.setDeleted({ id, deleted: false })
+  if (showResult(result, { success: true })) await refresh()
 }
 
 function toggleStarFilter() {

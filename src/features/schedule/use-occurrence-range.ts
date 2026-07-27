@@ -5,12 +5,13 @@ import type {
   CalendarOccurrenceDto,
   OccurrenceRangeQuery,
 } from '../../contracts/occurrence.contract'
-import type { AppErrorDto } from '../../contracts/result'
+import type { AppErrorDto, AppResult } from '../../contracts/result'
 
 /** 管理指定时间范围内 occurrence 的加载、错误和刷新状态。 */
 export function useOccurrenceRange(
   gateway: PlatformGateway,
-  initialQuery: OccurrenceRangeQuery
+  initialQuery: OccurrenceRangeQuery,
+  onResult?: <T>(result: AppResult<T>) => unknown
 ) {
   const items = ref<readonly CalendarOccurrenceDto[]>([])
   const loading = ref(false)
@@ -23,6 +24,7 @@ export function useOccurrenceRange(
     loading.value = true
     const result = await gateway.occurrences.listRange(query)
     if (current !== request) return
+    onResult?.(result)
     if (result.ok) {
       items.value = result.value
       error.value = null

@@ -4,6 +4,10 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { NLayoutSider } from 'naive-ui'
 import { describe, expect, it, vi } from 'vitest'
 
+import {
+  appFeedbackKey,
+  type AppFeedback
+} from '../../../src/app/app-feedback'
 import { platformGatewayKey } from '../../../src/app/injection-keys'
 import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import type { ScheduleDto } from '../../../src/contracts/schedule.contract'
@@ -56,7 +60,8 @@ describe('home workspace', () => {
   async function mountHome(
     seed: readonly ScheduleDto[] = [],
     pinia: Pinia = createPinia(),
-    platform = testGateway(seed)
+    platform = testGateway(seed),
+    feedback?: AppFeedback
   ) {
     const router = createRouter({
       history: createMemoryHistory(),
@@ -66,8 +71,10 @@ describe('home workspace', () => {
     return mount(HomePage, {
       global: {
         plugins: [pinia, router],
+        stubs: { teleport: true },
         provide: {
-          [platformGatewayKey as symbol]: platform
+          [platformGatewayKey as symbol]: platform,
+          ...(feedback === undefined ? {} : { [appFeedbackKey as symbol]: feedback })
         }
       }
     })
@@ -194,6 +201,43 @@ describe('home workspace', () => {
         comment: ''
       }
     ])
+  })
+
+  it('reports schedule creation success and failure through application feedback', async () => {
+    const feedback: AppFeedback = {
+      success: vi.fn(),
+      error: vi.fn()
+    }
+    const platform = testGateway()
+    const create = vi.spyOn(platform.schedules, 'create')
+    const wrapper = await mountHome([], createPinia(), platform, feedback)
+    const input = {
+      title: 'Weekly review',
+      recurrenceCode: '2026/7/14 10:00',
+      exclusionCode: '',
+      comment: ''
+    }
+
+    await wrapper.getComponent(ScheduleModal).get('button').trigger('click')
+    await wrapper.get('input[aria-label="Name"]').setValue(input.title)
+    await wrapper.get('textarea[aria-label="rTime"]').setValue(input.recurrenceCode)
+    await wrapper.get('[role="dialog"] button').trigger('click')
+    await vi.waitFor(() => expect(create).toHaveBeenCalledWith(input))
+    await expect(create.mock.results[0]!.value).resolves.toMatchObject({ ok: true })
+    await vi.waitFor(() => expect(feedback.success).toHaveBeenCalledWith('Success'), {
+      timeout: 5000
+    })
+
+    create.mockResolvedValueOnce({
+      ok: false,
+      error: { code: 'PERSISTENCE_FAILED', message: '保存失败' }
+    })
+    await wrapper.getComponent(ScheduleModal).get('button').trigger('click')
+    await wrapper.get('input[aria-label="Name"]').setValue(input.title)
+    await wrapper.get('textarea[aria-label="rTime"]').setValue(input.recurrenceCode)
+    await wrapper.get('[role="dialog"] button').trigger('click')
+    await vi.waitFor(() => expect(feedback.error).toHaveBeenCalledWith('Error', '保存失败'))
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
   it('inserts the next weekday into the focused rTime and exTime fields', async () => {

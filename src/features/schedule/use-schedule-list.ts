@@ -1,13 +1,14 @@
 import { readonly, shallowRef } from 'vue'
 
-import type { AppErrorDto } from '../../contracts/result'
+import type { AppErrorDto, AppResult } from '../../contracts/result'
 import type { PlatformGateway } from '../../contracts/platform.contract'
 import type { ScheduleDto, ScheduleListQuery } from '../../contracts/schedule.contract'
 
 /** 管理日程列表查询及其加载、错误状态，并忽略过期响应。 */
 export function useScheduleList(
   gateway: PlatformGateway,
-  initialQuery: ScheduleListQuery
+  initialQuery: ScheduleListQuery,
+  onResult?: <T>(result: AppResult<T>) => unknown
 ) {
   const items = shallowRef<readonly ScheduleDto[]>([])
   const loading = shallowRef(false)
@@ -22,6 +23,7 @@ export function useScheduleList(
     error.value = null
     const result = await gateway.schedules.list(query.value)
     if (token !== requestToken) return
+    onResult?.(result)
 
     if (result.ok) items.value = result.value
     else error.value = result.error

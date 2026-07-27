@@ -3,6 +3,7 @@ import { computed, inject, onBeforeUnmount, ref } from 'vue'
 import { NButton, NCard, NPageHeader, NProgress, NSelect } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 
+import { useOperationFeedback } from '../../app/app-feedback'
 import { platformGatewayKey } from '../../app/injection-keys'
 import type { ScheduleOccurrenceDto } from '../../contracts/occurrence.contract'
 import { defaultSettings } from '../../contracts/settings.contract'
@@ -12,6 +13,7 @@ import { FocusSession } from '../../features/concentrate/focus-session'
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
 const platform = gateway
+const { showResult } = useOperationFeedback()
 const route = useRoute()
 const router = useRouter()
 const routeId = Array.isArray(route.params.timeId) ? route.params.timeId[0] : route.params.timeId
@@ -72,6 +74,7 @@ async function selectTodo(value: string | number | null) {
 /** 加载可选 Todo，并按路由参数恢复初始选择。 */
 async function load() {
   const settingsResult = await platform.settings.get()
+  showResult(settingsResult)
   const values = settingsResult.ok ? settingsResult.value : defaultSettings
   const todoResult = await platform.occurrences.listTodos({
     now: new Date().toISOString(),
@@ -80,7 +83,7 @@ async function load() {
     logicalDayStartMinute: values.logicalDayStartMinute
   })
   if (unmounted) return
-  if (todoResult.ok) todos.value = todoResult.value
+  if (showResult(todoResult)) todos.value = todoResult.value
   session = new FocusSession({
     focusMs: values.focusMinutes * 60_000,
     smallBreakMs: values.smallBreakMinutes * 60_000,
@@ -88,7 +91,11 @@ async function load() {
   }, {
     now: () => Date.now(),
     notify: (input) => platform.notifications.show(input),
-    saveRecord: (input) => platform.records.create(input)
+    saveRecord: async (input) => {
+      const result = await platform.records.create(input)
+      showResult(result)
+      return result
+    }
   })
   await session.selectTodo(selected.value && { scheduleId: selected.value.scheduleId })
   snapshot.value = session.snapshot()

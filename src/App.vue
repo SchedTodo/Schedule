@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { NConfigProvider } from 'naive-ui/es/config-provider'
+import { NNotificationProvider } from 'naive-ui'
 import { darkTheme } from 'naive-ui/es/themes'
 
 import { naiveThemeOverrides } from './app/naive-theme'
+import AppFeedbackProvider from './app/components/AppFeedbackProvider.vue'
 import AppShell from './app/components/AppShell.vue'
 import { usePreferencesStore } from './stores/preferences'
 import { useRuntimeStore } from './stores/runtime'
@@ -26,11 +28,15 @@ const usesDarkTheme = computed(
     :theme="usesDarkTheme ? darkTheme : null"
     :theme-overrides="naiveThemeOverrides"
   >
-    <main
-      data-testid="app-shell"
-      :class="{ 'theme-dark': usesDarkTheme }"
-    >
-      <AppShell />
-    </main>
+    <NNotificationProvider>
+      <AppFeedbackProvider>
+        <main
+          data-testid="app-shell"
+          :class="{ 'theme-dark': usesDarkTheme }"
+        >
+          <AppShell />
+        </main>
+      </AppFeedbackProvider>
+    </NNotificationProvider>
   </NConfigProvider>
 </template>

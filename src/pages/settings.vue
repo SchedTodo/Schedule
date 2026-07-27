@@ -12,6 +12,7 @@ import {
   NSwitch,
   type DataTableColumns
 } from 'naive-ui'
+import { useOperationFeedback } from '../app/app-feedback'
 import { platformGatewayKey } from '../app/injection-keys'
 import { defaultSettings, type SettingsDto } from '../contracts/settings.contract'
 import { createTimeZoneOptions } from '../features/settings/time-zone-options'
@@ -19,6 +20,7 @@ import type { Preferences } from '../stores/preferences'
 import { usePreferencesStore } from '../stores/preferences'
 
 const preferences = usePreferencesStore()
+const { showResult } = useOperationFeedback()
 const gateway = inject(platformGatewayKey)
 const settings = ref<SettingsDto>({ ...defaultSettings })
 const timeZoneOptions = computed(() => createTimeZoneOptions(settings.value.timeZone))
@@ -57,7 +59,7 @@ const weekStarts = [
 ] as const
 if (gateway) {
   void gateway.settings.get().then((result) => {
-    if (result.ok) settings.value = result.value
+    if (showResult(result)) settings.value = result.value
   })
 }
 function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
@@ -67,7 +69,7 @@ function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
 async function updateSetting<K extends keyof SettingsDto>(key: K, value: SettingsDto[K]) {
   if (!gateway) return false
   const result = await gateway.settings.update({ [key]: value })
-  if (result.ok) settings.value = result.value
+  if (showResult(result)) settings.value = result.value
   return result.ok
 }
 async function addAbbreviation() {

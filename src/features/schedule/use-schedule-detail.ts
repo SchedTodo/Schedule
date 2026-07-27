@@ -1,11 +1,15 @@
 import { readonly, shallowRef } from 'vue'
 
-import type { AppErrorDto } from '../../contracts/result'
+import type { AppErrorDto, AppResult } from '../../contracts/result'
 import type { PlatformGateway } from '../../contracts/platform.contract'
 import type { ScheduleDetailDto } from '../../contracts/schedule.contract'
 
 /** 管理单个日程详情的异步加载状态，并避免旧响应覆盖新请求。 */
-export function useScheduleDetail(gateway: PlatformGateway, id: string) {
+export function useScheduleDetail(
+  gateway: PlatformGateway,
+  id: string,
+  onResult?: <T>(result: AppResult<T>) => unknown
+) {
   const schedule = shallowRef<ScheduleDetailDto | null>(null)
   const loading = shallowRef(false)
   const error = shallowRef<AppErrorDto | null>(null)
@@ -18,6 +22,7 @@ export function useScheduleDetail(gateway: PlatformGateway, id: string) {
     error.value = null
     const result = await gateway.schedules.findById(id)
     if (token !== requestToken) return
+    onResult?.(result)
 
     if (result.ok) schedule.value = result.value
     else error.value = result.error
