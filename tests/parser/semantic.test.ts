@@ -41,4 +41,20 @@ describe('schedule semantic validation', () => {
   it('rejects an unknown IANA time zone', () => {
     expectDiagnostic('2026/7/13 10:00 Unknown/Nowhere;', 'INVALID_TIME_ZONE')
   })
+
+  it('validates duration bounds and deterministic unknown-minute arithmetic', () => {
+    for (const source of [
+      '2026/7/13 0h;',
+      '2026/7/13 24h;',
+      '2026/7/13 0m;',
+      '2026/7/13 1440m;',
+      '2026/7/13 10:?-90m;',
+      '2026/7/13 ?:?-2h;'
+    ]) {
+      expectDiagnostic(source, 'INVALID_TIME')
+    }
+
+    expect(parseSchedule('2026/7/13 23h;', context).ok).toBe(true)
+    expect(parseSchedule('2026/7/13 1439m;', context).ok).toBe(true)
+  })
 })

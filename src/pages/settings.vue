@@ -1,6 +1,17 @@
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue'
-import { NCard, NInputNumber, NRadio, NRadioGroup, NSelect, NSwitch } from 'naive-ui'
+import { computed, h, inject, ref } from 'vue'
+import {
+  NButton,
+  NCard,
+  NDataTable,
+  NInput,
+  NInputNumber,
+  NRadio,
+  NRadioGroup,
+  NSelect,
+  NSwitch,
+  type DataTableColumns
+} from 'naive-ui'
 import { platformGatewayKey } from '../app/injection-keys'
 import { defaultSettings, type SettingsDto } from '../contracts/settings.contract'
 import { createTimeZoneOptions } from '../features/settings/time-zone-options'
@@ -11,6 +22,30 @@ const preferences = usePreferencesStore()
 const gateway = inject(platformGatewayKey)
 const settings = ref<SettingsDto>({ ...defaultSettings })
 const timeZoneOptions = computed(() => createTimeZoneOptions(settings.value.timeZone))
+const abbreviation = ref('')
+const abbreviationTimeZone = ref('UTC')
+interface TimeZoneAbbreviationRow {
+  readonly abbreviation: string
+  readonly timeZone: string
+}
+const abbreviationRows = computed<TimeZoneAbbreviationRow[]>(() =>
+  Object.entries(settings.value.timeZoneAbbreviations)
+    .map(([value, timeZone]) => ({ abbreviation: value, timeZone }))
+    .sort((left, right) => left.abbreviation.localeCompare(right.abbreviation))
+)
+const abbreviationColumns: DataTableColumns<TimeZoneAbbreviationRow> = [
+  { title: 'Abbreviation', key: 'abbreviation' },
+  { title: 'IANA Time Zone', key: 'timeZone' },
+  {
+    title: 'Action',
+    key: 'actions',
+    render: (row) => h(
+      NButton,
+      { size: 'small', onClick: () => { void removeAbbreviation(row.abbreviation) } },
+      { default: () => 'Delete' }
+    )
+  }
+]
 const weekStarts = [
   { label: 'MO', value: 1 },
   { label: 'TU', value: 2 },
@@ -30,9 +65,30 @@ function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
 }
 /** 持久化单项应用设置，并仅在宿主确认成功后更新页面状态。 */
 async function updateSetting<K extends keyof SettingsDto>(key: K, value: SettingsDto[K]) {
-  if (!gateway) return
+  if (!gateway) return false
   const result = await gateway.settings.update({ [key]: value })
   if (result.ok) settings.value = result.value
+  return result.ok
+}
+async function addAbbreviation() {
+  const key = abbreviation.value.trim().toUpperCase()
+  if (
+    key === '' ||
+    abbreviationTimeZone.value === '' ||
+    Object.hasOwn(settings.value.timeZoneAbbreviations, key)
+  ) return
+  const updated = {
+    ...settings.value.timeZoneAbbreviations,
+    [key]: abbreviationTimeZone.value
+  }
+  if (await updateSetting('timeZoneAbbreviations', updated)) abbreviation.value = ''
+}
+async function removeAbbreviation(value: string) {
+  const updated = Object.fromEntries(
+    Object.entries(settings.value.timeZoneAbbreviations)
+      .filter(([key]) => key !== value)
+  )
+  await updateSetting('timeZoneAbbreviations', updated)
 }
 </script>
 
@@ -49,6 +105,31 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
             :options="timeZoneOptions"
             filterable
             @update:value="updateSetting('timeZone', $event)"
+          />
+        </div>
+        <label>Time Zone Abbreviations</label><div class="setting-field setting-field--abbreviations">
+          <div class="abbreviation-editor">
+            <NInput
+              v-model:value="abbreviation"
+              :maxlength="32"
+              aria-label="Time Zone Abbreviation"
+              placeholder="Abbreviation"
+            />
+            <NSelect
+              v-model:value="abbreviationTimeZone"
+              :options="timeZoneOptions"
+              aria-label="Abbreviation IANA Time Zone"
+              filterable
+            />
+            <NButton @click="addAbbreviation">
+              Add
+            </NButton>
+          </div>
+          <NDataTable
+            :columns="abbreviationColumns"
+            :data="abbreviationRows"
+            :pagination="false"
+            :row-key="(row: TimeZoneAbbreviationRow) => row.abbreviation"
           />
         </div>
         <label>WKST</label><div class="setting-field">
@@ -182,6 +263,8 @@ async function updateSetting<K extends keyof SettingsDto>(key: K, value: Setting
 .settings-group > label { font-weight: 700; }
 .setting-field { display: flex; align-items: center; justify-self: start; gap: 1rem; min-inline-size: 0; }
 .setting-field--select { inline-size: 15rem; }
+.setting-field--abbreviations { align-items: stretch; flex-direction: column; inline-size: min(50rem, 100%); }
+.abbreviation-editor { display: grid; grid-template-columns: 10rem minmax(15rem, 1fr) auto; gap: 0.75rem; }
 .setting-field :deep(.n-input-number) { inline-size: 8rem; }
 .setting-field--time :deep(.n-input-number) { inline-size: 6rem; }
 </style>

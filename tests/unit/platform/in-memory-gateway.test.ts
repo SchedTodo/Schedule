@@ -53,6 +53,27 @@ describe('createInMemoryGateway', () => {
       .toBe('2026/7/12 10:00 America/Chicago;')
   })
 
+  it('normalizes configured time zone abbreviations to IANA identifiers', async () => {
+    let sequence = 0
+    const gateway = createInMemoryGateway([], {
+      clock: new FixedClock('2026-07-12T16:30:00Z'),
+      idGenerator: { next: () => `10000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}` }
+    })
+    await gateway.settings.update({
+      timeZoneAbbreviations: { work_1: 'America/Chicago' }
+    })
+
+    const result = await gateway.schedules.create({
+      title: 'Chicago',
+      recurrenceCode: 'tdy now-2h work_1;',
+      exclusionCode: '',
+      comment: ''
+    })
+
+    expect(result.ok && result.value.recurrenceCode)
+      .toBe('2026/7/12 11:30-13:30 America/Chicago;')
+  })
+
   it('normalizes create defaults with injected time and id', async () => {
     const gateway = createInMemoryGateway([], {
       clock: new FixedClock('2026-07-11T08:00:00Z'),

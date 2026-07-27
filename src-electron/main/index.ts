@@ -13,6 +13,7 @@ import { AlarmCoordinator } from '../../src/application/alarm-coordinator'
 import { ScheduleService } from '../../src/application/schedule-service'
 import { SystemClock } from '../../src/domain/shared/clock'
 import { CryptoIdGenerator } from '../../src/domain/shared/id-generator'
+import { resolveConfiguredTimeZoneAbbreviation } from '../../src/parser/time-zone-abbreviations'
 import { initializeScheduleDatabase } from '../adapters/db/client'
 import schemaSql from '../adapters/db/schema.sql?raw'
 import { DrizzleOccurrenceRepository } from '../adapters/db/occurrence-repository'
@@ -77,7 +78,11 @@ function registerSchedulePlatform(): readonly Disposable[] {
       idGenerator: new CryptoIdGenerator(),
       defaultTimeZone: settings?.timeZone ?? 'UTC',
       weekStartsOn: settings?.weekStart ?? 1,
-      resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
+      resolveTimeZoneAbbreviation: (value) =>
+        resolveConfiguredTimeZoneAbbreviation(
+          value,
+          settings?.timeZoneAbbreviations ?? {}
+        )
     }, occurrenceRepository)
   }
   registerScheduleIpcHandlers(ipcMain, {

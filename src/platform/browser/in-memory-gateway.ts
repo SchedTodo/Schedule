@@ -30,6 +30,7 @@ import {
   expandScheduleOccurrences,
   normalizeScheduleOccurrences
 } from '../../parser/parse-schedule'
+import { resolveConfiguredTimeZoneAbbreviation } from '../../parser/time-zone-abbreviations'
 
 export interface InMemoryGatewayDependencies {
   readonly clock: Clock
@@ -63,7 +64,8 @@ export function createInMemoryGateway(
     if (schedule.recurrenceCode.trim() === '') continue
     const expanded = expandScheduleOccurrences(schedule.recurrenceCode, schedule.exclusionCode, {
       now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
-      resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
+      resolveTimeZoneAbbreviation: (value) =>
+        resolveConfiguredTimeZoneAbbreviation(value, settings.timeZoneAbbreviations)
     })
     if (!expanded.ok) continue
     occurrences.push(...expanded.value.map((value) => ({
@@ -91,7 +93,8 @@ export function createInMemoryGateway(
           ? undefined
           : normalizeScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
             now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
-            resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
+            resolveTimeZoneAbbreviation: (value) =>
+              resolveConfiguredTimeZoneAbbreviation(value, settings.timeZoneAbbreviations)
           })
         if (normalized !== undefined && !normalized.ok) return { ok: false, error: validationError }
         const normalizedValue = normalized?.ok === true ? normalized.value : undefined
@@ -159,7 +162,8 @@ export function createInMemoryGateway(
           ? undefined
           : normalizeScheduleOccurrences(parsed.data.recurrenceCode, parsed.data.exclusionCode, {
             now: dependencies.clock.now(), defaultTimeZone: settings.timeZone, weekStartsOn: settings.weekStart,
-            resolveTimeZoneAbbreviation: () => ({ kind: 'unknown' })
+            resolveTimeZoneAbbreviation: (value) =>
+              resolveConfiguredTimeZoneAbbreviation(value, settings.timeZoneAbbreviations)
           })
         if (normalized !== undefined && !normalized.ok) return { ok: false, error: validationError }
         const normalizedValue = normalized?.ok === true ? normalized.value : undefined

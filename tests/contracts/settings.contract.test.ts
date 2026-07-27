@@ -5,6 +5,7 @@ import { SettingsDtoSchema, defaultSettings } from '../../src/contracts/settings
 describe('settings contract', () => {
   it('contains legacy-compatible defaults', () => {
     expect(SettingsDtoSchema.parse(defaultSettings)).toMatchObject({
+      timeZoneAbbreviations: {},
       weekStart: 1,
       todoAlarmEnabled: true,
       todoAlarmBeforeMinutes: 5,
@@ -32,5 +33,32 @@ describe('settings contract', () => {
     for (const weekStart of [0, 8]) {
       expect(SettingsDtoSchema.safeParse({ ...defaultSettings, weekStart }).success).toBe(false)
     }
+  })
+
+  it('normalizes valid time zone abbreviations and rejects conflicts', () => {
+    expect(SettingsDtoSchema.parse({
+      ...defaultSettings,
+      timeZoneAbbreviations: { work_1: 'America/Chicago' }
+    }).timeZoneAbbreviations).toEqual({ WORK_1: 'America/Chicago' })
+
+    for (const timeZoneAbbreviations of [
+      { now: 'America/Chicago' },
+      { UTC: 'America/Chicago' },
+      { 'bad-name': 'America/Chicago' },
+      { CST: 'Unknown/Nowhere' }
+    ]) {
+      expect(SettingsDtoSchema.safeParse({
+        ...defaultSettings,
+        timeZoneAbbreviations
+      }).success).toBe(false)
+    }
+  })
+
+  it('defaults a missing abbreviation table for existing persisted settings', () => {
+    const existing = Object.fromEntries(
+      Object.entries(defaultSettings)
+        .filter(([key]) => key !== 'timeZoneAbbreviations')
+    )
+    expect(SettingsDtoSchema.parse(existing).timeZoneAbbreviations).toEqual({})
   })
 })

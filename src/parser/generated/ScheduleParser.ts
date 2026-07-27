@@ -22,25 +22,27 @@ type int = number;
 export default class ScheduleParser extends Parser {
 	public static readonly TODAY = 1;
 	public static readonly TOMORROW = 2;
-	public static readonly START_OF_DAY = 3;
-	public static readonly END_OF_DAY = 4;
-	public static readonly FREQUENCY = 5;
-	public static readonly BY = 6;
-	public static readonly BY_TYPE = 7;
-	public static readonly INTERVAL = 8;
-	public static readonly COUNT = 9;
-	public static readonly IANA_ZONE = 10;
-	public static readonly ZONE_ABBR = 11;
-	public static readonly INTEGER = 12;
-	public static readonly QUESTION = 13;
-	public static readonly SLASH = 14;
-	public static readonly DASH = 15;
-	public static readonly TIME_SEPARATOR = 16;
-	public static readonly COMMA = 17;
-	public static readonly SEMI = 18;
-	public static readonly LBRACK = 19;
-	public static readonly RBRACK = 20;
-	public static readonly WS = 21;
+	public static readonly NOW = 3;
+	public static readonly START_OF_DAY = 4;
+	public static readonly END_OF_DAY = 5;
+	public static readonly FREQUENCY = 6;
+	public static readonly BY = 7;
+	public static readonly BY_TYPE = 8;
+	public static readonly IANA_ZONE = 9;
+	public static readonly INTERVAL_OPTION = 10;
+	public static readonly COUNT_OPTION = 11;
+	public static readonly DURATION = 12;
+	public static readonly ZONE_ALIAS = 13;
+	public static readonly INTEGER = 14;
+	public static readonly QUESTION = 15;
+	public static readonly SLASH = 16;
+	public static readonly DASH = 17;
+	public static readonly TIME_SEPARATOR = 18;
+	public static readonly COMMA = 19;
+	public static readonly SEMI = 20;
+	public static readonly LBRACK = 21;
+	public static readonly RBRACK = 22;
+	public static readonly WS = 23;
 	public static override readonly EOF = Token.EOF;
 	public static readonly RULE_document = 0;
 	public static readonly RULE_statement = 1;
@@ -49,17 +51,19 @@ export default class ScheduleParser extends Parser {
 	public static readonly RULE_integerDate = 4;
 	public static readonly RULE_timeRange = 5;
 	public static readonly RULE_timeValue = 6;
-	public static readonly RULE_timeZone = 7;
-	public static readonly RULE_frequency = 8;
-	public static readonly RULE_frequencyOption = 9;
-	public static readonly RULE_byClause = 10;
-	public static readonly RULE_byItem = 11;
-	public static readonly RULE_signedInteger = 12;
+	public static readonly RULE_timeDuration = 7;
+	public static readonly RULE_timeZone = 8;
+	public static readonly RULE_frequency = 9;
+	public static readonly RULE_frequencyOption = 10;
+	public static readonly RULE_byClause = 11;
+	public static readonly RULE_byItem = 12;
+	public static readonly RULE_signedInteger = 13;
 	public static readonly literalNames: (string | null)[] = [ null, "'tdy'", 
-                                                            "'tmr'", null, 
+                                                            "'tmr'", "'now'", 
                                                             null, null, 
-                                                            "'by'", null, 
-                                                            "'i'", "'c'", 
+                                                            null, "'by'", 
+                                                            null, null, 
+                                                            null, null, 
                                                             null, null, 
                                                             null, "'?'", 
                                                             "'/'", "'-'", 
@@ -68,13 +72,15 @@ export default class ScheduleParser extends Parser {
                                                             "']'" ];
 	public static readonly symbolicNames: (string | null)[] = [ null, "TODAY", 
                                                              "TOMORROW", 
-                                                             "START_OF_DAY", 
+                                                             "NOW", "START_OF_DAY", 
                                                              "END_OF_DAY", 
                                                              "FREQUENCY", 
                                                              "BY", "BY_TYPE", 
-                                                             "INTERVAL", 
-                                                             "COUNT", "IANA_ZONE", 
-                                                             "ZONE_ABBR", 
+                                                             "IANA_ZONE", 
+                                                             "INTERVAL_OPTION", 
+                                                             "COUNT_OPTION", 
+                                                             "DURATION", 
+                                                             "ZONE_ALIAS", 
                                                              "INTEGER", 
                                                              "QUESTION", 
                                                              "SLASH", "DASH", 
@@ -85,8 +91,8 @@ export default class ScheduleParser extends Parser {
 	// tslint:disable:no-trailing-whitespace
 	public static readonly ruleNames: string[] = [
 		"document", "statement", "dateRange", "dateValue", "integerDate", "timeRange", 
-		"timeValue", "timeZone", "frequency", "frequencyOption", "byClause", "byItem", 
-		"signedInteger",
+		"timeValue", "timeDuration", "timeZone", "frequency", "frequencyOption", 
+		"byClause", "byItem", "signedInteger",
 	];
 	public get grammarFileName(): string { return "Schedule.g4"; }
 	public get literalNames(): (string | null)[] { return ScheduleParser.literalNames; }
@@ -111,37 +117,37 @@ export default class ScheduleParser extends Parser {
 			let _alt: number;
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 26;
+			this.state = 28;
 			this.statement();
-			this.state = 31;
+			this.state = 33;
 			this._errHandler.sync(this);
 			_alt = this._interp.adaptivePredict(this._input, 0, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					{
 					{
-					this.state = 27;
+					this.state = 29;
 					this.match(ScheduleParser.SEMI);
-					this.state = 28;
+					this.state = 30;
 					this.statement();
 					}
 					}
 				}
-				this.state = 33;
+				this.state = 35;
 				this._errHandler.sync(this);
 				_alt = this._interp.adaptivePredict(this._input, 0, this._ctx);
 			}
-			this.state = 35;
+			this.state = 37;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===18) {
+			if (_la===20) {
 				{
-				this.state = 34;
+				this.state = 36;
 				this.match(ScheduleParser.SEMI);
 				}
 			}
 
-			this.state = 37;
+			this.state = 39;
 			this.match(ScheduleParser.EOF);
 			}
 		}
@@ -167,36 +173,36 @@ export default class ScheduleParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 39;
+			this.state = 41;
 			this.dateRange();
-			this.state = 40;
-			this.timeRange();
 			this.state = 42;
+			this.timeRange();
+			this.state = 44;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===10 || _la===11) {
+			if (_la===9 || _la===13) {
 				{
-				this.state = 41;
+				this.state = 43;
 				this.timeZone();
 				}
 			}
 
-			this.state = 45;
-			this._errHandler.sync(this);
-			_la = this._input.LA(1);
-			if (_la===5) {
-				{
-				this.state = 44;
-				this.frequency();
-				}
-			}
-
-			this.state = 48;
+			this.state = 47;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===6) {
 				{
-				this.state = 47;
+				this.state = 46;
+				this.frequency();
+				}
+			}
+
+			this.state = 50;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			if (_la===7) {
+				{
+				this.state = 49;
 				this.byClause();
 				}
 			}
@@ -225,16 +231,16 @@ export default class ScheduleParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 50;
+			this.state = 52;
 			this.dateValue();
-			this.state = 53;
+			this.state = 55;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===15) {
+			if (_la===17) {
 				{
-				this.state = 51;
+				this.state = 53;
 				this.match(ScheduleParser.DASH);
-				this.state = 52;
+				this.state = 54;
 				this.dateValue();
 				}
 			}
@@ -260,27 +266,27 @@ export default class ScheduleParser extends Parser {
 		let localctx: DateValueContext = new DateValueContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 6, ScheduleParser.RULE_dateValue);
 		try {
-			this.state = 58;
+			this.state = 60;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 1:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 55;
+				this.state = 57;
 				this.match(ScheduleParser.TODAY);
 				}
 				break;
 			case 2:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 56;
+				this.state = 58;
 				this.match(ScheduleParser.TOMORROW);
 				}
 				break;
-			case 12:
+			case 14:
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 57;
+				this.state = 59;
 				this.integerDate();
 				}
 				break;
@@ -310,25 +316,25 @@ export default class ScheduleParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 60;
+			this.state = 62;
 			this.match(ScheduleParser.INTEGER);
-			this.state = 67;
+			this.state = 69;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===14) {
+			if (_la===16) {
 				{
-				this.state = 61;
+				this.state = 63;
 				this.match(ScheduleParser.SLASH);
-				this.state = 62;
+				this.state = 64;
 				this.match(ScheduleParser.INTEGER);
-				this.state = 65;
+				this.state = 67;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===14) {
+				if (_la===16) {
 					{
-					this.state = 63;
+					this.state = 65;
 					this.match(ScheduleParser.SLASH);
-					this.state = 64;
+					this.state = 66;
 					this.match(ScheduleParser.INTEGER);
 					}
 				}
@@ -358,22 +364,63 @@ export default class ScheduleParser extends Parser {
 		this.enterRule(localctx, 10, ScheduleParser.RULE_timeRange);
 		let _la: number;
 		try {
-			this.enterOuterAlt(localctx, 1);
-			{
-			this.state = 69;
-			this.timeValue();
-			this.state = 72;
+			this.state = 80;
 			this._errHandler.sync(this);
-			_la = this._input.LA(1);
-			if (_la===15) {
+			switch (this._input.LA(1)) {
+			case 3:
+			case 4:
+			case 5:
+			case 14:
+			case 15:
+			case 18:
+				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 70;
-				this.match(ScheduleParser.DASH);
 				this.state = 71;
 				this.timeValue();
+				this.state = 77;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if (_la===17) {
+					{
+					this.state = 72;
+					this.match(ScheduleParser.DASH);
+					this.state = 75;
+					this._errHandler.sync(this);
+					switch (this._input.LA(1)) {
+					case 3:
+					case 4:
+					case 5:
+					case 14:
+					case 15:
+					case 18:
+						{
+						this.state = 73;
+						this.timeValue();
+						}
+						break;
+					case 12:
+						{
+						this.state = 74;
+						this.timeDuration();
+						}
+						break;
+					default:
+						throw new NoViableAltException(this);
+					}
+					}
 				}
-			}
 
+				}
+				break;
+			case 12:
+				this.enterOuterAlt(localctx, 2);
+				{
+				this.state = 79;
+				this.timeDuration();
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (re) {
@@ -396,48 +443,55 @@ export default class ScheduleParser extends Parser {
 		this.enterRule(localctx, 12, ScheduleParser.RULE_timeValue);
 		let _la: number;
 		try {
-			this.state = 91;
+			this.state = 100;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 3:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 74;
-				this.match(ScheduleParser.START_OF_DAY);
+				this.state = 82;
+				this.match(ScheduleParser.NOW);
 				}
 				break;
 			case 4:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 75;
+				this.state = 83;
+				this.match(ScheduleParser.START_OF_DAY);
+				}
+				break;
+			case 5:
+				this.enterOuterAlt(localctx, 3);
+				{
+				this.state = 84;
 				this.match(ScheduleParser.END_OF_DAY);
 				}
 				break;
-			case 16:
-				this.enterOuterAlt(localctx, 3);
+			case 18:
+				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 76;
+				this.state = 85;
 				this.match(ScheduleParser.TIME_SEPARATOR);
 				}
 				break;
-			case 13:
-				this.enterOuterAlt(localctx, 4);
+			case 15:
+				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 77;
+				this.state = 86;
 				this.match(ScheduleParser.QUESTION);
-				this.state = 82;
+				this.state = 91;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===16) {
+				if (_la===18) {
 					{
-					this.state = 78;
+					this.state = 87;
 					this.match(ScheduleParser.TIME_SEPARATOR);
-					this.state = 80;
+					this.state = 89;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-					if (_la===13) {
+					if (_la===15) {
 						{
-						this.state = 79;
+						this.state = 88;
 						this.match(ScheduleParser.QUESTION);
 						}
 					}
@@ -447,26 +501,26 @@ export default class ScheduleParser extends Parser {
 
 				}
 				break;
-			case 12:
-				this.enterOuterAlt(localctx, 5);
+			case 14:
+				this.enterOuterAlt(localctx, 6);
 				{
-				this.state = 84;
+				this.state = 93;
 				this.match(ScheduleParser.INTEGER);
-				this.state = 89;
+				this.state = 98;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===16) {
+				if (_la===18) {
 					{
-					this.state = 85;
+					this.state = 94;
 					this.match(ScheduleParser.TIME_SEPARATOR);
-					this.state = 87;
+					this.state = 96;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-					if (_la===12 || _la===13) {
+					if (_la===14 || _la===15) {
 						{
-						this.state = 86;
+						this.state = 95;
 						_la = this._input.LA(1);
-						if(!(_la===12 || _la===13)) {
+						if(!(_la===14 || _la===15)) {
 						this._errHandler.recoverInline(this);
 						}
 						else {
@@ -500,16 +554,41 @@ export default class ScheduleParser extends Parser {
 		return localctx;
 	}
 	// @RuleVersion(0)
+	public timeDuration(): TimeDurationContext {
+		let localctx: TimeDurationContext = new TimeDurationContext(this, this._ctx, this.state);
+		this.enterRule(localctx, 14, ScheduleParser.RULE_timeDuration);
+		try {
+			this.enterOuterAlt(localctx, 1);
+			{
+			this.state = 102;
+			this.match(ScheduleParser.DURATION);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return localctx;
+	}
+	// @RuleVersion(0)
 	public timeZone(): TimeZoneContext {
 		let localctx: TimeZoneContext = new TimeZoneContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 14, ScheduleParser.RULE_timeZone);
+		this.enterRule(localctx, 16, ScheduleParser.RULE_timeZone);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 93;
+			this.state = 104;
 			_la = this._input.LA(1);
-			if(!(_la===10 || _la===11)) {
+			if(!(_la===9 || _la===13)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -535,26 +614,26 @@ export default class ScheduleParser extends Parser {
 	// @RuleVersion(0)
 	public frequency(): FrequencyContext {
 		let localctx: FrequencyContext = new FrequencyContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 16, ScheduleParser.RULE_frequency);
+		this.enterRule(localctx, 18, ScheduleParser.RULE_frequency);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 95;
+			this.state = 106;
 			this.match(ScheduleParser.FREQUENCY);
-			this.state = 100;
+			this.state = 111;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===17) {
+			while (_la===19) {
 				{
 				{
-				this.state = 96;
+				this.state = 107;
 				this.match(ScheduleParser.COMMA);
-				this.state = 97;
+				this.state = 108;
 				this.frequencyOption();
 				}
 				}
-				this.state = 102;
+				this.state = 113;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
@@ -577,31 +656,20 @@ export default class ScheduleParser extends Parser {
 	// @RuleVersion(0)
 	public frequencyOption(): FrequencyOptionContext {
 		let localctx: FrequencyOptionContext = new FrequencyOptionContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 18, ScheduleParser.RULE_frequencyOption);
+		this.enterRule(localctx, 20, ScheduleParser.RULE_frequencyOption);
+		let _la: number;
 		try {
-			this.state = 107;
-			this._errHandler.sync(this);
-			switch (this._input.LA(1)) {
-			case 8:
-				this.enterOuterAlt(localctx, 1);
-				{
-				this.state = 103;
-				this.match(ScheduleParser.INTERVAL);
-				this.state = 104;
-				this.match(ScheduleParser.INTEGER);
-				}
-				break;
-			case 9:
-				this.enterOuterAlt(localctx, 2);
-				{
-				this.state = 105;
-				this.match(ScheduleParser.COUNT);
-				this.state = 106;
-				this.match(ScheduleParser.INTEGER);
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
+			this.enterOuterAlt(localctx, 1);
+			{
+			this.state = 114;
+			_la = this._input.LA(1);
+			if(!(_la===10 || _la===11)) {
+			this._errHandler.recoverInline(this);
+			}
+			else {
+				this._errHandler.reportMatch(this);
+			    this.consume();
+			}
 			}
 		}
 		catch (re) {
@@ -621,34 +689,34 @@ export default class ScheduleParser extends Parser {
 	// @RuleVersion(0)
 	public byClause(): ByClauseContext {
 		let localctx: ByClauseContext = new ByClauseContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 20, ScheduleParser.RULE_byClause);
+		this.enterRule(localctx, 22, ScheduleParser.RULE_byClause);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 109;
-			this.match(ScheduleParser.BY);
-			this.state = 110;
-			this.match(ScheduleParser.LBRACK);
-			this.state = 111;
-			this.byItem();
 			this.state = 116;
+			this.match(ScheduleParser.BY);
+			this.state = 117;
+			this.match(ScheduleParser.LBRACK);
+			this.state = 118;
+			this.byItem();
+			this.state = 123;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===17) {
+			while (_la===19) {
 				{
 				{
-				this.state = 112;
+				this.state = 119;
 				this.match(ScheduleParser.COMMA);
-				this.state = 113;
+				this.state = 120;
 				this.byItem();
 				}
 				}
-				this.state = 118;
+				this.state = 125;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 119;
+			this.state = 126;
 			this.match(ScheduleParser.RBRACK);
 			}
 		}
@@ -669,34 +737,34 @@ export default class ScheduleParser extends Parser {
 	// @RuleVersion(0)
 	public byItem(): ByItemContext {
 		let localctx: ByItemContext = new ByItemContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 22, ScheduleParser.RULE_byItem);
+		this.enterRule(localctx, 24, ScheduleParser.RULE_byItem);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 121;
-			this.match(ScheduleParser.BY_TYPE);
-			this.state = 122;
-			this.match(ScheduleParser.LBRACK);
-			this.state = 123;
-			this.signedInteger();
 			this.state = 128;
+			this.match(ScheduleParser.BY_TYPE);
+			this.state = 129;
+			this.match(ScheduleParser.LBRACK);
+			this.state = 130;
+			this.signedInteger();
+			this.state = 135;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===17) {
+			while (_la===19) {
 				{
 				{
-				this.state = 124;
+				this.state = 131;
 				this.match(ScheduleParser.COMMA);
-				this.state = 125;
+				this.state = 132;
 				this.signedInteger();
 				}
 				}
-				this.state = 130;
+				this.state = 137;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 131;
+			this.state = 138;
 			this.match(ScheduleParser.RBRACK);
 			}
 		}
@@ -717,22 +785,22 @@ export default class ScheduleParser extends Parser {
 	// @RuleVersion(0)
 	public signedInteger(): SignedIntegerContext {
 		let localctx: SignedIntegerContext = new SignedIntegerContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 24, ScheduleParser.RULE_signedInteger);
+		this.enterRule(localctx, 26, ScheduleParser.RULE_signedInteger);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 134;
+			this.state = 141;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===15) {
+			if (_la===17) {
 				{
-				this.state = 133;
+				this.state = 140;
 				this.match(ScheduleParser.DASH);
 				}
 			}
 
-			this.state = 136;
+			this.state = 143;
 			this.match(ScheduleParser.INTEGER);
 			}
 		}
@@ -751,49 +819,52 @@ export default class ScheduleParser extends Parser {
 		return localctx;
 	}
 
-	public static readonly _serializedATN: number[] = [4,1,21,139,2,0,7,0,2,
+	public static readonly _serializedATN: number[] = [4,1,23,146,2,0,7,0,2,
 	1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,
-	10,7,10,2,11,7,11,2,12,7,12,1,0,1,0,1,0,5,0,30,8,0,10,0,12,0,33,9,0,1,0,
-	3,0,36,8,0,1,0,1,0,1,1,1,1,1,1,3,1,43,8,1,1,1,3,1,46,8,1,1,1,3,1,49,8,1,
-	1,2,1,2,1,2,3,2,54,8,2,1,3,1,3,1,3,3,3,59,8,3,1,4,1,4,1,4,1,4,1,4,3,4,66,
-	8,4,3,4,68,8,4,1,5,1,5,1,5,3,5,73,8,5,1,6,1,6,1,6,1,6,1,6,1,6,3,6,81,8,
-	6,3,6,83,8,6,1,6,1,6,1,6,3,6,88,8,6,3,6,90,8,6,3,6,92,8,6,1,7,1,7,1,8,1,
-	8,1,8,5,8,99,8,8,10,8,12,8,102,9,8,1,9,1,9,1,9,1,9,3,9,108,8,9,1,10,1,10,
-	1,10,1,10,1,10,5,10,115,8,10,10,10,12,10,118,9,10,1,10,1,10,1,11,1,11,1,
-	11,1,11,1,11,5,11,127,8,11,10,11,12,11,130,9,11,1,11,1,11,1,12,3,12,135,
-	8,12,1,12,1,12,1,12,0,0,13,0,2,4,6,8,10,12,14,16,18,20,22,24,0,2,1,0,12,
-	13,1,0,10,11,149,0,26,1,0,0,0,2,39,1,0,0,0,4,50,1,0,0,0,6,58,1,0,0,0,8,
-	60,1,0,0,0,10,69,1,0,0,0,12,91,1,0,0,0,14,93,1,0,0,0,16,95,1,0,0,0,18,107,
-	1,0,0,0,20,109,1,0,0,0,22,121,1,0,0,0,24,134,1,0,0,0,26,31,3,2,1,0,27,28,
-	5,18,0,0,28,30,3,2,1,0,29,27,1,0,0,0,30,33,1,0,0,0,31,29,1,0,0,0,31,32,
-	1,0,0,0,32,35,1,0,0,0,33,31,1,0,0,0,34,36,5,18,0,0,35,34,1,0,0,0,35,36,
-	1,0,0,0,36,37,1,0,0,0,37,38,5,0,0,1,38,1,1,0,0,0,39,40,3,4,2,0,40,42,3,
-	10,5,0,41,43,3,14,7,0,42,41,1,0,0,0,42,43,1,0,0,0,43,45,1,0,0,0,44,46,3,
-	16,8,0,45,44,1,0,0,0,45,46,1,0,0,0,46,48,1,0,0,0,47,49,3,20,10,0,48,47,
-	1,0,0,0,48,49,1,0,0,0,49,3,1,0,0,0,50,53,3,6,3,0,51,52,5,15,0,0,52,54,3,
-	6,3,0,53,51,1,0,0,0,53,54,1,0,0,0,54,5,1,0,0,0,55,59,5,1,0,0,56,59,5,2,
-	0,0,57,59,3,8,4,0,58,55,1,0,0,0,58,56,1,0,0,0,58,57,1,0,0,0,59,7,1,0,0,
-	0,60,67,5,12,0,0,61,62,5,14,0,0,62,65,5,12,0,0,63,64,5,14,0,0,64,66,5,12,
-	0,0,65,63,1,0,0,0,65,66,1,0,0,0,66,68,1,0,0,0,67,61,1,0,0,0,67,68,1,0,0,
-	0,68,9,1,0,0,0,69,72,3,12,6,0,70,71,5,15,0,0,71,73,3,12,6,0,72,70,1,0,0,
-	0,72,73,1,0,0,0,73,11,1,0,0,0,74,92,5,3,0,0,75,92,5,4,0,0,76,92,5,16,0,
-	0,77,82,5,13,0,0,78,80,5,16,0,0,79,81,5,13,0,0,80,79,1,0,0,0,80,81,1,0,
-	0,0,81,83,1,0,0,0,82,78,1,0,0,0,82,83,1,0,0,0,83,92,1,0,0,0,84,89,5,12,
-	0,0,85,87,5,16,0,0,86,88,7,0,0,0,87,86,1,0,0,0,87,88,1,0,0,0,88,90,1,0,
-	0,0,89,85,1,0,0,0,89,90,1,0,0,0,90,92,1,0,0,0,91,74,1,0,0,0,91,75,1,0,0,
-	0,91,76,1,0,0,0,91,77,1,0,0,0,91,84,1,0,0,0,92,13,1,0,0,0,93,94,7,1,0,0,
-	94,15,1,0,0,0,95,100,5,5,0,0,96,97,5,17,0,0,97,99,3,18,9,0,98,96,1,0,0,
-	0,99,102,1,0,0,0,100,98,1,0,0,0,100,101,1,0,0,0,101,17,1,0,0,0,102,100,
-	1,0,0,0,103,104,5,8,0,0,104,108,5,12,0,0,105,106,5,9,0,0,106,108,5,12,0,
-	0,107,103,1,0,0,0,107,105,1,0,0,0,108,19,1,0,0,0,109,110,5,6,0,0,110,111,
-	5,19,0,0,111,116,3,22,11,0,112,113,5,17,0,0,113,115,3,22,11,0,114,112,1,
-	0,0,0,115,118,1,0,0,0,116,114,1,0,0,0,116,117,1,0,0,0,117,119,1,0,0,0,118,
-	116,1,0,0,0,119,120,5,20,0,0,120,21,1,0,0,0,121,122,5,7,0,0,122,123,5,19,
-	0,0,123,128,3,24,12,0,124,125,5,17,0,0,125,127,3,24,12,0,126,124,1,0,0,
-	0,127,130,1,0,0,0,128,126,1,0,0,0,128,129,1,0,0,0,129,131,1,0,0,0,130,128,
-	1,0,0,0,131,132,5,20,0,0,132,23,1,0,0,0,133,135,5,15,0,0,134,133,1,0,0,
-	0,134,135,1,0,0,0,135,136,1,0,0,0,136,137,5,12,0,0,137,25,1,0,0,0,20,31,
-	35,42,45,48,53,58,65,67,72,80,82,87,89,91,100,107,116,128,134];
+	10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,1,0,1,0,1,0,5,0,32,8,0,10,0,12,0,
+	35,9,0,1,0,3,0,38,8,0,1,0,1,0,1,1,1,1,1,1,3,1,45,8,1,1,1,3,1,48,8,1,1,1,
+	3,1,51,8,1,1,2,1,2,1,2,3,2,56,8,2,1,3,1,3,1,3,3,3,61,8,3,1,4,1,4,1,4,1,
+	4,1,4,3,4,68,8,4,3,4,70,8,4,1,5,1,5,1,5,1,5,3,5,76,8,5,3,5,78,8,5,1,5,3,
+	5,81,8,5,1,6,1,6,1,6,1,6,1,6,1,6,1,6,3,6,90,8,6,3,6,92,8,6,1,6,1,6,1,6,
+	3,6,97,8,6,3,6,99,8,6,3,6,101,8,6,1,7,1,7,1,8,1,8,1,9,1,9,1,9,5,9,110,8,
+	9,10,9,12,9,113,9,9,1,10,1,10,1,11,1,11,1,11,1,11,1,11,5,11,122,8,11,10,
+	11,12,11,125,9,11,1,11,1,11,1,12,1,12,1,12,1,12,1,12,5,12,134,8,12,10,12,
+	12,12,137,9,12,1,12,1,12,1,13,3,13,142,8,13,1,13,1,13,1,13,0,0,14,0,2,4,
+	6,8,10,12,14,16,18,20,22,24,26,0,3,1,0,14,15,2,0,9,9,13,13,1,0,10,11,157,
+	0,28,1,0,0,0,2,41,1,0,0,0,4,52,1,0,0,0,6,60,1,0,0,0,8,62,1,0,0,0,10,80,
+	1,0,0,0,12,100,1,0,0,0,14,102,1,0,0,0,16,104,1,0,0,0,18,106,1,0,0,0,20,
+	114,1,0,0,0,22,116,1,0,0,0,24,128,1,0,0,0,26,141,1,0,0,0,28,33,3,2,1,0,
+	29,30,5,20,0,0,30,32,3,2,1,0,31,29,1,0,0,0,32,35,1,0,0,0,33,31,1,0,0,0,
+	33,34,1,0,0,0,34,37,1,0,0,0,35,33,1,0,0,0,36,38,5,20,0,0,37,36,1,0,0,0,
+	37,38,1,0,0,0,38,39,1,0,0,0,39,40,5,0,0,1,40,1,1,0,0,0,41,42,3,4,2,0,42,
+	44,3,10,5,0,43,45,3,16,8,0,44,43,1,0,0,0,44,45,1,0,0,0,45,47,1,0,0,0,46,
+	48,3,18,9,0,47,46,1,0,0,0,47,48,1,0,0,0,48,50,1,0,0,0,49,51,3,22,11,0,50,
+	49,1,0,0,0,50,51,1,0,0,0,51,3,1,0,0,0,52,55,3,6,3,0,53,54,5,17,0,0,54,56,
+	3,6,3,0,55,53,1,0,0,0,55,56,1,0,0,0,56,5,1,0,0,0,57,61,5,1,0,0,58,61,5,
+	2,0,0,59,61,3,8,4,0,60,57,1,0,0,0,60,58,1,0,0,0,60,59,1,0,0,0,61,7,1,0,
+	0,0,62,69,5,14,0,0,63,64,5,16,0,0,64,67,5,14,0,0,65,66,5,16,0,0,66,68,5,
+	14,0,0,67,65,1,0,0,0,67,68,1,0,0,0,68,70,1,0,0,0,69,63,1,0,0,0,69,70,1,
+	0,0,0,70,9,1,0,0,0,71,77,3,12,6,0,72,75,5,17,0,0,73,76,3,12,6,0,74,76,3,
+	14,7,0,75,73,1,0,0,0,75,74,1,0,0,0,76,78,1,0,0,0,77,72,1,0,0,0,77,78,1,
+	0,0,0,78,81,1,0,0,0,79,81,3,14,7,0,80,71,1,0,0,0,80,79,1,0,0,0,81,11,1,
+	0,0,0,82,101,5,3,0,0,83,101,5,4,0,0,84,101,5,5,0,0,85,101,5,18,0,0,86,91,
+	5,15,0,0,87,89,5,18,0,0,88,90,5,15,0,0,89,88,1,0,0,0,89,90,1,0,0,0,90,92,
+	1,0,0,0,91,87,1,0,0,0,91,92,1,0,0,0,92,101,1,0,0,0,93,98,5,14,0,0,94,96,
+	5,18,0,0,95,97,7,0,0,0,96,95,1,0,0,0,96,97,1,0,0,0,97,99,1,0,0,0,98,94,
+	1,0,0,0,98,99,1,0,0,0,99,101,1,0,0,0,100,82,1,0,0,0,100,83,1,0,0,0,100,
+	84,1,0,0,0,100,85,1,0,0,0,100,86,1,0,0,0,100,93,1,0,0,0,101,13,1,0,0,0,
+	102,103,5,12,0,0,103,15,1,0,0,0,104,105,7,1,0,0,105,17,1,0,0,0,106,111,
+	5,6,0,0,107,108,5,19,0,0,108,110,3,20,10,0,109,107,1,0,0,0,110,113,1,0,
+	0,0,111,109,1,0,0,0,111,112,1,0,0,0,112,19,1,0,0,0,113,111,1,0,0,0,114,
+	115,7,2,0,0,115,21,1,0,0,0,116,117,5,7,0,0,117,118,5,21,0,0,118,123,3,24,
+	12,0,119,120,5,19,0,0,120,122,3,24,12,0,121,119,1,0,0,0,122,125,1,0,0,0,
+	123,121,1,0,0,0,123,124,1,0,0,0,124,126,1,0,0,0,125,123,1,0,0,0,126,127,
+	5,22,0,0,127,23,1,0,0,0,128,129,5,8,0,0,129,130,5,21,0,0,130,135,3,26,13,
+	0,131,132,5,19,0,0,132,134,3,26,13,0,133,131,1,0,0,0,134,137,1,0,0,0,135,
+	133,1,0,0,0,135,136,1,0,0,0,136,138,1,0,0,0,137,135,1,0,0,0,138,139,5,22,
+	0,0,139,25,1,0,0,0,140,142,5,17,0,0,141,140,1,0,0,0,141,142,1,0,0,0,142,
+	143,1,0,0,0,143,144,5,14,0,0,144,27,1,0,0,0,21,33,37,44,47,50,55,60,67,
+	69,75,77,80,89,91,96,98,100,111,123,135,141];
 
 	private static __ATN: ATN;
 	public static get _ATN(): ATN {
@@ -978,6 +1049,9 @@ export class TimeRangeContext extends ParserRuleContext {
 	public DASH(): TerminalNode {
 		return this.getToken(ScheduleParser.DASH, 0);
 	}
+	public timeDuration(): TimeDurationContext {
+		return this.getTypedRuleContext(TimeDurationContext, 0) as TimeDurationContext;
+	}
     public get ruleIndex(): number {
     	return ScheduleParser.RULE_timeRange;
 	}
@@ -996,6 +1070,9 @@ export class TimeValueContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
     	this.parser = parser;
+	}
+	public NOW(): TerminalNode {
+		return this.getToken(ScheduleParser.NOW, 0);
 	}
 	public START_OF_DAY(): TerminalNode {
 		return this.getToken(ScheduleParser.START_OF_DAY, 0);
@@ -1032,6 +1109,28 @@ export class TimeValueContext extends ParserRuleContext {
 }
 
 
+export class TimeDurationContext extends ParserRuleContext {
+	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
+		super(parent, invokingState);
+    	this.parser = parser;
+	}
+	public DURATION(): TerminalNode {
+		return this.getToken(ScheduleParser.DURATION, 0);
+	}
+    public get ruleIndex(): number {
+    	return ScheduleParser.RULE_timeDuration;
+	}
+	// @Override
+	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
+		if (visitor.visitTimeDuration) {
+			return visitor.visitTimeDuration(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
 export class TimeZoneContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
@@ -1040,8 +1139,8 @@ export class TimeZoneContext extends ParserRuleContext {
 	public IANA_ZONE(): TerminalNode {
 		return this.getToken(ScheduleParser.IANA_ZONE, 0);
 	}
-	public ZONE_ABBR(): TerminalNode {
-		return this.getToken(ScheduleParser.ZONE_ABBR, 0);
+	public ZONE_ALIAS(): TerminalNode {
+		return this.getToken(ScheduleParser.ZONE_ALIAS, 0);
 	}
     public get ruleIndex(): number {
     	return ScheduleParser.RULE_timeZone;
@@ -1096,14 +1195,11 @@ export class FrequencyOptionContext extends ParserRuleContext {
 		super(parent, invokingState);
     	this.parser = parser;
 	}
-	public INTERVAL(): TerminalNode {
-		return this.getToken(ScheduleParser.INTERVAL, 0);
+	public INTERVAL_OPTION(): TerminalNode {
+		return this.getToken(ScheduleParser.INTERVAL_OPTION, 0);
 	}
-	public INTEGER(): TerminalNode {
-		return this.getToken(ScheduleParser.INTEGER, 0);
-	}
-	public COUNT(): TerminalNode {
-		return this.getToken(ScheduleParser.COUNT, 0);
+	public COUNT_OPTION(): TerminalNode {
+		return this.getToken(ScheduleParser.COUNT_OPTION, 0);
 	}
     public get ruleIndex(): number {
     	return ScheduleParser.RULE_frequencyOption;

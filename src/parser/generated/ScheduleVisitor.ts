@@ -11,6 +11,7 @@ import { DateValueContext } from "./ScheduleParser.js";
 import { IntegerDateContext } from "./ScheduleParser.js";
 import { TimeRangeContext } from "./ScheduleParser.js";
 import { TimeValueContext } from "./ScheduleParser.js";
+import { TimeDurationContext } from "./ScheduleParser.js";
 import { TimeZoneContext } from "./ScheduleParser.js";
 import { FrequencyContext } from "./ScheduleParser.js";
 import { FrequencyOptionContext } from "./ScheduleParser.js";
@@ -69,6 +70,12 @@ export default class ScheduleVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitTimeValue?: (ctx: TimeValueContext) => Result;
+	/**
+	 * Visit a parse tree produced by `ScheduleParser.timeDuration`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTimeDuration?: (ctx: TimeDurationContext) => Result;
 	/**
 	 * Visit a parse tree produced by `ScheduleParser.timeZone`.
 	 * @param ctx the parse tree

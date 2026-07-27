@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { NDataTable, NPopconfirm, NRadio, NSelect, NSwitch } from 'naive-ui'
+import { NButton, NDataTable, NInput, NPopconfirm, NRadio, NSelect, NSwitch } from 'naive-ui'
 import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -181,10 +181,51 @@ describe('secondary pages', () => {
     const timeZoneSelect = wrapper.findAllComponents(NSelect)[0]!
     expect(timeZoneSelect.props('filterable')).toBe(true)
     expect(timeZoneSelect.props('options')?.length ?? 0).toBeGreaterThan(100)
-    expect(wrapper.findAll('.setting-field')).toHaveLength(12)
+    expect(wrapper.text()).toContain('Time Zone Abbreviations')
+    const abbreviationTable = wrapper.getComponent(NDataTable)
+    expect(abbreviationTable.props('pagination')).toBe(false)
+    expect(wrapper.findAllComponents(NSelect)[1]?.props('filterable')).toBe(true)
+    expect(wrapper.getComponent(NInput).props('placeholder')).toBe('Abbreviation')
+    expect(wrapper.findAll('.setting-field')).toHaveLength(13)
     expect(wrapper.findAllComponents(NSwitch).every(
       (component) => component.element.parentElement?.classList.contains('setting-field') === true
     )).toBe(true)
+  })
+
+  it('adds and removes configured time zone abbreviations', async () => {
+    const router = await routerAt('/settings')
+    const platform = createInMemoryGateway()
+    const wrapper = mount(SettingsPage, {
+      global: {
+        plugins: [createPinia(), router],
+        provide: { [platformGatewayKey as symbol]: platform }
+      }
+    })
+    await vi.waitFor(() => expect(wrapper.findAllComponents(NSelect)).toHaveLength(3))
+
+    wrapper.getComponent(NInput).vm.$emit('update:value', 'work_1')
+    wrapper.findAllComponents(NSelect)[1]!.vm.$emit('update:value', 'America/Chicago')
+    await wrapper.vm.$nextTick()
+    await wrapper.findAllComponents(NButton)
+      .find((button) => button.text() === 'Add')!
+      .trigger('click')
+
+    await vi.waitFor(async () => {
+      const result = await platform.settings.get()
+      expect(result.ok && result.value.timeZoneAbbreviations)
+        .toEqual({ WORK_1: 'America/Chicago' })
+    })
+    expect(wrapper.getComponent(NDataTable).props('data')).toEqual([
+      { abbreviation: 'WORK_1', timeZone: 'America/Chicago' }
+    ])
+
+    await wrapper.findAllComponents(NButton)
+      .find((button) => button.text() === 'Delete')!
+      .trigger('click')
+    await vi.waitFor(async () => {
+      const result = await platform.settings.get()
+      expect(result.ok && result.value.timeZoneAbbreviations).toEqual({})
+    })
   })
 
   it('documents the shortcuts on Help', () => {
@@ -192,5 +233,7 @@ describe('secondary pages', () => {
     expect(wrapper.text()).toContain('Ctrl + Arrow Left / Right')
     expect(wrapper.text()).toContain('Ctrl + Arrow Up')
     expect(wrapper.text()).toContain('Ctrl + Enter')
+    expect(wrapper.text()).toContain('now')
+    expect(wrapper.text()).toContain('10:?-2h')
   })
 })

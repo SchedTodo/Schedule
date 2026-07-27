@@ -104,4 +104,40 @@ describe('normalizeSchedule', () => {
     expect(result.ok && result.value.code)
       .toBe('2026/7/13-2026/7/17 13:00-14:00 Asia/Shanghai daily,i2,c2;')
   })
+
+  it('expands now and omitted duration starts before serialization', () => {
+    const todo = normalizeSchedule('tdy now;', context)
+    const explicit = normalizeSchedule('tdy now-2h;', context)
+    const omitted = normalizeSchedule('tdy 2h;', context)
+
+    expect(todo.ok && todo.value.code)
+      .toBe('2026/7/13 0:30 Asia/Shanghai;')
+    expect(explicit.ok && explicit.value.code)
+      .toBe('2026/7/13 0:30-2:30 Asia/Shanghai;')
+    expect(omitted.ok && omitted.value.code)
+      .toBe('2026/7/13 0:30-2:30 Asia/Shanghai;')
+  })
+
+  it('expands wall-clock durations and preserves unknown minutes when deterministic', () => {
+    const minutes = normalizeSchedule('2026/7/13 10:00-90m;', context)
+    const hoursUnknown = normalizeSchedule('2026/7/13 10:?-2h;', context)
+    const minutesUnknown = normalizeSchedule('2026/7/13 10:?-120m;', context)
+
+    expect(minutes.ok && minutes.value.code)
+      .toBe('2026/7/13 10:00-11:30 Asia/Shanghai;')
+    expect(hoursUnknown.ok && hoursUnknown.value.code)
+      .toBe('2026/7/13 10:?-12:? Asia/Shanghai;')
+    expect(minutesUnknown.ok && minutesUnknown.value.code)
+      .toBe('2026/7/13 10:?-12:? Asia/Shanghai;')
+  })
+
+  it('uses wall-clock arithmetic across daylight-saving transitions', () => {
+    const result = normalizeSchedule(
+      '2026/3/8 1:30-2h America/Chicago;',
+      context
+    )
+
+    expect(result.ok && result.value.code)
+      .toBe('2026/3/8 1:30-3:30 America/Chicago;')
+  })
 })

@@ -99,4 +99,11 @@ describe('legacy-compatible occurrence expansion', () => {
       endMark: '10'
     })
   })
+
+  it('expands duration sugar across midnight using the complete wall time', () => {
+    expect(expand('2026/7/13 10:30-1439m UTC;')[0]).toMatchObject({
+      start: '2026-07-13T10:30:00Z',
+      end: '2026-07-14T10:29:00Z'
+    })
+  })
 })

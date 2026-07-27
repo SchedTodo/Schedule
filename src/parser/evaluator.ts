@@ -92,7 +92,15 @@ function evaluateDate(
 }
 
 /** 将时间文本求值为具体或带未知精度标记的时分结构。 */
-function evaluateTime(source: string): EvaluatedTime {
+function evaluateTime(
+  source: string,
+  context: EvaluationContext,
+  timeZone: string
+): EvaluatedTime {
+  if (source === 'now') {
+    const now = context.now.toZonedDateTimeISO(timeZone)
+    return { hour: now.hour, minute: now.minute }
+  }
   if (source === 's' || source === 'start') return { hour: 0, minute: 0 }
   if (source === 'e' || source === 'end') return { hour: 23, minute: 59 }
   if (source === ':' || source === '.') return { hour: null, minute: null }
@@ -108,6 +116,39 @@ function evaluateTime(source: string): EvaluatedTime {
     throw new Error(`Invalid minute: ${source}`)
   }
   return { hour, minute }
+}
+
+/** 按墙钟时间增加小于一天的持续长度，并保留可确定的未知分钟。 */
+function addDuration(
+  start: EvaluatedTime,
+  duration: NonNullable<ScheduleStatementAst['duration']>
+): EvaluatedTime {
+  const minutes = duration.unit === 'hours' ? duration.value * 60 : duration.value
+  if (
+    !Number.isSafeInteger(duration.value) ||
+    duration.value <= 0 ||
+    minutes >= 24 * 60
+  ) {
+    throw new Error('Invalid time: duration must be positive and shorter than 24 hours')
+  }
+  if (start.hour === null) {
+    throw new Error('Invalid time: duration requires a known start hour')
+  }
+  if (start.minute === null) {
+    if (minutes % 60 !== 0) {
+      throw new Error('Invalid time: duration cannot determine the end hour')
+    }
+    return {
+      hour: (start.hour + minutes / 60) % 24,
+      minute: null
+    }
+  }
+
+  const endMinutes = (start.hour * 60 + start.minute + minutes) % (24 * 60)
+  return {
+    hour: Math.floor(endMinutes / 60),
+    minute: endMinutes % 60
+  }
 }
 
 /** 解析 IANA 时区或通过注入解析器解析缩写；歧义和未知缩写均视为无效。 */
@@ -177,9 +218,12 @@ function evaluateStatement(
     statement.dates[1] === undefined
       ? undefined
       : evaluateDate(statement.dates[1], context, timeZone, startDate)
-  const firstTime = evaluateTime(statement.times[0])
-  const secondTime =
-    statement.times[1] === undefined ? undefined : evaluateTime(statement.times[1])
+  const firstTime = evaluateTime(statement.times[0], context, timeZone)
+  const secondTime = statement.duration === undefined
+    ? statement.times[1] === undefined
+      ? undefined
+      : evaluateTime(statement.times[1], context, timeZone)
+    : addDuration(firstTime, statement.duration)
   if (
     secondTime !== undefined &&
     firstTime.hour === null && firstTime.minute === null &&
@@ -224,7 +268,7 @@ export function evaluateSchedule(
       ? 'INVALID_TIME_ZONE'
       : lowerMessage.includes('recurrence')
         ? 'INVALID_RECURRENCE'
-        : lowerMessage.includes('hour') || lowerMessage.includes('minute')
+      : lowerMessage.includes('time')
         ? 'INVALID_TIME'
         : 'INVALID_DATE'
     return { ok: false, diagnostics: [semanticDiagnostic(code, message)] }

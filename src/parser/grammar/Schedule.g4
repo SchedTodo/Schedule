@@ -23,20 +23,26 @@ integerDate
   ;
 
 timeRange
-  : timeValue (DASH timeValue)?
+  : timeValue (DASH (timeValue | timeDuration))?
+  | timeDuration
   ;
 
 timeValue
-  : START_OF_DAY
+  : NOW
+  | START_OF_DAY
   | END_OF_DAY
   | TIME_SEPARATOR
   | QUESTION (TIME_SEPARATOR QUESTION?)?
   | INTEGER (TIME_SEPARATOR (INTEGER | QUESTION)?)?
   ;
 
+timeDuration
+  : DURATION
+  ;
+
 timeZone
   : IANA_ZONE
-  | ZONE_ABBR
+  | ZONE_ALIAS
   ;
 
 frequency
@@ -44,8 +50,8 @@ frequency
   ;
 
 frequencyOption
-  : INTERVAL INTEGER
-  | COUNT INTEGER
+  : INTERVAL_OPTION
+  | COUNT_OPTION
   ;
 
 byClause
@@ -62,15 +68,17 @@ signedInteger
 
 TODAY: 'tdy';
 TOMORROW: 'tmr';
+NOW: 'now';
 START_OF_DAY: 'start' | 's';
 END_OF_DAY: 'end' | 'e';
 FREQUENCY: 'daily' | 'weekly' | 'monthly' | 'yearly';
 BY: 'by';
 BY_TYPE: 'month' | 'weekno' | 'yearday' | 'monthday' | 'day' | 'setpos';
-INTERVAL: 'i';
-COUNT: 'c';
 IANA_ZONE: [A-Za-z_] [A-Za-z0-9_+-]* ('/' [A-Za-z0-9_+-]+)+;
-ZONE_ABBR: [A-Z] [A-Z] [A-Z] [A-Z]? [A-Z]?;
+INTERVAL_OPTION: 'i' [0-9]+;
+COUNT_OPTION: 'c' [0-9]+;
+DURATION: [0-9]+ [hm];
+ZONE_ALIAS: [A-Za-z] [A-Za-z0-9_]*;
 INTEGER: [0-9]+;
 QUESTION: '?';
 SLASH: '/';

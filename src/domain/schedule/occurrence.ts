@@ -148,7 +148,10 @@ function expandStatement(statement: EvaluatedStatement): readonly ScheduleOccurr
   return dates(statement).map((date) => {
     const endDate =
       statement.startTime !== null &&
-      (statement.startTime.hour ?? 0) > (statement.endTime.hour ?? 0)
+      Temporal.PlainTime.compare(
+        plainTime(statement.startTime),
+        plainTime(statement.endTime)
+      ) > 0
         ? date.add({ days: 1 })
         : date
     return {
