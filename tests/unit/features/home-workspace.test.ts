@@ -322,6 +322,58 @@ describe('home workspace', () => {
     }
   })
 
+  it('updates the week current-time indicator once per minute and cleans up its timer', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(TEST_NOW))
+    const setIntervalSpy = vi.spyOn(globalThis, 'setInterval')
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
+    const wrapper = await mountHome()
+
+    try {
+      await flushPromises()
+      setIntervalSpy.mockClear()
+      clearIntervalSpy.mockClear()
+      await wrapper.get('button[data-view="week"]').trigger('click')
+      const indicator = wrapper.get('[data-testid="current-time-indicator"]')
+      const originalStyle = indicator.attributes('style')
+      const timer = setIntervalSpy.mock.results.at(-1)?.value
+
+      expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 60_000)
+      await vi.advanceTimersByTimeAsync(60_000)
+      await wrapper.vm.$nextTick()
+      expect(indicator.attributes('style')).not.toBe(originalStyle)
+
+      wrapper.unmount()
+      expect(clearIntervalSpy).toHaveBeenCalledWith(timer)
+    } finally {
+      if (wrapper.exists()) wrapper.unmount()
+      setIntervalSpy.mockRestore()
+      clearIntervalSpy.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
+  it('starts the week on the current logical day and rolls over at its boundary', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(TEST_NOW))
+    const platform = testGateway()
+    await platform.settings.update({ logicalDayStartHour: 6 })
+    const wrapper = await mountHome([], createPinia(), platform)
+
+    try {
+      await flushPromises()
+      await wrapper.get('button[data-view="week"]').trigger('click')
+      expect(wrapper.get('.day-card header').text()).toBe('2026/07/12')
+
+      await vi.advanceTimersByTimeAsync(2 * 60 * 60 * 1000)
+      await wrapper.vm.$nextTick()
+      expect(wrapper.get('.day-card header').text()).toBe('2026/07/13')
+    } finally {
+      wrapper.unmount()
+      vi.useRealTimers()
+    }
+  })
+
   it('marks Name and rTime required and shows field errors before submitting', async () => {
     const wrapper = mount(ScheduleModal, {
       props: { timeZone: 'UTC' },

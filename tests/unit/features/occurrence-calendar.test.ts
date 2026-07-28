@@ -173,10 +173,14 @@ describe('occurrence calendar views', () => {
       .toEqual(['2026-07-13', '2026-07-14'])
     expect(cards.map((card) => card.text()))
       .toEqual(['跨日值班20:00–08:00', '跨日值班20:00–08:00'])
-    expect(cards[0]!.attributes('style')).toContain('58.3333%')
-    expect(cards[0]!.attributes('style')).toContain('41.66666666666667%')
-    expect(cards[1]!.attributes('style')).toContain('0%')
-    expect(cards[1]!.attributes('style')).toContain('8.333333333333332%')
+    expect(cards[0]!.attributes('style'))
+      .toContain('0.5833333333333334 * (100% - 4.8vh)')
+    expect(cards[0]!.attributes('style'))
+      .toContain('calc((100% - 4.8vh) * 0.4166666666666667)')
+    expect(cards[1]!.attributes('style'))
+      .toContain('0 * (100% - 4.8vh)')
+    expect(cards[1]!.attributes('style'))
+      .toContain('calc((100% - 4.8vh) * 0.08333333333333333)')
     const backgrounds = cards.map((card) =>
       (card.attributes('style') ?? '').match(/background-color: [^;]+/)?.[0]
     )
@@ -198,5 +202,43 @@ describe('occurrence calendar views', () => {
     expect(card.attributes('style')).toContain('z-index: 999')
     await card.trigger('mouseleave')
     expect(card.attributes('style')).not.toContain('z-index: 999')
+  })
+
+  it('renders an inert current-time indicator only in its logical-day column', async () => {
+    const wrapper = mount(WeekScheduleView, {
+      props: {
+        items: [],
+        timeZone: 'UTC',
+        startDate: '2026-07-13',
+        dayCount: 2,
+        now: '2026-07-13T12:00:00Z'
+      }
+    })
+
+    const indicator = wrapper.get('[data-testid="current-time-indicator"]')
+    expect(wrapper.findAll('[data-testid="current-time-indicator"]')).toHaveLength(1)
+    expect(indicator.attributes('aria-label')).toBe('Current time 12:00')
+    expect(indicator.get('.current-time-label').text()).toBe('12:00')
+    expect(indicator.attributes('style')).toContain('0.5 * (100% - 4.8vh)')
+    expect(indicator.attributes('style')).toContain('pointer-events: none')
+    expect(indicator.element.parentElement).toBe(wrapper.findAll('.day-card')[0]!.element)
+
+    await wrapper.setProps({ now: '2026-07-13T12:01:00Z' })
+    expect(indicator.attributes('style')).toContain('0.5006944444444444 * (100% - 4.8vh)')
+    expect(indicator.get('.current-time-label').text()).toBe('12:01')
+  })
+
+  it('does not render the current-time indicator outside the visible range', () => {
+    const wrapper = mount(WeekScheduleView, {
+      props: {
+        items: [],
+        timeZone: 'UTC',
+        startDate: '2026-07-14',
+        dayCount: 1,
+        now: '2026-07-13T12:00:00Z'
+      }
+    })
+
+    expect(wrapper.find('[data-testid="current-time-indicator"]').exists()).toBe(false)
   })
 })

@@ -14,7 +14,8 @@ import WeekScheduleView from '../features/schedule/components/WeekScheduleView.v
 import { useScheduleList } from '../features/schedule/use-schedule-list'
 import { useScheduleMutations } from '../features/schedule/use-schedule-mutations'
 import { useOccurrenceRange } from '../features/schedule/use-occurrence-range'
-import { calendarRange, todayInTimeZone } from '../features/schedule/occurrence-time'
+import { calendarRange } from '../features/schedule/occurrence-time'
+import { logicalDateForInstant } from '../features/schedule/week-presentation'
 import { useRuntimeStore } from '../stores/runtime'
 
 const gateway = inject(platformGatewayKey)
@@ -54,8 +55,17 @@ const hasVisibleRelativeTime = computed(() => [
   ...occurrenceRange.items.value.filter((item) => item.startMark === '11'),
   ...todos.value.filter((item) => item.endMark === '11')
 ].some((item) => effectiveTimeMode(item.id) === 'relative'))
+const needsLiveClock = computed(() =>
+  runtimeStore.homepage.priority === 'week' || hasVisibleRelativeTime.value
+)
+const weekStartDate = computed(() => logicalDateForInstant(
+  displayNow.value,
+  appSettings.value.timeZone,
+  appSettings.value.logicalDayStartHour,
+  appSettings.value.logicalDayStartMinute
+))
 
-watch(hasVisibleRelativeTime, (visible) => {
+watch(needsLiveClock, (visible) => {
   if (relativeTimeTimer !== undefined) clearInterval(relativeTimeTimer)
   relativeTimeTimer = undefined
   if (!visible) return
@@ -189,7 +199,7 @@ void refreshTodos()
           v-else
           :items="occurrenceRange.items.value"
           :time-zone="appSettings.timeZone"
-          :start-date="todayInTimeZone(appSettings.timeZone)"
+          :start-date="weekStartDate"
           :day-count="appSettings.weekViewDays"
           :start-hour="appSettings.logicalDayStartHour"
           :start-minute="appSettings.logicalDayStartMinute"

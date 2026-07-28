@@ -40,6 +40,11 @@ export interface WeekEventSegment {
   readonly durationMinutes: number
 }
 
+export interface WeekCurrentTimePosition {
+  readonly logicalDate: string
+  readonly startMinutes: number
+}
+
 function logicalDayBoundary(
   logicalDate: string,
   timeZone: string,
@@ -53,6 +58,21 @@ function logicalDayBoundary(
     })
     .toInstant()
     .epochMilliseconds
+}
+
+/** 将当前 instant 定位到周视图中的逻辑日期和分钟位置。 */
+export function weekCurrentTimePosition(
+  instant: string,
+  timeZone: string,
+  startHour: number,
+  startMinute: number
+): WeekCurrentTimePosition {
+  const logicalDate = logicalDateForInstant(instant, timeZone, startHour, startMinute)
+  const boundary = logicalDayBoundary(logicalDate, timeZone, startHour, startMinute)
+  return {
+    logicalDate,
+    startMinutes: (Temporal.Instant.from(instant).epochMilliseconds - boundary) / 60_000
+  }
 }
 
 /** 将 occurrence 按配置的逻辑日边界拆分为周视图卡片。 */

@@ -4,6 +4,7 @@ import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.co
 import {
   logicalDateForInstant,
   scheduleColor,
+  weekCurrentTimePosition,
   weekSegmentsForOccurrence
 } from '../../../src/features/schedule/week-presentation'
 
@@ -28,6 +29,21 @@ describe('week presentation', () => {
       .toBe('2026-07-17')
     expect(logicalDateForInstant('2026-07-17T22:00:00Z', 'Asia/Shanghai', 6, 0))
       .toBe('2026-07-18')
+  })
+
+  it('positions the current time within a UTC logical day', () => {
+    expect(weekCurrentTimePosition('2026-07-13T12:00:00Z', 'UTC', 0, 0))
+      .toEqual({ logicalDate: '2026-07-13', startMinutes: 720 })
+  })
+
+  it('positions an early wall time within the previous logical day', () => {
+    expect(weekCurrentTimePosition('2026-07-13T02:00:00Z', 'UTC', 6, 0))
+      .toEqual({ logicalDate: '2026-07-12', startMinutes: 1200 })
+  })
+
+  it('uses the selected time zone for the current logical day', () => {
+    expect(weekCurrentTimePosition('2026-07-13T16:00:00Z', 'Asia/Shanghai', 6, 0))
+      .toEqual({ logicalDate: '2026-07-13', startMinutes: 1080 })
   })
 
   it('selects one stable legacy palette color per schedule', () => {
