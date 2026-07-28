@@ -29,9 +29,9 @@ describe('schedule detail presentation', () => {
   it('formats marked instants to minutes and derives the configured-zone weekday', () => {
     const value = occurrence('14', 14)
     expect(formatOccurrenceDateTime(value.start!, value.startMark, TEST_TIME_ZONE))
-      .toBe('2026/7/14 13:00')
+      .toBe('7/14/2026 13:00')
     expect(formatOccurrenceDateTime(value.start!, '10', TEST_TIME_ZONE))
-      .toBe('2026/7/14 13:?')
+      .toBe('7/14/2026 13:?')
     expect(occurrenceWeekday(value, TEST_TIME_ZONE, TEST_LOCALE)).toBe('星期二')
   })
 

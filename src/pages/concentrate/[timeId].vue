@@ -2,6 +2,7 @@
 import { computed, inject, onBeforeUnmount, ref } from 'vue'
 import { NButton, NCard, NPageHeader, NProgress, NSelect } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import { useOperationFeedback } from '../../app/app-feedback'
 import { platformGatewayKey } from '../../app/injection-keys'
@@ -16,6 +17,7 @@ const platform = gateway
 const { showResult } = useOperationFeedback()
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const routeId = Array.isArray(route.params.timeId) ? route.params.timeId[0] : route.params.timeId
 const todos = ref<readonly ScheduleOccurrenceDto[]>([])
 const selectedId = ref(routeId ?? '')
@@ -28,12 +30,14 @@ const selected = computed(() => todos.value.find(({ id }) => id === selectedId.v
 const stageLabel = computed(() => {
   const state = snapshot.value
   if (!state) return ''
-  if (state.stage === 'focus') return `Focus ${state.focusNumber} of 4`
-  return state.stage === 'smallBreak' ? 'Small Break' : 'Big Break'
+  if (state.stage === 'focus') return t('focus.focusCount', { current: state.focusNumber })
+  return state.stage === 'smallBreak' ? t('focus.smallBreak') : t('focus.bigBreak')
 })
 const buttonLabel = computed(() => {
-  if (snapshot.value?.running) return 'Pause'
-  return (snapshot.value?.cumulativeFocusMs ?? 0) === 0 ? 'Start' : 'Resume'
+  if (snapshot.value?.running) return t('focus.pause')
+  return (snapshot.value?.cumulativeFocusMs ?? 0) === 0
+    ? t('focus.start')
+    : t('focus.resume')
 })
 
 function formatCountdown(milliseconds: number) {
@@ -89,6 +93,7 @@ async function load() {
     smallBreakMs: values.smallBreakMinutes * 60_000,
     bigBreakMs: values.bigBreakMinutes * 60_000
   }, {
+    locale: values.locale,
     now: () => Date.now(),
     notify: (input) => platform.notifications.show(input),
     saveRecord: async (input) => {
@@ -113,7 +118,7 @@ void load()
 <template>
   <div class="concentrate-page">
     <NPageHeader
-      title="Concentrate"
+      :title="t('focus.concentrate')"
       :show-breadcrumb="false"
       @back="router.back()"
     />
@@ -133,7 +138,7 @@ void load()
         {{ formatCountdown(snapshot?.remainingMs ?? 0) }}
       </NProgress>
       <p class="focused-total">
-        Focused {{ formatTotal(snapshot?.cumulativeFocusMs ?? 0) }}
+        {{ t('focus.focused') }} {{ formatTotal(snapshot?.cumulativeFocusMs ?? 0) }}
       </p>
       <NButton
         data-testid="focus-toggle"

@@ -14,6 +14,7 @@ import {
   weekSegmentsForOccurrence
 } from '../week-presentation'
 import OccurrenceTooltip from './OccurrenceTooltip.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(defineProps<{
   items: readonly CalendarOccurrenceDto[]
@@ -38,6 +39,7 @@ const emit = defineEmits<{
   select: [id: string]
   'toggle-time': [id: string]
 }>()
+const { t, locale } = useI18n()
 const dragStartOffsets = reactive(new Map<string, number>())
 const dragOffsets = reactive(new Map<string, number>())
 const hovered = reactive(new Set<string>())
@@ -46,6 +48,12 @@ const days = computed(() => Array.from({ length: props.dayCount }, (_, offset) =
   date.setUTCDate(date.getUTCDate() + offset)
   return date.toISOString().slice(0, 10)
 }))
+const dayLabel = (day: string) => new Intl.DateTimeFormat(locale.value, {
+  month: 'numeric',
+  day: 'numeric',
+  weekday: 'short',
+  timeZone: 'UTC'
+}).format(new Date(`${day}T00:00:00Z`))
 const segments = computed(() => props.items.flatMap((item) =>
   weekSegmentsForOccurrence(
     item,
@@ -60,7 +68,7 @@ const currentTime = computed(() => weekCurrentTimePosition(
   props.startHour,
   props.startMinute
 ))
-const currentTimeText = computed(() => new Intl.DateTimeFormat('en-GB', {
+const currentTimeText = computed(() => new Intl.DateTimeFormat(locale.value, {
   timeZone: props.timeZone,
   hour: '2-digit',
   minute: '2-digit',
@@ -73,7 +81,7 @@ function timeLabel(item: CalendarOccurrenceDto): string {
     ? props.timeDisplayMode === 'clock'
     : props.timeDisplayMode === 'relative'
   if (relative && item.start !== null && item.startMark === '11') {
-    return formatRelativeTime(item.start, props.now, 'event')
+    return formatRelativeTime(item.start, props.now, 'event', locale.value)
   }
   return formatOccurrenceRange(item, props.timeZone)
 }
@@ -83,7 +91,7 @@ function positionInDay(startMinutes: number, offsetPixels = 0): string {
 }
 
 function currentTimeLabel(): string {
-  return `Current time ${currentTimeText.value}`
+  return t('schedule.currentTime', { time: currentTimeText.value })
 }
 
 function currentTimeStyle(): CSSProperties {
@@ -137,7 +145,7 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
       :key="day"
       class="day-card"
     >
-      <header>{{ day.replaceAll('-', '/') }}</header>
+      <header>{{ dayLabel(day) }}</header>
       <OccurrenceTooltip
         v-for="segment in segments.filter((value) => value.logicalDate === day)"
         :key="segment.key"
@@ -167,7 +175,7 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
             type="button"
             class="event-time"
             :disabled="segment.item.startMark !== '11'"
-            :aria-label="`Toggle time display for ${segment.item.title}`"
+            :aria-label="t('schedule.toggleTime', { title: segment.item.title })"
             @click.stop="emit('toggle-time', segment.item.id)"
           >
             {{ timeLabel(segment.item) }}
@@ -178,7 +186,7 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
         v-if="!segments.some((value) => value.logicalDate === day)"
         data-testid="no-events"
         class="day-empty"
-        description="No Events"
+        :description="t('schedule.noEvents')"
       />
       <div
         v-if="currentTime.logicalDate === day"

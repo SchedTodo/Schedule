@@ -19,7 +19,12 @@ function harness(durations: FocusCycleDurations = {
   const saveRecord = vi.fn<(input: CreateConcentrationRecordInput) => Promise<void>>(
     async () => undefined
   )
-  const session = new FocusSession(durations, { now: () => now, notify, saveRecord })
+  const session = new FocusSession(durations, {
+    locale: 'en-US',
+    now: () => now,
+    notify,
+    saveRecord
+  })
   return {
     session,
     notify,

@@ -2,12 +2,14 @@
 import type { InputInst } from 'naive-ui'
 import { nextTick, ref } from 'vue'
 import { NInput } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{ value: string }>()
 const emit = defineEmits<{ commit: [value: string] }>()
 const editing = ref(false)
 const draft = ref('')
 const input = ref<InputInst | null>(null)
+const { t } = useI18n()
 
 function beginEdit() {
   draft.value = props.value
@@ -26,7 +28,7 @@ function finishEdit() {
     v-if="editing"
     ref="input"
     v-model:value="draft"
-    aria-label="Edit time comment"
+    :aria-label="t('schedule.comment')"
     @blur="finishEdit"
     @keyup.enter="finishEdit"
   />

@@ -275,13 +275,20 @@ describe('home workspace', () => {
 
     create.mockResolvedValueOnce({
       ok: false,
-      error: { code: 'PERSISTENCE_FAILED', message: '保存失败' }
+      error: {
+        code: 'PERSISTENCE_FAILED',
+        messageKey: 'error.persistenceFailed',
+        message: '保存失败'
+      }
     })
     await wrapper.getComponent(ScheduleModal).get('button').trigger('click')
     await wrapper.get('input[aria-label="Name"]').setValue(input.title)
     await wrapper.get('textarea[aria-label="rTime"]').setValue(input.recurrenceCode)
     await wrapper.get('[role="dialog"] button').trigger('click')
-    await vi.waitFor(() => expect(feedback.error).toHaveBeenCalledWith('Error', '保存失败'))
+    await vi.waitFor(() => expect(feedback.error).toHaveBeenCalledWith(
+      'Error',
+      'Local data could not be saved or loaded.'
+    ))
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
@@ -363,11 +370,11 @@ describe('home workspace', () => {
     try {
       await flushPromises()
       await wrapper.get('button[data-view="week"]').trigger('click')
-      expect(wrapper.get('.day-card header').text()).toBe('2026/07/12')
+      expect(wrapper.get('.day-card header').text()).toBe('Sun, 7/12')
 
       await vi.advanceTimersByTimeAsync(2 * 60 * 60 * 1000)
       await wrapper.vm.$nextTick()
-      expect(wrapper.get('.day-card header').text()).toBe('2026/07/13')
+      expect(wrapper.get('.day-card header').text()).toBe('Mon, 7/13')
     } finally {
       wrapper.unmount()
       vi.useRealTimers()

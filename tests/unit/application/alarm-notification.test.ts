@@ -33,9 +33,9 @@ describe('alarm notification presentation', () => {
         comment: '带材料'
       },
       alarmAt: '2026-07-23T00:55:00Z'
-    }, 'Asia/Shanghai')).toEqual({
+    }, 'Asia/Shanghai', 'en-US')).toEqual({
       title: 'Event: 评审',
-      body: '带材料\n2026-07-23 09:00–10:00'
+      body: '带材料\n7/23/2026 09:00–10:00'
     })
   })
 
@@ -49,8 +49,8 @@ describe('alarm notification presentation', () => {
         endMark: '01'
       },
       alarmAt: '2026-07-23T15:25:00Z'
-    }, 'Asia/Shanghai').body).toBe(
-      '2026-07-23 23:?–2026-07-24 ?:00'
+    }, 'Asia/Shanghai', 'en-US').body).toBe(
+      '7/23/2026 23:?–7/24/2026 ?:00'
     )
   })
 
@@ -67,9 +67,16 @@ describe('alarm notification presentation', () => {
         endMark
       },
       alarmAt: '2026-07-23T01:25:00Z'
-    }, 'Asia/Shanghai')).toEqual({
+    }, 'Asia/Shanghai', 'en-US')).toEqual({
       title: 'Todo: 待办',
-      body: `2026-07-23 ${expected}`
+      body: `7/23/2026 ${expected}`
     })
+  })
+
+  it('localizes the notification type', () => {
+    expect(notificationForAlarm({
+      occurrence: event,
+      alarmAt: '2026-07-23T00:55:00Z'
+    }, 'Asia/Shanghai', 'zh-CN').title).toBe('事件: 评审')
   })
 })

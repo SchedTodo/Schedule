@@ -4,6 +4,7 @@ import { NAlert, NEmpty, NList, NSpin } from 'naive-ui'
 import type { AppErrorDto } from '../../../contracts/result'
 import type { ScheduleDto } from '../../../contracts/schedule.contract'
 import ScheduleListItem from './ScheduleListItem.vue'
+import { useI18n } from 'vue-i18n'
 
 withDefaults(
   defineProps<{
@@ -15,6 +16,7 @@ withDefaults(
 )
 
 const emit = defineEmits<{ select: [id: string] }>()
+const { t, te } = useI18n()
 </script>
 
 <template>
@@ -22,15 +24,15 @@ const emit = defineEmits<{ select: [id: string] }>()
     v-if="error"
     type="error"
   >
-    {{ error.message }}
+    {{ te(error.messageKey) ? t(error.messageKey) : error.message }}
   </NAlert>
   <NSpin
     v-else-if="loading"
-    description="正在加载日程"
+    :description="t('schedule.loading')"
   />
   <NEmpty
     v-else-if="items.length === 0"
-    description="暂无日程"
+    :description="t('schedule.noSchedules')"
   />
   <NList v-else>
     <ScheduleListItem

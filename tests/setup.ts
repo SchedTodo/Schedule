@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, vi } from 'vitest'
+import { config } from '@vue/test-utils'
 
 import { TEST_NOW } from './support/time'
+import { createScheduleI18n } from '../src/i18n'
+
+config.global.plugins = [createScheduleI18n('en-US')]
 
 const NativeDate = Date
 const fixedEpochMilliseconds = NativeDate.parse(TEST_NOW)

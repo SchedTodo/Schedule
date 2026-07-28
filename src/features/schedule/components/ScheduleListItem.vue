@@ -2,9 +2,11 @@
 import { NListItem, NTag } from 'naive-ui'
 
 import type { ScheduleDto } from '../../../contracts/schedule.contract'
+import { useI18n } from 'vue-i18n'
 
 defineProps<{ schedule: ScheduleDto }>()
 const emit = defineEmits<{ select: [id: string] }>()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -20,7 +22,7 @@ const emit = defineEmits<{ select: [id: string] }>()
         size="small"
         :type="schedule.kind === 'event' ? 'info' : 'success'"
       >
-        {{ schedule.kind === 'event' ? '事件' : '待办' }}
+        {{ schedule.kind === 'event' ? t('common.event') : t('common.todo') }}
       </NTag>
       <span
         v-if="schedule.recurrenceCode"

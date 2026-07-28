@@ -46,6 +46,7 @@ export interface StoredOccurrenceInput {
 function persistenceError(error: unknown): AppErrorDto {
   return {
     code: 'PERSISTENCE_FAILED',
+    messageKey: 'error.persistenceFailed',
     message: '本地时间实例数据库操作失败',
     details: { cause: error instanceof Error ? error.message : String(error) }
   }
@@ -139,7 +140,7 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
     if (!parsed.success) {
       return {
         ok: false,
-        error: { code: 'VALIDATION_FAILED', message: '提醒候选查询无效' }
+        error: { code: 'VALIDATION_FAILED', messageKey: 'error.validationFailed', message: '提醒候选查询无效' }
       }
     }
     try {
@@ -265,7 +266,7 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
         .from(scheduleOccurrences)
         .innerJoin(schedules, eq(scheduleOccurrences.scheduleId, schedules.id))
         .where(eq(scheduleOccurrences.id, id)).get()
-      if (row === undefined) return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+      if (row === undefined) return { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '时间实例不存在' } }
       return { ok: true, value: {
         id: row.occurrence.id,
         scheduleId: row.occurrence.scheduleId,
@@ -295,10 +296,10 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
           .where(inArray(scheduleOccurrences.id, input.ids))
           .all()
         if (rows.length !== input.ids.length) {
-          return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+          return { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '时间实例不存在' } }
         }
         if (new Set(rows.map(({ occurrence }) => occurrence.scheduleId)).size !== 1) {
-          return { ok: false, error: { code: 'VALIDATION_FAILED', message: '所选时间不属于同一日程' } }
+          return { ok: false, error: { code: 'VALIDATION_FAILED', messageKey: 'error.validationFailed', message: '所选时间不属于同一日程' } }
         }
         const now = new Date()
         transaction.update(scheduleOccurrences)
@@ -373,7 +374,7 @@ export class DrizzleOccurrenceRepository implements OccurrenceRepository {
     try {
       const changed = this.database.update(scheduleOccurrences).set({ done, updatedAt: new Date() })
         .where(eq(scheduleOccurrences.id, id)).run()
-      if (changed.changes === 0) return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+      if (changed.changes === 0) return { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '时间实例不存在' } }
       const listed = this.database.select({ occurrence: scheduleOccurrences, schedule: schedules })
         .from(scheduleOccurrences).innerJoin(schedules, eq(scheduleOccurrences.scheduleId, schedules.id))
         .where(eq(scheduleOccurrences.id, id)).get()!

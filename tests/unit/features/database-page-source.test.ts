@@ -7,7 +7,7 @@ const source = readFileSync(resolve(process.cwd(), 'src/pages/database.vue'), 'u
 
 describe('Database page source', () => {
   it('documents the search operators in the input hint', () => {
-    expect(source).toContain('Search Name or Comment (space: AND, |: OR)...')
+    expect(source).toContain("t('database.searchPlaceholder')")
   })
 
   it('lets the search field fill the remaining filter width', () => {

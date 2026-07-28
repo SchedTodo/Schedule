@@ -14,7 +14,7 @@ export class DrizzleRecordRepository {
   /** 校验并持久化一条新的专注记录。 */
   async create(input: CreateConcentrationRecordInput): Promise<AppResult<ConcentrationRecordDto>> {
     const parsed = CreateConcentrationRecordInputSchema.safeParse(input)
-    if (!parsed.success) return { ok: false, error: { code: 'VALIDATION_FAILED', message: '专注记录无效' } }
+    if (!parsed.success) return { ok: false, error: { code: 'VALIDATION_FAILED', messageKey: 'error.validationFailed', message: '专注记录无效' } }
     const value = { id: this.ids.next(), ...parsed.data }
     try {
       this.database.insert(concentrationRecords).values({
@@ -22,7 +22,7 @@ export class DrizzleRecordRepository {
         start: new Date(value.start), end: new Date(value.end), deletedAt: null
       }).run()
       return { ok: true, value }
-    } catch { return { ok: false, error: { code: 'PERSISTENCE_FAILED', message: '专注记录保存失败' } } }
+    } catch { return { ok: false, error: { code: 'PERSISTENCE_FAILED', messageKey: 'error.persistenceFailed', message: '专注记录保存失败' } } }
   }
   /** 按开始时间升序返回指定日程的未删除专注记录。 */
   async listBySchedule(scheduleId: string): Promise<AppResult<readonly ConcentrationRecordDto[]>> {
@@ -34,7 +34,7 @@ export class DrizzleRecordRepository {
         id: row.id, scheduleId: row.scheduleId,
         start: row.start.toISOString(), end: row.end.toISOString()
       })) }
-    } catch { return { ok: false, error: { code: 'PERSISTENCE_FAILED', message: '专注记录读取失败' } } }
+    } catch { return { ok: false, error: { code: 'PERSISTENCE_FAILED', messageKey: 'error.persistenceFailed', message: '专注记录读取失败' } } }
   }
   /** 软删除指定专注记录。 */
   async delete(id: string): Promise<AppResult<void>> {
@@ -42,8 +42,8 @@ export class DrizzleRecordRepository {
       const result = this.database.update(concentrationRecords).set({ deletedAt: new Date() })
         .where(eq(concentrationRecords.id, id)).run()
       return result.changes === 0
-        ? { ok: false, error: { code: 'NOT_FOUND', message: '专注记录不存在' } }
+        ? { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '专注记录不存在' } }
         : { ok: true, value: undefined }
-    } catch { return { ok: false, error: { code: 'PERSISTENCE_FAILED', message: '专注记录删除失败' } } }
+    } catch { return { ok: false, error: { code: 'PERSISTENCE_FAILED', messageKey: 'error.persistenceFailed', message: '专注记录删除失败' } } }
   }
 }

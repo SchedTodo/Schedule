@@ -17,6 +17,7 @@ import {
   formatRelativeTime,
   type TimeDisplayMode
 } from '../occurrence-time'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(defineProps<{
   items: readonly ScheduleOccurrenceDto[]
@@ -37,6 +38,7 @@ const emit = defineEmits<{
 }>()
 const hideExpired = ref(false)
 const hideDone = ref(false)
+const { t, locale } = useI18n()
 const activeButtonStyle = {
   backgroundColor: 'var(--color-control-pressed-background)',
   boxShadow: 'var(--shadow-control-pressed)'
@@ -60,9 +62,9 @@ function deadlineLabel(item: ScheduleOccurrenceDto): string {
     ? props.timeDisplayMode === 'clock'
     : props.timeDisplayMode === 'relative'
   if (relative && item.endMark === '11') {
-    return formatRelativeTime(item.end, nowValue.value, 'todo')
+    return formatRelativeTime(item.end, nowValue.value, 'todo', locale.value)
   }
-  return formatTodoDeadline(item.end, props.timeZone)
+  return formatTodoDeadline(item.end, props.timeZone, locale.value)
 }
 
 function title(value: string) {
@@ -84,10 +86,10 @@ function rowClassName(item: ScheduleOccurrenceDto): string {
   return classes.join(' ')
 }
 
-const columns: DataTableColumns<ScheduleOccurrenceDto> = [
+const columns = computed<DataTableColumns<ScheduleOccurrenceDto>>(() => [
   {
     key: 'name',
-    title: () => title('Name'),
+    title: () => title(t('common.name')),
     render: (item) => h('span', {
       class: 'todo-link',
       'data-action': 'name',
@@ -96,38 +98,38 @@ const columns: DataTableColumns<ScheduleOccurrenceDto> = [
   },
   {
     key: 'end',
-    title: () => title('Deadline'),
+    title: () => title(t('schedule.deadline')),
     render: (item) => h('button', {
       type: 'button',
       class: ['todo-link', 'todo-time'],
       'data-action': 'deadline',
       disabled: item.endMark !== '11',
-      'aria-label': `Toggle time display for ${item.title}`,
+      'aria-label': t('schedule.toggleTime', { title: item.title }),
       onClick: () => emit('toggle-time', item.id)
     }, deadlineLabel(item))
   },
   {
     key: 'action',
-    title: () => title('Action'),
+    title: () => title(t('common.action')),
     width: '100px',
     render: (item) => h(NButton, {
       text: true,
-      'aria-label': 'Concentrate',
+      'aria-label': t('focus.concentrate'),
       style: { fontSize: '20px', padding: '5px 0 0 0' },
       onClick: () => emit('concentrate', item.id)
     }, { default: () => h(NIcon, null, { default: () => h(Play) }) })
   },
   {
     key: 'done',
-    title: () => title('Done'),
+    title: () => title(t('common.done')),
     width: '100px',
     render: (item) => h(NCheckbox, {
       checked: item.done,
-      'aria-label': 'Done',
+      'aria-label': t('common.done'),
       onUpdateChecked: (checked) => emit('done', item.id, checked)
     })
   }
-]
+])
 </script>
 
 <template>
@@ -138,14 +140,14 @@ const columns: DataTableColumns<ScheduleOccurrenceDto> = [
         :style="hideExpired ? activeButtonStyle : undefined"
         @click="hideExpired = !hideExpired"
       >
-        Not Expired
+        {{ t('schedule.hideExpired') }}
       </NButton>
       <NButton
         data-filter="done"
         :style="hideDone ? activeButtonStyle : undefined"
         @click="hideDone = !hideDone"
       >
-        Not Done
+        {{ t('schedule.hideDone') }}
       </NButton>
     </NButtonGroup>
     <NDataTable

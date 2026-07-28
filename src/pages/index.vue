@@ -17,12 +17,14 @@ import { useOccurrenceRange } from '../features/schedule/use-occurrence-range'
 import { calendarRange } from '../features/schedule/occurrence-time'
 import { logicalDateForInstant } from '../features/schedule/week-presentation'
 import { useRuntimeStore } from '../stores/runtime'
+import { useI18n } from 'vue-i18n'
 
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
 const platform = gateway
 const router = useRouter()
 const runtimeStore = useRuntimeStore()
+const { t } = useI18n()
 const { showResult } = useOperationFeedback()
 const list = useScheduleList(gateway, { offset: 0, limit: 200 }, showResult)
 const mutations = useScheduleMutations(
@@ -153,14 +155,14 @@ void refreshTodos()
               :style="runtimeStore.homepage.priority === 'month' ? activeButtonStyle : undefined"
               @click="runtimeStore.homepage.priority = 'month'"
             >
-              month
+              {{ t('schedule.month') }}
             </NButton>
             <NButton
               data-view="week"
               :style="runtimeStore.homepage.priority === 'week' ? activeButtonStyle : undefined"
               @click="runtimeStore.homepage.priority = 'week'"
             >
-              week
+              {{ t('schedule.week') }}
             </NButton>
           </NButtonGroup>
           <NButtonGroup class="segmented-control">
@@ -169,14 +171,14 @@ void refreshTodos()
               :style="runtimeStore.homepage.timeDisplayMode === 'clock' ? activeButtonStyle : undefined"
               @click="runtimeStore.setTimeDisplayMode('clock')"
             >
-              time
+              {{ t('schedule.time') }}
             </NButton>
             <NButton
               data-time-mode="relative"
               :style="runtimeStore.homepage.timeDisplayMode === 'relative' ? activeButtonStyle : undefined"
               @click="runtimeStore.setTimeDisplayMode('relative')"
             >
-              relative
+              {{ t('schedule.relative') }}
             </NButton>
           </NButtonGroup>
           <ScheduleModal

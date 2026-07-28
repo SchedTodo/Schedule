@@ -9,12 +9,19 @@ function effectiveInstant(value: ScheduleOccurrenceDto): string {
 export function formatOccurrenceDateTime(
   instant: string,
   mark: KnownTimeMark,
-  timeZone: string
+  timeZone: string,
+  locale = 'en-US'
 ): string {
   const value = Temporal.Instant.from(instant).toZonedDateTimeISO(timeZone)
   const hour = mark[0] === '1' ? String(value.hour).padStart(2, '0') : '?'
   const minute = mark[1] === '1' ? String(value.minute).padStart(2, '0') : '?'
-  return `${value.year}/${value.month}/${value.day} ${hour}:${minute}`
+  const date = new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    timeZone
+  }).format(new Date(instant))
+  return `${date} ${hour}:${minute}`
 }
 
 /** 按 occurrence 的有效时间返回指定时区中的本地化星期名称。 */

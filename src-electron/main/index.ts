@@ -14,6 +14,7 @@ import { ScheduleService } from '../../src/application/schedule-service'
 import { SystemClock } from '../../src/domain/shared/clock'
 import { CryptoIdGenerator } from '../../src/domain/shared/id-generator'
 import { resolveConfiguredTimeZoneAbbreviation } from '../../src/parser/time-zone-abbreviations'
+import { resolveSupportedLocale } from '../../src/i18n/locale'
 import { initializeScheduleDatabase } from '../adapters/db/client'
 import schemaSql from '../adapters/db/schema.sql?raw'
 import { DrizzleOccurrenceRepository } from '../adapters/db/occurrence-repository'
@@ -49,7 +50,10 @@ function registerSchedulePlatform(): readonly Disposable[] {
   const connection = initializeScheduleDatabase(databasePath, schemaSql)
   const repository = new DrizzleScheduleRepository(connection.database)
   const occurrenceRepository = new DrizzleOccurrenceRepository(connection.database)
-  const settingsRepository = new DrizzleSettingsRepository(connection.database)
+  const settingsRepository = new DrizzleSettingsRepository(
+    connection.database,
+    resolveSupportedLocale(app.getLocale())
+  )
   const notifier = new ElectronNotifier()
   const recordRepository = new DrizzleRecordRepository(connection.database, new CryptoIdGenerator())
   const alarmRuntime = new AlarmRuntime({

@@ -38,7 +38,7 @@ async function mountPage(focusMinutes: number) {
   vi.spyOn(platform.settings, 'get').mockResolvedValue({
     ok: true,
     value: {
-      timeZone: 'UTC', timeZoneAbbreviations: {}, weekStart: 1,
+      locale: 'en-US', timeZone: 'UTC', timeZoneAbbreviations: {}, weekStart: 1,
       todoAlarmEnabled: true, todoAlarmBeforeMinutes: 5,
       eventAlarmEnabled: true, eventAlarmBeforeMinutes: 5,
       calendarMode: 'month', weekViewDays: 5,

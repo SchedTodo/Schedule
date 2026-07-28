@@ -2,12 +2,18 @@ import { defineStore } from 'pinia'
 import { z } from 'zod'
 
 import { WeekStartSchema } from '../contracts/settings.contract'
+import {
+  resolveSupportedLocale,
+  SupportedLocaleSchema,
+  type SupportedLocale
+} from '../i18n/locale'
 
 const PreferencesSchema = z
   .object({
     themeMode: z.enum(['system', 'light', 'dark']),
     calendarMode: z.enum(['month', 'week']),
-    weekStart: WeekStartSchema
+    weekStart: WeekStartSchema,
+    locale: SupportedLocaleSchema
   })
   .strict()
 
@@ -23,27 +29,44 @@ const storageKey = 'schedule-v2-preferences'
 const defaults: Preferences = {
   themeMode: 'system',
   calendarMode: 'month',
-  weekStart: 1
+  weekStart: 1,
+  locale: 'en-US'
 }
 
 function browserStorage(): PreferencesStorage | undefined {
   return typeof localStorage === 'undefined' ? undefined : localStorage
 }
 
+function browserLocale(): SupportedLocale {
+  return resolveSupportedLocale(
+    typeof navigator === 'undefined' ? undefined : navigator.language
+  )
+}
+
 export const usePreferencesStore = defineStore('preferences', {
   state: (): Preferences => ({ ...defaults }),
   actions: {
     /** 从浏览器存储恢复通过契约校验的偏好，损坏数据保持默认值。 */
-    hydrate(storage: PreferencesStorage | undefined = browserStorage()) {
+    hydrate(
+      storage: PreferencesStorage | undefined = browserStorage(),
+      systemLocale: SupportedLocale = browserLocale()
+    ) {
       const serialized = storage?.getItem(storageKey)
-      if (!serialized) return
+      if (!serialized) {
+        this.locale = systemLocale
+        return
+      }
 
       try {
         const parsed = PreferencesSchema.safeParse(JSON.parse(serialized))
-        if (parsed.success) this.$patch(parsed.data)
+        if (parsed.success) {
+          this.$patch(parsed.data)
+          return
+        }
       } catch {
-        // 无效的客户端偏好继续使用稳定默认值。
+        // 无效的客户端偏好按首次启动处理。
       }
+      this.$patch({ ...defaults, locale: systemLocale })
     },
     /** 合并并持久化通过契约校验的偏好字段。 */
     update(
@@ -57,6 +80,7 @@ export const usePreferencesStore = defineStore('preferences', {
         this.calendarMode = parsed.data.calendarMode
       }
       if (parsed.data.weekStart !== undefined) this.weekStart = parsed.data.weekStart
+      if (parsed.data.locale !== undefined) this.locale = parsed.data.locale
       storage?.setItem(storageKey, JSON.stringify(this.$state))
     }
   }

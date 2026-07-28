@@ -167,6 +167,11 @@ Database 页面使用远程分页的 `NDataTable`：
 
 v2 采用“忠实迁移可见行为、重建内部架构”的策略：旧版页面层级、导航、关键快捷键、月/周/Todo/详情/设置交互作为参考，但不复制 Axios、EventBus、旧 Store、Prisma、Luxon 或 Electron 耦合。
 
+- 界面完整支持 `en-US` 与 `zh-CN`。首次启动时系统语言以 `zh` 开头则选择简体中文，否则使用英文；用户显式选择后不再跟随系统变化，未知语言和缺失翻译回退英文。
+- renderer 在 Vue 挂载前从严格校验的本地 Preferences 读取 locale，保证首屏无语言切换闪烁；设置页 Appearance 中的 Language 与 Theme 并列，切换立即生效。
+- locale 同步写入平台 Settings，供 Electron 隐藏窗口或后台运行时生成同语言的提醒。新数据库由 `app.getLocale()` 初始化；旧数据库和缺少 locale 的旧 localStorage 不迁移、不兼容。
+- 页面、校验、无障碍文案、Naive UI、日期、星期、相对时间和系统通知参与本地化；用户数据、开发日志、ANTLR 内部诊断、`RRule`/`rTime`/`exTime`、IANA 标识和日程 DSL 关键字不翻译。
+- `AppErrorDto.messageKey` 是 renderer 展示错误的稳定本地化键，`message` 只用于日志和未知键回退；平台层不得自行选择展示语言。
 - 顶部导航为 Home、Database、Settings、Help，右侧本地 Guest；页脚和顶部栏固定，只有内容区滚动。
 - 首页保留可折叠 Todo 侧栏、月/周视图和共享 Add/Edit modal。
 - 临时 month/week 选择存入 runtime Pinia store，路由往返时保留，但不写入持久化偏好；`preferences.calendarMode` 仅表示下次启动默认值。

@@ -20,7 +20,16 @@ describe('Todo presentation', () => {
     expect(todoTone(end, done, 'Asia/Shanghai', now)).toBe(expected)
   })
 
-  it('formats the legacy deadline without seconds or locale punctuation', () => {
-    expect(formatTodoDeadline('2026-07-13T15:30:00Z', 'Asia/Shanghai')).toBe('07-13 23:30')
+  it('formats the deadline with the selected locale and no seconds', () => {
+    expect(formatTodoDeadline(
+      '2026-07-13T15:30:00Z',
+      'Asia/Shanghai',
+      'en-US'
+    )).toBe('07/13 23:30')
+    expect(formatTodoDeadline(
+      '2026-07-13T15:30:00Z',
+      'Asia/Shanghai',
+      'zh-CN'
+    )).toBe('07/13 23:30')
   })
 })

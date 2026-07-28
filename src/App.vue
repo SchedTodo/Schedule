@@ -1,19 +1,35 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject, watch } from 'vue'
 import { NConfigProvider } from 'naive-ui/es/config-provider'
 import { NNotificationProvider } from 'naive-ui'
 import { darkTheme } from 'naive-ui/es/themes'
+import { dateEnUS, dateZhCN, enUS, zhCN } from 'naive-ui/es/locales'
+import { useI18n } from 'vue-i18n'
 
 import { naiveThemeOverrides } from './app/naive-theme'
 import AppFeedbackProvider from './app/components/AppFeedbackProvider.vue'
 import AppShell from './app/components/AppShell.vue'
 import { usePreferencesStore } from './stores/preferences'
 import { useRuntimeStore } from './stores/runtime'
+import { platformGatewayKey } from './app/injection-keys'
 
 const preferences = usePreferencesStore()
-preferences.hydrate()
+const gateway = inject(platformGatewayKey)
+const { locale } = useI18n()
 const runtime = useRuntimeStore()
 runtime.init(preferences.calendarMode)
+watch(
+  () => preferences.locale,
+  (value) => {
+    locale.value = value
+    void gateway?.settings.update({ locale: value })
+  },
+  { immediate: true }
+)
+const naiveLocale = computed(() => preferences.locale === 'zh-CN' ? zhCN : enUS)
+const naiveDateLocale = computed(() =>
+  preferences.locale === 'zh-CN' ? dateZhCN : dateEnUS
+)
 const usesDarkTheme = computed(
   () =>
     preferences.themeMode === 'dark' ||
@@ -27,6 +43,8 @@ const usesDarkTheme = computed(
   <NConfigProvider
     :theme="usesDarkTheme ? darkTheme : null"
     :theme-overrides="naiveThemeOverrides"
+    :locale="naiveLocale"
+    :date-locale="naiveDateLocale"
   >
     <NNotificationProvider>
       <AppFeedbackProvider>

@@ -4,6 +4,8 @@ import type {
   ScheduleOccurrenceDto
 } from '../../contracts/occurrence.contract'
 import { Temporal } from '../../domain/shared/temporal'
+import { resolveSupportedLocale } from '../../i18n/locale'
+import { translateMessage } from '../../i18n/translate'
 
 export interface OccurrenceWallTime {
   readonly date: string
@@ -18,16 +20,20 @@ export type RelativeTimeKind = 'event' | 'todo'
 export function formatRelativeTime(
   target: string,
   now: string,
-  kind: RelativeTimeKind
+  kind: RelativeTimeKind,
+  locale: string = 'en-US'
 ): string {
+  const supportedLocale = resolveSupportedLocale(locale)
   const difference = Date.parse(target) - Date.parse(now)
-  if (difference === 0) return 'now'
+  if (difference === 0) return translateMessage(supportedLocale, 'relative.now')
 
   const future = difference > 0
   const absolute = Math.abs(difference)
   if (absolute < 60_000) {
-    if (kind === 'todo') return future ? 'due soon' : 'just overdue'
-    return future ? 'starting soon' : 'just started'
+    if (kind === 'todo') {
+      return translateMessage(supportedLocale, future ? 'relative.dueSoon' : 'relative.justOverdue')
+    }
+    return translateMessage(supportedLocale, future ? 'relative.startingSoon' : 'relative.justStarted')
   }
 
   let minutes = Math.floor(absolute / 60_000)
@@ -36,13 +42,17 @@ export function formatRelativeTime(
   const hours = Math.floor(minutes / 60)
   minutes -= hours * 60
   const duration = [
-    days === 0 ? '' : `${days}d`,
-    hours === 0 ? '' : `${hours}h`,
-    minutes === 0 ? '' : `${minutes}m`
+    days === 0 ? '' : translateMessage(supportedLocale, 'relative.day', { count: days }),
+    hours === 0 ? '' : translateMessage(supportedLocale, 'relative.hour', { count: hours }),
+    minutes === 0 ? '' : translateMessage(supportedLocale, 'relative.minute', { count: minutes })
   ].filter(Boolean).join(' ')
 
-  if (future) return `in ${duration}`
-  return kind === 'todo' ? `overdue ${duration}` : `${duration} ago`
+  if (future) return translateMessage(supportedLocale, 'relative.future', { duration })
+  return translateMessage(
+    supportedLocale,
+    kind === 'todo' ? 'relative.overdue' : 'relative.ago',
+    { duration }
+  )
 }
 
 /** 将 UTC instant 转换为指定时区中的日期和墙上时钟。 */
@@ -84,8 +94,12 @@ export function calendarRange(
   }
 }
 
-export function formatInstant(instant: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(undefined, {
+export function formatInstant(
+  instant: string,
+  timeZone: string,
+  locale: string = 'en-US'
+): string {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: 'short',
     timeStyle: 'medium',
     timeZone

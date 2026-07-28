@@ -77,6 +77,7 @@ describe('AlarmRuntime', () => {
   it('reports coordinator failures and keeps the queue usable', async () => {
     const failure = {
       code: 'PERSISTENCE_FAILED' as const,
+      messageKey: 'error.persistenceFailed' as const,
       message: 'read failed'
     }
     recalculate

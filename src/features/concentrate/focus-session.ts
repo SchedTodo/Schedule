@@ -6,6 +6,8 @@ import {
   type FocusCycleSnapshot,
   type FocusCycleTransition
 } from './focus-cycle'
+import type { SupportedLocale } from '../../i18n/locale'
+import { translateMessage } from '../../i18n/translate'
 
 interface SelectedTodo {
   readonly scheduleId: string
@@ -18,6 +20,7 @@ interface FocusInterval {
 }
 
 interface FocusSessionDependencies {
+  readonly locale: SupportedLocale
   readonly now: () => number
   readonly notify: (input: NotificationInput) => Promise<unknown>
   readonly saveRecord: (input: CreateConcentrationRecordInput) => Promise<unknown>
@@ -25,13 +28,27 @@ interface FocusSessionDependencies {
 
 const minimumRecordMs = 60_000
 
-function notificationFor(transition: FocusCycleTransition): NotificationInput {
+function notificationFor(
+  transition: FocusCycleTransition,
+  locale: SupportedLocale
+): NotificationInput {
   if (transition.stage === 'focus') {
-    return { title: 'Time to focus', body: `Focus ${transition.focusNumber} of 4` }
+    return {
+      title: translateMessage(locale, 'focus.timeToFocus'),
+      body: translateMessage(locale, 'focus.focusCount', {
+        current: transition.focusNumber
+      })
+    }
   }
   return transition.stage === 'smallBreak'
-    ? { title: 'Take a break', body: 'Small Break' }
-    : { title: 'Take a break', body: 'Big Break' }
+    ? {
+        title: translateMessage(locale, 'focus.takeBreak'),
+        body: translateMessage(locale, 'focus.smallBreak')
+      }
+    : {
+        title: translateMessage(locale, 'focus.takeBreak'),
+        body: translateMessage(locale, 'focus.bigBreak')
+      }
 }
 
 /**
@@ -105,7 +122,9 @@ export class FocusSession {
   #processTransitions(transitions: readonly FocusCycleTransition[]): void {
     for (const transition of transitions) {
       this.#closeActive(transition.atMs)
-      void this.dependencies.notify(notificationFor(transition)).catch(() => undefined)
+      void this.dependencies.notify(
+        notificationFor(transition, this.dependencies.locale)
+      ).catch(() => undefined)
       if (transition.stage === 'focus' && this.#selectedTodo) {
         this.#activeStartMs = transition.atMs
       }

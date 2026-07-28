@@ -172,7 +172,7 @@ describe('secondary pages', () => {
     }
     expect(wrapper.text()).not.toContain('Compact Density')
 
-    const labels = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     const weekStartRadios = wrapper.findAllComponents(NRadio).filter((radio) =>
       labels.includes(radio.text().trim())
     )
@@ -186,7 +186,7 @@ describe('secondary pages', () => {
     expect(abbreviationTable.props('pagination')).toBe(false)
     expect(wrapper.findAllComponents(NSelect)[1]?.props('filterable')).toBe(true)
     expect(wrapper.getComponent(NInput).props('placeholder')).toBe('Abbreviation')
-    expect(wrapper.findAll('.setting-field')).toHaveLength(13)
+    expect(wrapper.findAll('.setting-field')).toHaveLength(14)
     expect(wrapper.findAllComponents(NSwitch).every(
       (component) => component.element.parentElement?.classList.contains('setting-field') === true
     )).toBe(true)
@@ -201,7 +201,7 @@ describe('secondary pages', () => {
         provide: { [platformGatewayKey as symbol]: platform }
       }
     })
-    await vi.waitFor(() => expect(wrapper.findAllComponents(NSelect)).toHaveLength(3))
+    await vi.waitFor(() => expect(wrapper.findAllComponents(NSelect)).toHaveLength(4))
 
     wrapper.getComponent(NInput).vm.$emit('update:value', 'work_1')
     wrapper.findAllComponents(NSelect)[1]!.vm.$emit('update:value', 'America/Chicago')

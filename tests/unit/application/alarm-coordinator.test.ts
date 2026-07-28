@@ -209,6 +209,7 @@ describe('AlarmCoordinator', () => {
     candidates.value = [todoAt('2026-07-23T02:00:30Z')]
     candidateFailure = {
       code: 'PERSISTENCE_FAILED',
+      messageKey: 'error.persistenceFailed',
       message: 'candidate read failed'
     }
     clock.set('2026-07-23T02:01:00Z')

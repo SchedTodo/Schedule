@@ -9,15 +9,26 @@ export const AppErrorCodeSchema = z.enum([
   'INTERNAL_ERROR'
 ])
 
+export const AppErrorMessageKeySchema = z.enum([
+  'error.validationFailed',
+  'error.notFound',
+  'error.conflict',
+  'error.persistenceFailed',
+  'error.platformUnavailable',
+  'error.internalError'
+])
+
 export const AppErrorDtoSchema = z
   .object({
     code: AppErrorCodeSchema,
+    messageKey: AppErrorMessageKeySchema,
     message: z.string().min(1),
     details: z.record(z.string(), z.unknown()).optional()
   })
   .strict()
 
 export type AppErrorCode = z.infer<typeof AppErrorCodeSchema>
+export type AppErrorMessageKey = z.infer<typeof AppErrorMessageKeySchema>
 export type AppErrorDto = z.infer<typeof AppErrorDtoSchema>
 
 export type AppResult<T> =

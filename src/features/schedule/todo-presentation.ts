@@ -21,8 +21,17 @@ export function todoTone(
 }
 
 /** 将 Todo 截止 instant 格式化为指定时区中的月日和时分。 */
-export function formatTodoDeadline(end: string, timeZone: string): string {
+export function formatTodoDeadline(
+  end: string,
+  timeZone: string,
+  locale = 'en-US'
+): string {
   const value = Temporal.Instant.from(end).toZonedDateTimeISO(timeZone)
   const pad = (part: number) => String(part).padStart(2, '0')
-  return `${pad(value.month)}-${pad(value.day)} ${pad(value.hour)}:${pad(value.minute)}`
+  const date = new Intl.DateTimeFormat(locale, {
+    month: '2-digit',
+    day: '2-digit',
+    timeZone
+  }).format(new Date(end))
+  return `${date} ${pad(value.hour)}:${pad(value.minute)}`
 }

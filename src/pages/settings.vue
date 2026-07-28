@@ -18,8 +18,11 @@ import { defaultSettings, type SettingsDto } from '../contracts/settings.contrac
 import { createTimeZoneOptions } from '../features/settings/time-zone-options'
 import type { Preferences } from '../stores/preferences'
 import { usePreferencesStore } from '../stores/preferences'
+import { useI18n } from 'vue-i18n'
+import type { SupportedLocale } from '../i18n/locale'
 
 const preferences = usePreferencesStore()
+const { t, locale } = useI18n()
 const { showResult } = useOperationFeedback()
 const gateway = inject(platformGatewayKey)
 const settings = ref<SettingsDto>({ ...defaultSettings })
@@ -35,28 +38,35 @@ const abbreviationRows = computed<TimeZoneAbbreviationRow[]>(() =>
     .map(([value, timeZone]) => ({ abbreviation: value, timeZone }))
     .sort((left, right) => left.abbreviation.localeCompare(right.abbreviation))
 )
-const abbreviationColumns: DataTableColumns<TimeZoneAbbreviationRow> = [
-  { title: 'Abbreviation', key: 'abbreviation' },
-  { title: 'IANA Time Zone', key: 'timeZone' },
+const abbreviationColumns = computed<DataTableColumns<TimeZoneAbbreviationRow>>(() => [
+  { title: t('settings.abbreviation'), key: 'abbreviation' },
+  { title: t('settings.ianaTimeZone'), key: 'timeZone' },
   {
-    title: 'Action',
+    title: t('common.action'),
     key: 'actions',
     render: (row) => h(
       NButton,
       { size: 'small', onClick: () => { void removeAbbreviation(row.abbreviation) } },
-      { default: () => 'Delete' }
+      { default: () => t('common.delete') }
     )
   }
-]
-const weekStarts = [
-  { label: 'MO', value: 1 },
-  { label: 'TU', value: 2 },
-  { label: 'WE', value: 3 },
-  { label: 'TH', value: 4 },
-  { label: 'FR', value: 5 },
-  { label: 'SA', value: 6 },
-  { label: 'SU', value: 7 }
-] as const
+])
+const weekStarts = computed(() => Array.from({ length: 7 }, (_, index) => ({
+  label: new Intl.DateTimeFormat(locale.value, {
+    weekday: 'short',
+    timeZone: 'UTC'
+  }).format(new Date(Date.UTC(2024, 0, index + 1))),
+  value: index + 1
+})))
+const localeOptions = computed(() => [
+  { label: t('appearance.english'), value: 'en-US' },
+  { label: t('appearance.simplifiedChinese'), value: 'zh-CN' }
+])
+const themeOptions = computed(() => [
+  { label: t('appearance.system'), value: 'system' },
+  { label: t('appearance.light'), value: 'light' },
+  { label: t('appearance.dark'), value: 'dark' }
+])
 if (gateway) {
   void gateway.settings.get().then((result) => {
     if (showResult(result)) settings.value = result.value
@@ -64,6 +74,10 @@ if (gateway) {
 }
 function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
   preferences.update({ [key]: value })
+}
+function updateLocale(value: SupportedLocale) {
+  preferences.update({ locale: value })
+  locale.value = value
 }
 /** 持久化单项应用设置，并仅在宿主确认成功后更新页面状态。 */
 async function updateSetting<K extends keyof SettingsDto>(key: K, value: SettingsDto[K]) {
@@ -101,7 +115,7 @@ async function removeAbbreviation(value: string) {
         <b>RRule</b>
       </template>
       <div class="settings-group">
-        <label>Time Zone</label><div class="setting-field setting-field--select">
+        <label>{{ t('settings.timeZone') }}</label><div class="setting-field setting-field--select">
           <NSelect
             :value="settings.timeZone"
             :options="timeZoneOptions"
@@ -109,22 +123,22 @@ async function removeAbbreviation(value: string) {
             @update:value="updateSetting('timeZone', $event)"
           />
         </div>
-        <label>Time Zone Abbreviations</label><div class="setting-field setting-field--abbreviations">
+        <label>{{ t('settings.timeZoneAbbreviations') }}</label><div class="setting-field setting-field--abbreviations">
           <div class="abbreviation-editor">
             <NInput
               v-model:value="abbreviation"
               :maxlength="32"
-              aria-label="Time Zone Abbreviation"
-              placeholder="Abbreviation"
+              :aria-label="t('settings.timeZoneAbbreviation')"
+              :placeholder="t('settings.abbreviation')"
             />
             <NSelect
               v-model:value="abbreviationTimeZone"
               :options="timeZoneOptions"
-              aria-label="Abbreviation IANA Time Zone"
+              :aria-label="t('settings.abbreviationIana')"
               filterable
             />
             <NButton @click="addAbbreviation">
-              Add
+              {{ t('common.add') }}
             </NButton>
           </div>
           <NDataTable
@@ -152,10 +166,10 @@ async function removeAbbreviation(value: string) {
     </NCard>
     <NCard segmented>
       <template #header>
-        <b>Alarm</b>
+        <b>{{ t('settings.alarm') }}</b>
       </template>
       <div class="settings-group">
-        <label>Todo</label><div class="setting-field">
+        <label>{{ t('common.todo') }}</label><div class="setting-field">
           <NSwitch
             :value="settings.todoAlarmEnabled"
             @update:value="updateSetting('todoAlarmEnabled', $event)"
@@ -163,9 +177,9 @@ async function removeAbbreviation(value: string) {
           <NInputNumber
             :value="settings.todoAlarmBeforeMinutes"
             @update:value="updateSetting('todoAlarmBeforeMinutes', $event ?? 0)"
-          /> minutes
+          /> {{ t('settings.minutes') }}
         </div>
-        <label>Event</label><div class="setting-field">
+        <label>{{ t('common.event') }}</label><div class="setting-field">
           <NSwitch
             :value="settings.eventAlarmEnabled"
             @update:value="updateSetting('eventAlarmEnabled', $event)"
@@ -173,34 +187,34 @@ async function removeAbbreviation(value: string) {
           <NInputNumber
             :value="settings.eventAlarmBeforeMinutes"
             @update:value="updateSetting('eventAlarmBeforeMinutes', $event ?? 0)"
-          /> minutes
+          /> {{ t('settings.minutes') }}
         </div>
       </div>
     </NCard>
     <NCard segmented>
       <template #header>
-        <b>Preferences</b>
+        <b>{{ t('settings.preferences') }}</b>
       </template>
       <div class="settings-group">
-        <label>Priority</label><div class="setting-field">
+        <label>{{ t('settings.priority') }}</label><div class="setting-field">
           <NRadioGroup
             :value="settings.calendarMode"
             @update:value="updateSetting('calendarMode', $event); update('calendarMode', $event)"
           >
             <NRadio value="month">
-              MonthView
+              {{ t('settings.monthView') }}
             </NRadio><NRadio value="week">
-              WeekView
+              {{ t('settings.weekView') }}
             </NRadio>
           </NRadioGroup>
         </div>
-        <label>Week View Days</label><div class="setting-field">
+        <label>{{ t('settings.weekViewDays') }}</label><div class="setting-field">
           <NInputNumber
             :value="settings.weekViewDays"
             @update:value="updateSetting('weekViewDays', $event ?? 5)"
           />
         </div>
-        <label>Week View Start Time</label><div class="setting-field setting-field--time">
+        <label>{{ t('settings.weekViewStartTime') }}</label><div class="setting-field setting-field--time">
           <NInputNumber
             :value="settings.logicalDayStartHour"
             @update:value="updateSetting('logicalDayStartHour', $event ?? 0)"
@@ -209,7 +223,7 @@ async function removeAbbreviation(value: string) {
             @update:value="updateSetting('logicalDayStartMinute', $event ?? 0)"
           />
         </div>
-        <label>Open At Login</label><div class="setting-field">
+        <label>{{ t('settings.openAtLogin') }}</label><div class="setting-field">
           <NSwitch
             :value="settings.openAtLogin"
             @update:value="updateSetting('openAtLogin', $event)"
@@ -219,38 +233,45 @@ async function removeAbbreviation(value: string) {
     </NCard>
     <NCard segmented>
       <template #header>
-        <b>Pomodoro</b>
+        <b>{{ t('settings.pomodoro') }}</b>
       </template>
       <div class="settings-group">
-        <label>Focus Time</label><div class="setting-field">
+        <label>{{ t('settings.focusTime') }}</label><div class="setting-field">
           <NInputNumber
             :value="settings.focusMinutes"
             @update:value="updateSetting('focusMinutes', $event ?? 25)"
-          /> minutes
+          /> {{ t('settings.minutes') }}
         </div>
-        <label>Small Break</label><div class="setting-field">
+        <label>{{ t('settings.smallBreak') }}</label><div class="setting-field">
           <NInputNumber
             :value="settings.smallBreakMinutes"
             @update:value="updateSetting('smallBreakMinutes', $event ?? 5)"
-          /> minutes
+          /> {{ t('settings.minutes') }}
         </div>
-        <label>Big Break</label><div class="setting-field">
+        <label>{{ t('settings.bigBreak') }}</label><div class="setting-field">
           <NInputNumber
             :value="settings.bigBreakMinutes"
             @update:value="updateSetting('bigBreakMinutes', $event ?? 20)"
-          /> minutes
+          /> {{ t('settings.minutes') }}
         </div>
       </div>
     </NCard>
     <NCard segmented>
       <template #header>
-        <b>Appearance</b>
+        <b>{{ t('appearance.appearance') }}</b>
       </template>
       <div class="settings-group">
-        <label>Theme</label><div class="setting-field setting-field--select">
+        <label>{{ t('appearance.language') }}</label><div class="setting-field setting-field--select">
+          <NSelect
+            :value="preferences.locale"
+            :options="localeOptions"
+            @update:value="updateLocale"
+          />
+        </div>
+        <label>{{ t('appearance.theme') }}</label><div class="setting-field setting-field--select">
           <NSelect
             :value="preferences.themeMode"
-            :options="[{ label: 'System', value: 'system' }, { label: 'Light', value: 'light' }, { label: 'Dark', value: 'dark' }]"
+            :options="themeOptions"
             @update:value="update('themeMode', $event)"
           />
         </div>

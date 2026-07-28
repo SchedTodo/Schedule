@@ -9,6 +9,7 @@ import {
   type TimeDisplayMode
 } from '../occurrence-time'
 import OccurrenceTooltip from './OccurrenceTooltip.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(defineProps<{
   items: readonly CalendarOccurrenceDto[]
@@ -25,6 +26,7 @@ const emit = defineEmits<{
   select: [id: string]
   'toggle-time': [id: string]
 }>()
+const { t, locale } = useI18n()
 /** 按指定时区的本地日期索引 occurrence，供月历单元格直接查询。 */
 const indexed = computed(() => {
   const result = new Map<string, CalendarOccurrenceDto[]>()
@@ -45,7 +47,7 @@ function timeLabel(item: CalendarOccurrenceDto): string {
     ? props.timeDisplayMode === 'clock'
     : props.timeDisplayMode === 'relative'
   if (relative && item.startMark === '11') {
-    return formatRelativeTime(item.start, props.now, 'event')
+    return formatRelativeTime(item.start, props.now, 'event', locale.value)
   }
   return formatMarkedWallClock(item.start, item.startMark, props.timeZone)
 }
@@ -79,7 +81,7 @@ function timeLabel(item: CalendarOccurrenceDto): string {
             type="button"
             class="schedule-time"
             :disabled="item.startMark !== '11'"
-            :aria-label="`Toggle time display for ${item.title}`"
+            :aria-label="t('schedule.toggleTime', { title: item.title })"
             @click.stop="emit('toggle-time', item.id)"
           >
             {{ timeLabel(item) }}

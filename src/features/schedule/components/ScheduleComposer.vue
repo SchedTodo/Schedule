@@ -4,6 +4,7 @@ import { NAlert, NButton, NForm, NInput } from 'naive-ui'
 
 import type { AppErrorDto } from '../../../contracts/result'
 import type { CreateScheduleInput } from '../../../contracts/schedule.contract'
+import { useI18n } from 'vue-i18n'
 
 withDefaults(defineProps<{ loading?: boolean; error?: AppErrorDto | null }>(), {
   loading: false,
@@ -15,12 +16,13 @@ const title = ref('')
 const recurrenceCode = ref('')
 const comment = ref('')
 const validationMessage = ref('')
+const { t, te } = useI18n()
 
 /** 校验表单并向父组件提交规范化的创建输入。 */
 function submit() {
   const normalizedTitle = title.value.trim()
   if (normalizedTitle === '') {
-    validationMessage.value = '请输入日程标题'
+    validationMessage.value = t('schedule.titleRequired')
     return
   }
 
@@ -39,12 +41,12 @@ function submit() {
     class="schedule-composer"
     @submit.prevent="submit"
   >
-    <h2>新建日程</h2>
+    <h2>{{ t('schedule.add') }}</h2>
     <NAlert
       v-if="error"
       type="error"
     >
-      {{ error.message }}
+      {{ te(error.messageKey) ? t(error.messageKey) : error.message }}
     </NAlert>
     <NAlert
       v-if="validationMessage"
@@ -54,7 +56,7 @@ function submit() {
     </NAlert>
 
     <div class="field">
-      <label for="schedule-title">标题</label>
+      <label for="schedule-title">{{ t('common.name') }}</label>
       <NInput
         v-model:value="title"
         :disabled="loading"
@@ -62,16 +64,16 @@ function submit() {
       />
     </div>
     <div class="field">
-      <label for="schedule-recurrence">时间规则</label>
+      <label for="schedule-recurrence">{{ t('schedule.recurrence') }}</label>
       <NInput
         v-model:value="recurrenceCode"
         :disabled="loading"
         :input-props="{ id: 'schedule-recurrence' }"
-        placeholder="例如：2026-07-12 10:00"
+        placeholder="2026-07-12 10:00"
       />
     </div>
     <div class="field">
-      <label for="schedule-comment">备注</label>
+      <label for="schedule-comment">{{ t('common.comment') }}</label>
       <NInput
         v-model:value="comment"
         :disabled="loading"
@@ -85,7 +87,7 @@ function submit() {
       :loading="loading"
       :disabled="loading"
     >
-      创建日程
+      {{ t('schedule.add') }}
     </NButton>
   </NForm>
 </template>

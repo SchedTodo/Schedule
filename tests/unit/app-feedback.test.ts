@@ -21,7 +21,11 @@ describe('application feedback', () => {
         showResult({ ok: true, value: undefined })
         showResult({
           ok: false,
-          error: { code: 'PERSISTENCE_FAILED', message: '保存失败' }
+          error: {
+            code: 'PERSISTENCE_FAILED',
+            messageKey: 'error.persistenceFailed',
+            message: '保存失败'
+          }
         })
         return () => h('div')
       }
@@ -36,6 +40,9 @@ describe('application feedback', () => {
     expect(feedback.success).toHaveBeenCalledOnce()
     expect(feedback.success).toHaveBeenCalledWith('Success')
     expect(feedback.error).toHaveBeenCalledOnce()
-    expect(feedback.error).toHaveBeenCalledWith('Error', '保存失败')
+    expect(feedback.error).toHaveBeenCalledWith(
+      'Error',
+      'Local data could not be saved or loaded.'
+    )
   })
 })

@@ -31,6 +31,7 @@ export interface AlarmCoordinatorDependencies {
 
 const notificationFailure = {
   code: 'PLATFORM_UNAVAILABLE' as const,
+  messageKey: 'error.platformUnavailable' as const,
   message: '系统通知发送失败'
 }
 
@@ -95,7 +96,7 @@ export class AlarmCoordinator {
 
       try {
         await this.dependencies.notify(
-          notificationForAlarm(alarm, settings.timeZone)
+          notificationForAlarm(alarm, settings.timeZone, settings.locale)
         )
         this.notifiedKeys.add(key)
       } catch {

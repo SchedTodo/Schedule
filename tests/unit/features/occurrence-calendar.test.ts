@@ -44,7 +44,7 @@ describe('occurrence calendar views', () => {
       props: { items: [occurrences[0]!], timeZone: 'UTC', dayCount: 1 }
     })
 
-    expect(wrapper.get('.day-card header').text()).toBe('2026/07/13')
+    expect(wrapper.get('.day-card header').text()).toBe('Mon, 7/13')
     expect(wrapper.get('[data-occurrence-id]').attributes('data-occurrence-id'))
       .toBe(occurrences[0]!.id)
   })

@@ -65,7 +65,7 @@ describe('Todo sidebar', () => {
     expect(rowClassName(items[3])).toContain('row-after-tmr')
     expect(rowClassName(items[4])).toContain('row-done')
 
-    expect(wrapper.get('.row-tdy').text()).toContain('07-13 23:30')
+    expect(wrapper.get('.row-tdy').text()).toContain('07/13 23:30')
   })
 
   it('opens details from the name and toggles time from the deadline', async () => {
@@ -90,7 +90,7 @@ describe('Todo sidebar', () => {
 
     const deadlines = wrapper.findAll('[data-action="deadline"]')
     expect(deadlines[0]!.text()).toBe('overdue 1m')
-    expect(deadlines[1]!.text()).toBe('07-13 23:30')
+    expect(deadlines[1]!.text()).toBe('07/13 23:30')
     expect(deadlines[1]!.attributes('disabled')).toBeDefined()
   })
 

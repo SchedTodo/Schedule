@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { ReloadOutline, Star } from '@vicons/ionicons5'
-import { h, inject, reactive, ref, watch } from 'vue'
+import { computed, h, inject, reactive, ref, watch } from 'vue'
 import { NButton, NCard, NDataTable, NDatePicker, NIcon, NInput, NSelect, NTag } from 'naive-ui'
 import type { DataTableColumns, PaginationProps } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { useOperationFeedback } from '../app/app-feedback'
 import { platformGatewayKey } from '../app/injection-keys'
 import type { ScheduleKind, SchedulePageItemDto } from '../contracts/schedule.contract'
+import { useI18n } from 'vue-i18n'
 
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
 const platform = gateway
 const { showResult } = useOperationFeedback()
 const router = useRouter()
+const { t, locale } = useI18n()
 const search = ref('')
 const kind = ref<ScheduleKind | null>(null)
 const dates = ref<[number, number] | null>(null)
@@ -25,7 +27,7 @@ const pagination = reactive<PaginationProps>({
   itemCount: 0,
   showSizePicker: true,
   pageSizes: [5, 10, 15, 20],
-  prefix: ({ itemCount }) => `Total is ${itemCount ?? 0}.`,
+  prefix: ({ itemCount }) => t('database.total', { count: itemCount ?? 0 }),
   onChange(nextPage) {
     pagination.page = nextPage
     void refresh()
@@ -78,7 +80,7 @@ function renderDeleted(item: SchedulePageItemDto) {
           {
             size: 'tiny',
             class: 'database-restore',
-            'aria-label': 'Restore schedule',
+            'aria-label': t('schedule.restore'),
             onClick: (event: MouseEvent) => {
               event.stopPropagation()
               void restore(item.id)
@@ -91,7 +93,9 @@ function renderDeleted(item: SchedulePageItemDto) {
 }
 
 function renderKind(item: SchedulePageItemDto) {
-  return h(NTag, { type: 'success' }, { default: () => item.kind })
+  return h(NTag, { type: 'success' }, {
+    default: () => t(item.kind === 'event' ? 'common.event' : 'common.todo')
+  })
 }
 
 function renderStar(item: SchedulePageItemDto) {
@@ -102,7 +106,7 @@ function renderStar(item: SchedulePageItemDto) {
   )
 }
 
-const columns: DataTableColumns<SchedulePageItemDto> = [
+const columns = computed<DataTableColumns<SchedulePageItemDto>>(() => [
   {
     title: 'ID',
     key: 'id',
@@ -110,26 +114,32 @@ const columns: DataTableColumns<SchedulePageItemDto> = [
     ellipsis: { tooltip: true },
     className: 'database-id-cell'
   },
-  { title: 'Name', key: 'title' },
+  { title: t('common.name'), key: 'title' },
   {
-    title: 'Deleted',
+    title: t('common.deleted'),
     key: 'deleted',
     className: 'database-deleted-cell',
     render: renderDeleted
   },
   {
-    title: 'Created',
+    title: t('common.created'),
     key: 'createdAt',
-    render: (item) => new Date(item.createdAt).toLocaleString()
+    render: (item) => new Intl.DateTimeFormat(locale.value, {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    }).format(new Date(item.createdAt))
   },
   {
-    title: 'Updated',
+    title: t('common.updated'),
     key: 'updatedAt',
-    render: (item) => new Date(item.updatedAt).toLocaleString()
+    render: (item) => new Intl.DateTimeFormat(locale.value, {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    }).format(new Date(item.updatedAt))
   },
-  { title: 'Type', key: 'kind', render: renderKind },
-  { title: 'Star', key: 'starred', render: renderStar }
-]
+  { title: t('common.type'), key: 'kind', render: renderKind },
+  { title: t('common.star'), key: 'starred', render: renderStar }
+])
 
 /** 为数据行绑定详情页导航属性。 */
 function rowProps(item: SchedulePageItemDto) {
@@ -152,35 +162,35 @@ watch(
   <div class="database-page">
     <NCard segmented>
       <template #header>
-        <b>Database</b>
+        <b>{{ t('database.database') }}</b>
       </template>
       <div class="database-wrapper">
         <div class="database-filter">
           <label
             class="sr-only"
             for="database-search"
-          >Search Name or Comment</label>
+          >{{ t('database.search') }}</label>
           <NInput
             v-model:value="search"
             class="database-search"
-            placeholder="Search Name or Comment (space: AND, |: OR)..."
+            :placeholder="t('database.searchPlaceholder')"
             :input-props="{ id: 'database-search' }"
             clearable
           />
-          <span class="sr-only">Start Date</span>
+          <span class="sr-only">{{ t('database.startDate') }}</span>
           <NDatePicker
             v-model:value="dates"
             type="daterange"
-            start-placeholder="Start Date"
-            end-placeholder="End Date"
+            :start-placeholder="t('database.startDate')"
+            :end-placeholder="t('database.endDate')"
           />
           <NSelect
             :value="kind"
-            placeholder="Type"
+            :placeholder="t('database.type')"
             clearable
             :options="[
-              { label: 'todo', value: 'todo' },
-              { label: 'event', value: 'event' }
+              { label: t('common.todo'), value: 'todo' },
+              { label: t('common.event'), value: 'event' }
             ]"
             style="width: 12rem"
             @update:value="kind = $event"
@@ -188,7 +198,7 @@ watch(
           <NButton
             text
             class="database-star-filter"
-            :aria-label="starredOnly ? 'Show all schedules' : 'Show starred schedules'"
+            :aria-label="starredOnly ? t('database.allSchedules') : t('database.starredSchedules')"
             :color="starredOnly ? '#ffe742' : '#c2c2c2'"
             @click="toggleStarFilter"
           >

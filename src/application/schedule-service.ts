@@ -46,7 +46,7 @@ export class ScheduleService implements ScheduleGateway {
     if (!parsed.success) {
       return {
         ok: false as const,
-        error: { code: 'VALIDATION_FAILED' as const, message: '日程数据无效' }
+        error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '日程数据无效' }
       }
     }
 
@@ -60,7 +60,7 @@ export class ScheduleService implements ScheduleGateway {
         resolveTimeZoneAbbreviation: this.dependencies.resolveTimeZoneAbbreviation
       })
       if (!result.ok) {
-        return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程时间规则无效' } }
+        return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '日程时间规则无效' } }
       }
       normalized = result.value
       kind = result.value.kind
@@ -118,13 +118,13 @@ export class ScheduleService implements ScheduleGateway {
    */
   async update(input: Parameters<ScheduleGateway['update']>[0]) {
     const parsed = UpdateScheduleInputSchema.safeParse(input)
-    if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程数据无效' } }
+    if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '日程数据无效' } }
     const found = await this.repository.findById(parsed.data.id)
     if (!found.ok) return found
-    if (found.value === null) return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: '日程不存在' } }
+    if (found.value === null) return { ok: false as const, error: { code: 'NOT_FOUND' as const, messageKey: 'error.notFound' as const, message: '日程不存在' } }
     const { deleted, ...current } = found.value
     if (deleted) {
-      return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能修改已删除的日程' } }
+      return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '不能修改已删除的日程' } }
     }
     let kind: 'event' | 'todo' = parsed.data.recurrenceCode === '' ? 'todo' : found.value.kind
     let normalized: NormalizedScheduleOccurrences | undefined
@@ -134,11 +134,11 @@ export class ScheduleService implements ScheduleGateway {
         weekStartsOn: this.dependencies.weekStartsOn,
         resolveTimeZoneAbbreviation: this.dependencies.resolveTimeZoneAbbreviation
       })
-      if (!result.ok) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '日程时间规则无效' } }
+      if (!result.ok) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '日程时间规则无效' } }
       normalized = result.value
       kind = result.value.kind
     }
-    if (kind !== found.value.kind) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能更改日程类型' } }
+    if (kind !== found.value.kind) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '不能更改日程类型' } }
     const now = this.dependencies.clock.now().toString()
     const updated: ScheduleDto = {
       ...current,
@@ -173,12 +173,12 @@ export class ScheduleService implements ScheduleGateway {
   /** 校验收藏请求，并禁止收藏已经软删除的日程。 */
   async setStarred(input: Parameters<ScheduleGateway['setStarred']>[0]) {
     const parsed = SetScheduleStarredInputSchema.safeParse(input)
-    if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '收藏状态无效' } }
+    if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '收藏状态无效' } }
     const found = await this.repository.findById(parsed.data.id)
     if (!found.ok) return found
-    if (found.value === null) return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: '日程不存在' } }
+    if (found.value === null) return { ok: false as const, error: { code: 'NOT_FOUND' as const, messageKey: 'error.notFound' as const, message: '日程不存在' } }
     if (found.value.deleted) {
-      return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '不能收藏已删除的日程' } }
+      return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '不能收藏已删除的日程' } }
     }
     return this.repository.setStarred(parsed.data.id, parsed.data.starred, this.dependencies.clock.now().toString())
   }
@@ -186,14 +186,14 @@ export class ScheduleService implements ScheduleGateway {
   /** 校验并更新日程的软删除状态。 */
   async setDeleted(input: Parameters<ScheduleGateway['setDeleted']>[0]) {
     const parsed = SetScheduleDeletedInputSchema.safeParse(input)
-    if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '删除状态无效' } }
+    if (!parsed.success) return { ok: false as const, error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '删除状态无效' } }
     return this.repository.setDeleted(parsed.data.id, parsed.data.deleted, this.dependencies.clock.now().toString())
   }
 
   /** 校验分页搜索条件后交由仓储执行查询。 */
   searchPage(query: Parameters<ScheduleGateway['searchPage']>[0]) {
     const parsed = ScheduleSearchQuerySchema.safeParse(query)
-    if (!parsed.success) return Promise.resolve({ ok: false as const, error: { code: 'VALIDATION_FAILED' as const, message: '查询条件无效' } })
+    if (!parsed.success) return Promise.resolve({ ok: false as const, error: { code: 'VALIDATION_FAILED' as const, messageKey: 'error.validationFailed' as const, message: '查询条件无效' } })
     return this.repository.searchPage(parsed.data)
   }
 }

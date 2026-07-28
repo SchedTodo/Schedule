@@ -5,6 +5,7 @@ import { SettingsDtoSchema, defaultSettings } from '../../src/contracts/settings
 describe('settings contract', () => {
   it('contains legacy-compatible defaults', () => {
     expect(SettingsDtoSchema.parse(defaultSettings)).toMatchObject({
+      locale: 'en-US',
       timeZoneAbbreviations: {},
       weekStart: 1,
       todoAlarmEnabled: true,
@@ -19,6 +20,15 @@ describe('settings contract', () => {
       smallBreakMinutes: 5,
       bigBreakMinutes: 20
     })
+  })
+
+  it('requires a supported locale', () => {
+    const existing = Object.fromEntries(
+      Object.entries(defaultSettings).filter(([key]) => key !== 'locale')
+    )
+    expect(SettingsDtoSchema.safeParse(existing).success).toBe(false)
+    expect(SettingsDtoSchema.safeParse({ ...defaultSettings, locale: 'fr-FR' }).success).toBe(false)
+    expect(SettingsDtoSchema.safeParse({ ...defaultSettings, locale: 'zh-CN' }).success).toBe(true)
   })
 
   it('rejects invalid settings and unknown fields', () => {

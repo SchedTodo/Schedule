@@ -217,7 +217,11 @@ describe('ScheduleService', () => {
   })
 
   it('returns repository failures and delegates reads', async () => {
-    const error = { code: 'PERSISTENCE_FAILED' as const, message: '保存失败' }
+    const error = {
+      code: 'PERSISTENCE_FAILED' as const,
+      messageKey: 'error.persistenceFailed' as const,
+      message: '保存失败'
+    }
     const repository = repositoryWith({
       save: vi.fn(async () => ({ ok: false as const, error })),
       findById: vi.fn(async () => ({ ok: true as const, value: null })),

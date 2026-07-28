@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from 'naive-ui'
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { NButton, NCard, NForm, NFormItem, NInput, NModal } from 'naive-ui'
 
 import type { CreateScheduleInput } from '../../../contracts/schedule.contract'
 import { Temporal } from '../../../domain/shared/temporal'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(defineProps<{
   timeZone: string
@@ -26,16 +27,17 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ submit: [input: CreateScheduleInput] }>()
 const show = ref(false)
 const formRef = ref<FormInst | null>(null)
+const { t } = useI18n()
 const model = reactive({
   title: '',
   recurrenceCode: '',
   exclusionCode: '',
   comment: ''
 })
-const rules: FormRules = {
-  title: [{ required: true, message: 'Please input name', trigger: ['input', 'blur'] }],
-  recurrenceCode: [{ required: true, message: 'Please input rTime', trigger: ['input', 'blur'] }]
-}
+const rules = computed<FormRules>(() => ({
+  title: [{ required: true, message: t('schedule.titleRequired'), trigger: ['input', 'blur'] }],
+  recurrenceCode: [{ required: true, message: t('schedule.recurrenceRequired'), trigger: ['input', 'blur'] }]
+}))
 
 /** 按新增或编辑模式恢复弹窗草稿，并清空上次校验信息。 */
 function resetDraft() {
@@ -104,12 +106,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
     :type="mode === 'add' ? 'primary' : 'default'"
     @click="open"
   >
-    {{ mode === 'add' ? 'Add' : 'Edit' }}
+    {{ mode === 'add' ? t('schedule.add') : t('schedule.edit') }}
   </NButton>
   <NModal v-model:show="show">
     <NCard
       class="schedule-modal"
-      :title="mode === 'add' ? 'Add' : 'Edit'"
+      :title="mode === 'add' ? t('schedule.add') : t('schedule.edit')"
       :bordered="false"
       role="dialog"
     >
@@ -123,16 +125,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
         size="large"
       >
         <NFormItem
-          label="Name"
+          :label="t('schedule.name')"
           path="title"
         >
           <NInput
             v-model:value="model.title"
-            :input-props="{ 'aria-label': 'Name' }"
+            :input-props="{ 'aria-label': t('schedule.name') }"
           />
         </NFormItem>
         <NFormItem
-          label="rTime"
+          :label="t('schedule.recurrence')"
           path="recurrenceCode"
         >
           <NInput
@@ -143,7 +145,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
           />
         </NFormItem>
         <NFormItem
-          label="exTime"
+          :label="t('schedule.exclusion')"
           path="exclusionCode"
         >
           <NInput
@@ -154,13 +156,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
           />
         </NFormItem>
         <NFormItem
-          label="Comment"
+          :label="t('schedule.comment')"
           path="comment"
         >
           <NInput
             v-model:value="model.comment"
             type="textarea"
-            :input-props="{ 'aria-label': 'Comment' }"
+            :input-props="{ 'aria-label': t('schedule.comment') }"
             :autosize="{ minRows: 3, maxRows: 5 }"
           />
         </NFormItem>
@@ -172,7 +174,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
           :loading="loading"
           @click="void submit()"
         >
-          Confirm
+          {{ t('common.confirm') }}
         </NButton>
       </template>
     </NCard>

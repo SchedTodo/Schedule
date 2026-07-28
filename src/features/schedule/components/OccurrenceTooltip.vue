@@ -3,19 +3,23 @@ import { NTooltip } from 'naive-ui'
 
 import type { CalendarOccurrenceDto } from '../../../contracts/occurrence.contract'
 import {
-  formatOccurrenceRange,
-  occurrenceWallTime
+  formatOccurrenceRange
 } from '../occurrence-time'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   item: CalendarOccurrenceDto
   timeZone: string
 }>()
+const { locale } = useI18n()
 
 function dateLabel(): string {
   const instant = props.item.start ?? props.item.end
-  const [, month, day] = occurrenceWallTime(instant, props.timeZone).date.split('-')
-  return `${Number(month)}/${Number(day)}`
+  return new Intl.DateTimeFormat(locale.value, {
+    month: 'numeric',
+    day: 'numeric',
+    timeZone: props.timeZone
+  }).format(new Date(instant))
 }
 </script>
 

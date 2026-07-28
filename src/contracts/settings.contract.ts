@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { SupportedLocaleSchema } from '../i18n/locale'
+
 export const WeekStartSchema = z.union([
   z.literal(1),
   z.literal(2),
@@ -71,6 +73,7 @@ export const TimeZoneAbbreviationsSchema = z
   ))
 
 export const SettingsDtoSchema = z.object({
+  locale: SupportedLocaleSchema,
   timeZone: z.string().min(1).max(100),
   timeZoneAbbreviations: TimeZoneAbbreviationsSchema,
   weekStart: WeekStartSchema,
@@ -94,7 +97,7 @@ export type SettingsDto = z.infer<typeof SettingsDtoSchema>
 export type UpdateSettingsInput = z.infer<typeof UpdateSettingsInputSchema>
 
 export const defaultSettings: SettingsDto = Object.freeze({
-  timeZone: 'UTC', timeZoneAbbreviations: {}, weekStart: 1,
+  locale: 'en-US', timeZone: 'UTC', timeZoneAbbreviations: {}, weekStart: 1,
   todoAlarmEnabled: true, todoAlarmBeforeMinutes: 5,
   eventAlarmEnabled: true, eventAlarmBeforeMinutes: 5,
   calendarMode: 'month', weekViewDays: 5,

@@ -1,0 +1,279 @@
+export const enUS = {
+  common: {
+    action: 'Action',
+    add: 'Add',
+    back: 'Back',
+    cancel: 'Cancel',
+    comment: 'Comment',
+    confirm: 'Confirm',
+    created: 'Created',
+    delete: 'Delete',
+    deleted: 'Deleted',
+    done: 'Done',
+    edit: 'Edit',
+    error: 'Error',
+    event: 'Event',
+    loading: 'Loading',
+    name: 'Name',
+    noRecords: 'No Records',
+    restore: 'Restore',
+    star: 'Star',
+    success: 'Success',
+    todo: 'Todo',
+    type: 'Type',
+    updated: 'Updated'
+  },
+  nav: {
+    database: 'Database',
+    help: 'Help',
+    home: 'Home',
+    main: 'Main navigation',
+    settings: 'Settings',
+    guest: 'Guest'
+  },
+  appearance: {
+    appearance: 'Appearance',
+    dark: 'Dark',
+    english: 'English',
+    language: 'Language',
+    light: 'Light',
+    simplifiedChinese: '简体中文',
+    system: 'System',
+    theme: 'Theme'
+  },
+  schedule: {
+    add: 'Add',
+    comment: 'Comment',
+    confirmDelete: 'Delete this schedule?',
+    currentTime: 'Current time {time}',
+    deadline: 'Deadline',
+    edit: 'Edit',
+    exclusion: 'exTime',
+    hideDone: 'Not Done',
+    hideExpired: 'Not Expired',
+    loading: 'Loading schedules',
+    name: 'Name',
+    noEvents: 'No Events',
+    noSchedules: 'No schedules',
+    recurrence: 'rTime',
+    restore: 'Restore schedule',
+    star: 'Star schedule',
+    titleRequired: 'Please input name',
+    recurrenceRequired: 'Please input rTime',
+    toggleTime: 'Toggle time display for {title}',
+    unstar: 'Unstar schedule',
+    month: 'month',
+    week: 'week',
+    time: 'time',
+    relative: 'relative',
+    schedule: 'Schedule',
+    info: 'Info',
+    records: 'Records',
+    times: 'Times',
+    start: 'Start',
+    end: 'End',
+    weekday: 'Weekday',
+    duration: 'Duration',
+    deleteSchedule: 'Delete the whole schedule?',
+    deleteTimes: 'Delete selected times?',
+    notFound: 'Schedule not found'
+  },
+  database: {
+    allSchedules: 'Show all schedules',
+    database: 'Database',
+    endDate: 'End Date',
+    search: 'Search Name or Comment',
+    searchPlaceholder: 'Search Name or Comment (space: AND, |: OR)...',
+    starredSchedules: 'Show starred schedules',
+    startDate: 'Start Date',
+    total: 'Total is {count}.',
+    type: 'Type'
+  },
+  settings: {
+    abbreviation: 'Abbreviation',
+    abbreviationIana: 'Abbreviation IANA Time Zone',
+    alarm: 'Alarm',
+    bigBreak: 'Big Break',
+    event: 'Event',
+    focusTime: 'Focus Time',
+    ianaTimeZone: 'IANA Time Zone',
+    minutes: 'minutes',
+    monthView: 'Month View',
+    openAtLogin: 'Open At Login',
+    pomodoro: 'Pomodoro',
+    preferences: 'Preferences',
+    priority: 'Priority',
+    smallBreak: 'Small Break',
+    timeZone: 'Time Zone',
+    timeZoneAbbreviation: 'Time Zone Abbreviation',
+    timeZoneAbbreviations: 'Time Zone Abbreviations',
+    todo: 'Todo',
+    weekView: 'Week View',
+    weekViewDays: 'Week View Days',
+    weekViewStartTime: 'Week View Start Time'
+  },
+  focus: {
+    bigBreak: 'Big Break',
+    focus: 'Focus',
+    focusCount: 'Focus {current} of 4',
+    pause: 'Pause',
+    resume: 'Resume',
+    selectTodo: 'Select Todo',
+    smallBreak: 'Small Break',
+    start: 'Start',
+    takeBreak: 'Take a break',
+    timeToFocus: 'Time to focus',
+    concentrate: 'Concentrate',
+    focused: 'Focused'
+  },
+  relative: {
+    now: 'now',
+    dueSoon: 'due soon',
+    justOverdue: 'just overdue',
+    startingSoon: 'starting soon',
+    justStarted: 'just started',
+    future: 'in {duration}',
+    overdue: 'overdue {duration}',
+    ago: '{duration} ago',
+    day: '{count}d',
+    hour: '{count}h',
+    minute: '{count}m'
+  },
+  help: {
+    title: 'Help',
+    keyboard: 'Keyboard Shortcuts',
+    syntax: 'Schedule Syntax',
+    navigation: 'Switch navigation pages',
+    openAdd: 'Open Add schedule dialog',
+    closeAdd: 'Close Add schedule dialog',
+    confirmAdd: 'Confirm Add schedule dialog',
+    insertWeekday: 'Insert the next Monday through Sunday into the focused rTime or exTime field.',
+    date: 'Date',
+    todo: 'Todo',
+    event: 'Event',
+    currentTime: 'Current time',
+    duration: 'Duration',
+    dateRange: 'Date range',
+    frequency: 'Frequency',
+    by: 'BY filters',
+    exclusion: 'Exclusion',
+    unknownTime: 'Unknown time',
+    timeZone: 'Time zone',
+    idea: 'Idea',
+    dateExamples: '{full}, {short}, tdy, or tmr',
+    eventDescription: '{example}; an earlier end time crosses midnight',
+    nowDescription: 'Use now in the time position; it is replaced with the current wall-clock time when saved',
+    durationDescription: 'Use 10:00-2h or 10:00-90m; omit the start as 2h to start at now. Durations must be positive and shorter than 24 hours',
+    frequencyDescription: 'daily, weekly, monthly, or yearly; use i2 for interval and c5 for count',
+    selectors: 'Selectors',
+    selectorsDescription: 'Use by[month[1,6],day[1,3],monthday[1,-1]]; weekno, yearday, and setpos are also supported',
+    timeZoneDescription: 'Append an IANA zone such as Asia/Shanghai, or configure a personal abbreviation in Settings',
+    unknownDescription: 'Use ? for an unknown hour or minute in event ranges; whole-hour durations preserve an unknown minute, as in 10:?-2h',
+    multipleRules: 'Multiple rules',
+    multipleDescription: 'Separate statements with semicolons',
+    exclusions: 'Exclusions',
+    exclusionsDescription: 'Use the exTime field to remove matching concrete occurrences'
+  },
+  error: {
+    validationFailed: 'The provided data is invalid.',
+    notFound: 'The requested item was not found.',
+    conflict: 'The operation conflicts with the current state.',
+    persistenceFailed: 'Local data could not be saved or loaded.',
+    platformUnavailable: 'The platform service is unavailable.',
+    internalError: 'The operation failed unexpectedly.'
+  }
+} as const
+
+type MessageShape<T> = {
+  readonly [K in keyof T]: T[K] extends string ? string : MessageShape<T[K]>
+}
+
+export const zhCN: MessageShape<typeof enUS> = {
+  common: {
+    action: '操作', add: '添加', back: '返回', cancel: '取消', comment: '备注',
+    confirm: '确认', created: '创建时间', delete: '删除', deleted: '已删除',
+    done: '完成', edit: '编辑', error: '错误', event: '事件', loading: '正在加载',
+    name: '名称', noRecords: '暂无记录', restore: '恢复', star: '收藏',
+    success: '成功', todo: '待办', type: '类型', updated: '更新时间'
+  },
+  nav: {
+    database: '数据库', help: '帮助', home: '首页', main: '主导航',
+    settings: '设置', guest: '访客'
+  },
+  appearance: {
+    appearance: '外观', dark: '深色', english: 'English', language: '语言',
+    light: '浅色', simplifiedChinese: '简体中文', system: '跟随系统', theme: '主题'
+  },
+  schedule: {
+    add: '添加', comment: '备注', confirmDelete: '确定删除此日程吗？',
+    currentTime: '当前时间 {time}',
+    deadline: '截止时间', edit: '编辑', exclusion: 'exTime', hideDone: '隐藏已完成',
+    hideExpired: '隐藏已过期', loading: '正在加载日程', name: '名称',
+    noEvents: '暂无事件', noSchedules: '暂无日程', recurrence: 'rTime',
+    restore: '恢复日程', star: '收藏日程', titleRequired: '请输入名称',
+    recurrenceRequired: '请输入 rTime', toggleTime: '切换 {title} 的时间显示',
+    unstar: '取消收藏日程', month: '月', week: '周', time: '时间',
+    relative: '相对时间', schedule: '日程', info: '信息', records: '专注记录',
+    times: '时间实例', start: '开始', end: '结束', weekday: '星期',
+    duration: '时长', deleteSchedule: '确定删除整个日程吗？',
+    deleteTimes: '确定删除选中的时间实例吗？', notFound: '未找到日程'
+  },
+  database: {
+    allSchedules: '显示全部日程', database: '数据库', endDate: '结束日期',
+    search: '搜索名称或备注', searchPlaceholder: '搜索名称或备注（空格：且，|：或）…',
+    starredSchedules: '只显示收藏日程', startDate: '开始日期',
+    total: '共 {count} 项。', type: '类型'
+  },
+  settings: {
+    abbreviation: '缩写', abbreviationIana: '缩写对应的 IANA 时区', alarm: '提醒',
+    bigBreak: '长休息', event: '事件', focusTime: '专注时长',
+    ianaTimeZone: 'IANA 时区', minutes: '分钟', monthView: '月视图',
+    openAtLogin: '开机启动', pomodoro: '番茄钟', preferences: '偏好',
+    priority: '默认视图', smallBreak: '短休息', timeZone: '时区',
+    timeZoneAbbreviation: '时区缩写', timeZoneAbbreviations: '时区缩写',
+    todo: '待办', weekView: '周视图', weekViewDays: '周视图天数',
+    weekViewStartTime: '周视图起始时间'
+  },
+  focus: {
+    bigBreak: '长休息', focus: '专注', focusCount: '第 {current} / 4 次专注',
+    pause: '暂停', resume: '继续', selectTodo: '选择待办', smallBreak: '短休息',
+    start: '开始', takeBreak: '该休息了', timeToFocus: '该专注了',
+    concentrate: '专注', focused: '累计专注'
+  },
+  relative: {
+    now: '现在', dueSoon: '即将到期', justOverdue: '刚刚过期',
+    startingSoon: '即将开始', justStarted: '刚刚开始', future: '{duration}后',
+    overdue: '已过期 {duration}', ago: '{duration}前', day: '{count}天',
+    hour: '{count}小时', minute: '{count}分钟'
+  },
+  help: {
+    title: '帮助', keyboard: '键盘快捷键', syntax: '日程语法',
+    navigation: '切换导航页面', openAdd: '打开添加日程对话框',
+    closeAdd: '关闭添加日程对话框', confirmAdd: '确认添加日程',
+    insertWeekday: '在当前 rTime 或 exTime 输入框中插入下一个周一至周日。',
+    date: '日期', todo: '待办', event: '事件', currentTime: '当前时间',
+    duration: '持续时间', dateRange: '日期范围', frequency: '频率',
+    by: 'BY 筛选', exclusion: '排除', unknownTime: '未知时间',
+    timeZone: '时区', idea: '灵感', dateExamples: '{full}、{short}、tdy 或 tmr',
+    eventDescription: '{example}；结束时间早于开始时间时表示跨越午夜',
+    nowDescription: '在时间位置使用 now；保存时会替换为当前墙上时间',
+    durationDescription: '使用 10:00-2h 或 10:00-90m；省略起点写作 2h 时从 now 开始。持续时间必须为正且短于 24 小时',
+    frequencyDescription: '支持 daily、weekly、monthly、yearly；i2 表示间隔，c5 表示次数',
+    selectors: '筛选器',
+    selectorsDescription: '使用 by[month[1,6],day[1,3],monthday[1,-1]]；也支持 weekno、yearday 和 setpos',
+    timeZoneDescription: '追加 Asia/Shanghai 等 IANA 时区，或在设置中配置个人缩写',
+    unknownDescription: '事件范围中用 ? 表示未知小时或分钟；整小时持续时间会保留未知分钟，例如 10:?-2h',
+    multipleRules: '多条规则', multipleDescription: '使用分号分隔语句',
+    exclusions: '排除规则', exclusionsDescription: '在 exTime 中填写规则以移除匹配的具体实例'
+  },
+  error: {
+    validationFailed: '提供的数据无效。', notFound: '未找到请求的内容。',
+    conflict: '当前状态与该操作冲突。', persistenceFailed: '无法读取或保存本地数据。',
+    platformUnavailable: '平台服务不可用。', internalError: '操作意外失败。'
+  }
+}
+
+export const messages = {
+  'en-US': enUS,
+  'zh-CN': zhCN
+}

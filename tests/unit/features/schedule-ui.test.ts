@@ -29,9 +29,9 @@ describe('schedule UI', () => {
   it('renders an accessible composer and emits normalized input', async () => {
     const wrapper = mount(ScheduleComposer)
 
-    expect(wrapper.get('label[for="schedule-title"]').text()).toBe('标题')
-    expect(wrapper.get('label[for="schedule-recurrence"]').text()).toBe('时间规则')
-    expect(wrapper.get('label[for="schedule-comment"]').text()).toBe('备注')
+    expect(wrapper.get('label[for="schedule-title"]').text()).toBe('Name')
+    expect(wrapper.get('label[for="schedule-recurrence"]').text()).toBe('rTime')
+    expect(wrapper.get('label[for="schedule-comment"]').text()).toBe('Comment')
     await wrapper.get('#schedule-title').setValue(' 周会 ')
     await wrapper.get('form').trigger('submit')
 
@@ -49,21 +49,28 @@ describe('schedule UI', () => {
 
     await wrapper.setProps({ loading: false })
     await wrapper.get('form').trigger('submit')
-    expect(wrapper.get('[role="alert"]').text()).toContain('请输入日程标题')
+    expect(wrapper.get('[role="alert"]').text()).toContain('Please input name')
   })
 
   it('renders empty, error, event, and todo list states', () => {
     const empty = mount(ScheduleList, { props: { items: [] } })
-    expect(empty.text()).toContain('暂无日程')
+    expect(empty.text()).toContain('No schedules')
 
     const failed = mount(ScheduleList, {
-      props: { items: [], error: { code: 'INTERNAL_ERROR', message: '加载失败' } }
+      props: {
+        items: [],
+        error: {
+          code: 'INTERNAL_ERROR',
+          messageKey: 'error.internalError',
+          message: '加载失败'
+        }
+      }
     })
-    expect(failed.get('[role="alert"]').text()).toContain('加载失败')
+    expect(failed.get('[role="alert"]').text()).toContain('unexpectedly')
 
     const list = mount(ScheduleList, { props: { items: [event, todo] } })
-    expect(list.text()).toContain('事件')
-    expect(list.text()).toContain('待办')
+    expect(list.text()).toContain('Event')
+    expect(list.text()).toContain('Todo')
     expect(list.text()).toContain('周会')
     expect(list.text()).toContain('提交周报')
   })

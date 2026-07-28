@@ -15,12 +15,12 @@ test('completes a Todo and switches an event between month and week views', asyn
   })
 
   await expect(page.getByTestId('month-view').getByText('日历事件')).toBeVisible()
-  await page.getByRole('button', { name: 'week', exact: true }).click()
+  await page.getByRole('button', { name: '周', exact: true }).click()
   await expect(page.getByTestId('week-view').getByText('日历事件')).toBeVisible()
-  await page.getByRole('button', { name: 'month', exact: true }).click()
+  await page.getByRole('button', { name: '月', exact: true }).click()
   await expect(page.getByTestId('month-view')).toBeVisible()
 
   const row = page.getByRole('row', { name: /完成待办/ })
-  await row.getByRole('checkbox', { name: 'Done' }).check()
-  await expect(row.getByRole('checkbox', { name: 'Done' })).toBeChecked()
+  await row.getByRole('checkbox', { name: '完成' }).check()
+  await expect(row.getByRole('checkbox', { name: '完成' })).toBeChecked()
 })

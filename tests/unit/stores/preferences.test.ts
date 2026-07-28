@@ -24,14 +24,20 @@ describe('preferences store', () => {
     expect(store.$state).toEqual({
       themeMode: 'system',
       calendarMode: 'month',
-      weekStart: 1
+      weekStart: 1,
+      locale: 'en-US'
     })
   })
 
   it('updates ISO week starts and round trips them through storage', () => {
     const storage = memoryStorage()
     const first = usePreferencesStore()
-    first.update({ themeMode: 'light', calendarMode: 'week', weekStart: 7 }, storage)
+    first.update({
+      themeMode: 'light',
+      calendarMode: 'week',
+      weekStart: 7,
+      locale: 'zh-CN'
+    }, storage)
 
     setActivePinia(createPinia())
     const restored = usePreferencesStore()
@@ -40,7 +46,26 @@ describe('preferences store', () => {
     expect(restored.$state).toEqual({
       themeMode: 'light',
       calendarMode: 'week',
+      weekStart: 7,
+      locale: 'zh-CN'
+    })
+  })
+
+  it('rejects legacy preferences without locale', () => {
+    const storage = memoryStorage()
+    storage.setItem('schedule-v2-preferences', JSON.stringify({
+      themeMode: 'dark',
+      calendarMode: 'week',
       weekStart: 7
+    }))
+    const store = usePreferencesStore()
+    store.hydrate(storage, 'zh-CN')
+
+    expect(store.$state).toEqual({
+      themeMode: 'system',
+      calendarMode: 'month',
+      weekStart: 1,
+      locale: 'zh-CN'
     })
   })
 })

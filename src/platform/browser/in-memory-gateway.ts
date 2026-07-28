@@ -31,6 +31,7 @@ import {
   normalizeScheduleOccurrences
 } from '../../parser/parse-schedule'
 import { resolveConfiguredTimeZoneAbbreviation } from '../../parser/time-zone-abbreviations'
+import { resolveSupportedLocale } from '../../i18n/locale'
 
 export interface InMemoryGatewayDependencies {
   readonly clock: Clock
@@ -39,6 +40,7 @@ export interface InMemoryGatewayDependencies {
 
 const validationError = {
   code: 'VALIDATION_FAILED' as const,
+  messageKey: 'error.validationFailed' as const,
   message: '日程数据无效'
 }
 
@@ -57,7 +59,12 @@ export function createInMemoryGateway(
   const schedules = [...seed]
   const occurrences: ScheduleOccurrenceDto[] = []
   const deletedScheduleIds = new Set<string>()
-  let settings = { ...defaultSettings }
+  let settings = {
+    ...defaultSettings,
+    locale: resolveSupportedLocale(
+      typeof navigator === 'undefined' ? undefined : navigator.language
+    )
+  }
   const records: ConcentrationRecordDto[] = []
 
   for (const schedule of seed) {
@@ -78,7 +85,7 @@ export function createInMemoryGateway(
   }
 
   function missing() {
-    return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: '日程不存在' } }
+    return { ok: false as const, error: { code: 'NOT_FOUND' as const, messageKey: 'error.notFound' as const, message: '日程不存在' } }
   }
 
   return {
@@ -280,7 +287,7 @@ export function createInMemoryGateway(
       async updateComment(id, comment) {
         const index = occurrences.findIndex((value) => value.id === id)
         const current = occurrences[index]
-        if (current === undefined) return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+        if (current === undefined) return { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '时间实例不存在' } }
         const updated = { ...current, comment }
         occurrences[index] = updated
         return { ok: true, value: updated }
@@ -291,7 +298,7 @@ export function createInMemoryGateway(
         if (!parsed.success) return { ok: false, error: validationError }
         const selected = parsed.data.ids.map((id) => occurrences.find((value) => value.id === id))
         if (selected.some((value) => value === undefined)) {
-          return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+          return { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '时间实例不存在' } }
         }
         const values = selected as ScheduleOccurrenceDto[]
         if (new Set(values.map(({ scheduleId }) => scheduleId)).size !== 1) {
@@ -333,7 +340,7 @@ export function createInMemoryGateway(
       async setDone(id, done) {
         const index = occurrences.findIndex((value) => value.id === id)
         const current = occurrences[index]
-        if (current === undefined) return { ok: false, error: { code: 'NOT_FOUND', message: '时间实例不存在' } }
+        if (current === undefined) return { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '时间实例不存在' } }
         const updated = { ...current, done }
         occurrences[index] = updated
         return { ok: true, value: updated }
@@ -369,7 +376,7 @@ export function createInMemoryGateway(
       /** 删除指定专注记录，不存在时返回 NOT_FOUND。 */
       async delete(id) {
         const index = records.findIndex((value) => value.id === id)
-        if (index < 0) return { ok: false, error: { code: 'NOT_FOUND', message: '专注记录不存在' } }
+        if (index < 0) return { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '专注记录不存在' } }
         records.splice(index, 1)
         return { ok: true, value: undefined }
       }

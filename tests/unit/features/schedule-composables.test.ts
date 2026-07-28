@@ -84,7 +84,11 @@ describe('schedule composables', () => {
   })
 
   it('keeps stable application errors from list and detail requests', async () => {
-    const error = { code: 'PLATFORM_UNAVAILABLE' as const, message: '平台不可用' }
+    const error = {
+      code: 'PLATFORM_UNAVAILABLE' as const,
+      messageKey: 'error.platformUnavailable' as const,
+      message: '平台不可用'
+    }
     const gateway = gatewayWith({
       list: vi.fn(async () => ({ ok: false as const, error })),
       findById: vi.fn(async () => ({ ok: false as const, error }))

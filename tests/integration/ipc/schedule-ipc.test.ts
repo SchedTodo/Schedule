@@ -147,7 +147,11 @@ describe('typed schedule IPC', () => {
       api.createSchedule({ title: '评审', recurrenceCode: '2026-07-12 10:00' })
     ).resolves.toEqual({
       ok: false,
-      error: { code: 'INTERNAL_ERROR', message: '日程操作失败' }
+      error: {
+        code: 'INTERNAL_ERROR',
+        messageKey: 'error.internalError',
+        message: '日程操作失败'
+      }
     })
   })
 
@@ -301,7 +305,11 @@ describe('typed schedule IPC', () => {
       schedules: {
         create: vi.fn(async () => ({
           ok: false as const,
-          error: { code: 'PERSISTENCE_FAILED' as const, message: 'save failed' }
+          error: {
+            code: 'PERSISTENCE_FAILED' as const,
+            messageKey: 'error.persistenceFailed' as const,
+            message: 'save failed'
+          }
         })),
         findById: vi.fn(),
         list: vi.fn()

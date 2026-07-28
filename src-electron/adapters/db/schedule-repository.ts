@@ -19,6 +19,7 @@ type ScheduleDatabase = BetterSQLite3Database<typeof databaseSchema>
 function persistenceError(error: unknown): AppErrorDto {
   return {
     code: 'PERSISTENCE_FAILED',
+    messageKey: 'error.persistenceFailed',
     message: '本地日程数据库操作失败',
     details: {
       cause: error instanceof Error ? error.message : String(error)
@@ -192,7 +193,7 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
     try {
       const changed = this.database.update(schedules)
         .set({ starred, updatedAt: new Date(updatedAt) }).where(eq(schedules.id, id)).run()
-      if (changed.changes === 0) return { ok: false, error: { code: 'NOT_FOUND', message: '日程不存在' } }
+      if (changed.changes === 0) return { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '日程不存在' } }
       const row = this.database.select().from(schedules).where(eq(schedules.id, id)).get()!
       return { ok: true, value: scheduleRowToDto(row) }
     } catch (error) {
@@ -217,7 +218,7 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
         return result.changes
       })
       return changed === 0
-        ? { ok: false, error: { code: 'NOT_FOUND', message: '日程不存在' } }
+        ? { ok: false, error: { code: 'NOT_FOUND', messageKey: 'error.notFound', message: '日程不存在' } }
         : { ok: true, value: undefined }
     } catch (error) {
       return { ok: false, error: persistenceError(error) }

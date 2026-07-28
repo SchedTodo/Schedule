@@ -33,6 +33,7 @@ import {
   sortDetailOccurrences
 } from '../../features/schedule/schedule-detail-presentation'
 import { useScheduleDetail } from '../../features/schedule/use-schedule-detail'
+import { useI18n } from 'vue-i18n'
 
 const gateway = inject(platformGatewayKey)
 if (!gateway) throw new Error('Platform gateway is not available')
@@ -40,6 +41,7 @@ const platform = gateway
 const { showResult } = useOperationFeedback()
 const route = useRoute()
 const router = useRouter()
+const { t, locale } = useI18n()
 const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
 if (!id) throw new Error('Schedule id is required')
 const scheduleId = id
@@ -54,7 +56,8 @@ const pagination = reactive({
   showSizePicker: true,
   pageSizes: [5, 10, 15, 20]
 })
-const format = (value: string) => formatInstant(value, timeZone.value)
+const format = (value: string) =>
+  formatInstant(value, timeZone.value, locale.value)
 const formatTimeCode = (value: string) => value.replace(/;\s*/g, ';\n')
 const formatDuration = (start: string, end: string) => {
   const seconds = Math.floor((Date.parse(end) - Date.parse(start)) / 1000)
@@ -139,34 +142,44 @@ async function updateComment(id: string, comment: string) {
   if (showResult(result, { success: true })) await refreshOccurrences()
 }
 
-const columns: DataTableColumns<ScheduleOccurrenceDto> = [
+const columns = computed<DataTableColumns<ScheduleOccurrenceDto>>(() => [
   { type: 'selection' },
   {
-    title: 'Start',
+    title: t('schedule.start'),
     key: 'start',
     render: (row) => row.start === null
       ? '-'
-      : formatOccurrenceDateTime(row.start, row.startMark, timeZone.value)
+      : formatOccurrenceDateTime(
+          row.start,
+          row.startMark,
+          timeZone.value,
+          locale.value
+        )
   },
   {
-    title: 'End',
+    title: t('schedule.end'),
     key: 'end',
-    render: (row) => formatOccurrenceDateTime(row.end, row.endMark, timeZone.value)
+    render: (row) => formatOccurrenceDateTime(
+      row.end,
+      row.endMark,
+      timeZone.value,
+      locale.value
+    )
   },
   {
-    title: 'Weekday',
+    title: t('schedule.weekday'),
     key: 'weekday',
-    render: (row) => occurrenceWeekday(row, timeZone.value)
+    render: (row) => occurrenceWeekday(row, timeZone.value, locale.value)
   },
   {
-    title: 'Comment',
+    title: t('common.comment'),
     key: 'comment',
     render: (row) => h(EditableOccurrenceComment, {
       value: row.comment,
       onCommit: (value) => void updateComment(row.id, value)
     })
   }
-]
+])
 
 void refreshOccurrences()
 void refreshRecords()
@@ -176,19 +189,19 @@ void refreshSettings()
 <template>
   <div class="detail-page">
     <NPageHeader
-      title="Schedule"
+      :title="t('schedule.schedule')"
       :show-breadcrumb="false"
       @back="router.back()"
     />
     <NSpin
       v-if="detail.loading.value"
-      description="Loading"
+      :description="t('common.loading')"
     />
     <div v-else-if="detail.error.value" />
     <template v-else-if="detail.schedule.value">
       <NCard segmented>
         <template #header>
-          <b>Info</b>
+          <b>{{ t('schedule.info') }}</b>
         </template>
         <template #header-extra>
           <NButton
@@ -196,7 +209,7 @@ void refreshSettings()
             text
             :disabled="detail.schedule.value.deleted"
             :color="detail.schedule.value.starred ? '#ffe742' : '#c2c2c2'"
-            :aria-label="detail.schedule.value.starred ? 'Unstar schedule' : 'Star schedule'"
+            :aria-label="detail.schedule.value.starred ? t('schedule.unstar') : t('schedule.star')"
             @click="toggleStar"
           >
             <NIcon class="star-icon">
@@ -215,28 +228,28 @@ void refreshSettings()
             />
             <NPopconfirm @positive-click="removeSchedule">
               <template #trigger>
-                <NButton>Delete</NButton>
+                <NButton>{{ t('common.delete') }}</NButton>
               </template>
-              Delete the whole Schedule?
+              {{ t('schedule.deleteSchedule') }}
             </NPopconfirm>
           </NButtonGroup>
         </template>
         <div class="schedule-info">
-          <b>Name</b><span>{{ detail.schedule.value.title }}</span>
-          <b>Type</b><NTag
+          <b>{{ t('common.name') }}</b><span>{{ detail.schedule.value.title }}</span>
+          <b>{{ t('common.type') }}</b><NTag
             class="schedule-type"
             type="success"
           >
-            {{ detail.schedule.value.kind }}
+            {{ detail.schedule.value.kind === 'event' ? t('common.event') : t('common.todo') }}
           </NTag>
-          <b>Comment</b><span class="pre-line">{{ detail.schedule.value.comment }}</span>
+          <b>{{ t('common.comment') }}</b><span class="pre-line">{{ detail.schedule.value.comment }}</span>
           <b>rTime</b><span class="pre-line recurrence-code">{{ formatTimeCode(detail.schedule.value.recurrenceCode) }}</span>
           <b>exTime</b><span class="pre-line exclusion-code">{{ formatTimeCode(detail.schedule.value.exclusionCode) }}</span>
-          <b>Deleted</b><NTag :type="detail.schedule.value.deleted ? 'success' : 'error'">
+          <b>{{ t('common.deleted') }}</b><NTag :type="detail.schedule.value.deleted ? 'success' : 'error'">
             {{ detail.schedule.value.deleted }}
           </NTag>
-          <b>Created</b><span>{{ format(detail.schedule.value.createdAt) }}</span>
-          <b>Updated</b><span>{{ format(detail.schedule.value.updatedAt) }}</span>
+          <b>{{ t('common.created') }}</b><span>{{ format(detail.schedule.value.createdAt) }}</span>
+          <b>{{ t('common.updated') }}</b><span>{{ format(detail.schedule.value.updatedAt) }}</span>
         </div>
       </NCard>
       <NCard
@@ -244,14 +257,14 @@ void refreshSettings()
         segmented
       >
         <template #header>
-          <b>Records</b>
+          <b>{{ t('schedule.records') }}</b>
         </template>
         <NEmpty
           v-if="records.length === 0"
-          description="No Records"
+          :description="t('common.noRecords')"
         />
         <table v-else>
-          <thead><tr><th>Start</th><th>End</th><th>Duration</th></tr></thead>
+          <thead><tr><th>{{ t('schedule.start') }}</th><th>{{ t('schedule.end') }}</th><th>{{ t('schedule.duration') }}</th></tr></thead>
           <tbody>
             <tr
               v-for="record in records"
@@ -266,7 +279,7 @@ void refreshSettings()
       </NCard>
       <NCard segmented>
         <template #header>
-          <b>Times</b>
+          <b>{{ t('schedule.times') }}</b>
         </template>
         <template
           v-if="!detail.schedule.value.deleted"
@@ -274,9 +287,9 @@ void refreshSettings()
         >
           <NPopconfirm @positive-click="excludeSelected">
             <template #trigger>
-              <NButton>Delete</NButton>
+              <NButton>{{ t('common.delete') }}</NButton>
             </template>
-            Delete selected times?
+            {{ t('schedule.deleteTimes') }}
           </NPopconfirm>
         </template>
         <NDataTable
@@ -293,7 +306,7 @@ void refreshSettings()
       v-else
       type="warning"
     >
-      Schedule not found
+      {{ t('schedule.notFound') }}
     </NAlert>
   </div>
 </template>

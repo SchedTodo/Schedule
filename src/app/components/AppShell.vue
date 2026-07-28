@@ -9,29 +9,31 @@ import { NAvatar } from 'naive-ui/es/avatar'
 import { NIcon } from 'naive-ui/es/icon'
 import { NLayoutContent, NLayoutFooter, NLayoutHeader } from 'naive-ui/es/layout'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import IdeaPane from '../../features/ideas/IdeaPane.vue'
 
 const route = useRoute()
 const router = useRouter()
-const navigation = [
-  { label: 'Home', path: '/', icon: HomeOutline },
-  { label: 'Database', path: '/database', icon: Database },
-  { label: 'Settings', path: '/settings', icon: SettingsOutline },
-  { label: 'Help', path: '/help', icon: HelpCircleOutline }
-]
+const { t } = useI18n()
+const navigation = computed(() => [
+  { label: t('nav.home'), path: '/', icon: HomeOutline },
+  { label: t('nav.database'), path: '/database', icon: Database },
+  { label: t('nav.settings'), path: '/settings', icon: SettingsOutline },
+  { label: t('nav.help'), path: '/help', icon: HelpCircleOutline }
+])
 const activePath = computed(() => {
   if (route.path.startsWith('/schedule/')) return '/'
-  return navigation.some(({ path }) => path === route.path) ? route.path : '/'
+  return navigation.value.some(({ path }) => path === route.path) ? route.path : '/'
 })
 
 /** 处理 Ctrl+左右方向键，在应用的顶级页面之间循环切换。 */
 function handleKeyboard(event: KeyboardEvent) {
   if (!event.ctrlKey || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return
-  const current = navigation.findIndex(({ path }) => path === activePath.value)
+  const current = navigation.value.findIndex(({ path }) => path === activePath.value)
   const direction = event.key === 'ArrowRight' ? 1 : -1
-  const next = (current + direction + navigation.length) % navigation.length
-  void router.push(navigation[next]?.path ?? '/')
+  const next = (current + direction + navigation.value.length) % navigation.value.length
+  void router.push(navigation.value[next]?.path ?? '/')
 }
 
 onMounted(() => window.addEventListener('keydown', handleKeyboard))
@@ -48,7 +50,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
         color: 'var(--color-navigation-text)'
       }"
     >
-      <nav aria-label="Main navigation">
+      <nav :aria-label="t('nav.main')">
         <RouterLink
           v-for="item in navigation"
           :key="item.path"
@@ -71,7 +73,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
         >
           <NIcon><UserOutlined /></NIcon>
         </NAvatar>
-        <span>Guest</span>
+        <span>{{ t('nav.guest') }}</span>
       </div>
     </NLayoutHeader>
 

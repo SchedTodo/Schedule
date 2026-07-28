@@ -17,11 +17,13 @@ export interface ScheduleIpcHandlerOptions {
 
 const validationError: AppErrorDto = {
   code: 'VALIDATION_FAILED',
+  messageKey: 'error.validationFailed',
   message: 'IPC 请求格式无效'
 }
 
 const internalError: AppErrorDto = {
   code: 'INTERNAL_ERROR',
+  messageKey: 'error.internalError',
   message: '日程操作失败'
 }
 
