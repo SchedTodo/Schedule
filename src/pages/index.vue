@@ -183,7 +183,7 @@ void refreshTodos()
           </NButtonGroup>
           <ScheduleModal
             :loading="mutations.loading.value"
-            :time-zone="appSettings.timeZone"
+            :settings="appSettings"
             @submit="create"
           />
         </div>

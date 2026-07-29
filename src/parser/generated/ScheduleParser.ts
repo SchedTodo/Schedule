@@ -24,25 +24,37 @@ export default class ScheduleParser extends Parser {
 	public static readonly TOMORROW = 2;
 	public static readonly NOW = 3;
 	public static readonly START_OF_DAY = 4;
-	public static readonly END_OF_DAY = 5;
-	public static readonly FREQUENCY = 6;
-	public static readonly BY = 7;
-	public static readonly BY_TYPE = 8;
-	public static readonly IANA_ZONE = 9;
-	public static readonly INTERVAL_OPTION = 10;
-	public static readonly COUNT_OPTION = 11;
-	public static readonly DURATION = 12;
-	public static readonly ZONE_ALIAS = 13;
-	public static readonly INTEGER = 14;
-	public static readonly QUESTION = 15;
-	public static readonly SLASH = 16;
-	public static readonly DASH = 17;
-	public static readonly TIME_SEPARATOR = 18;
-	public static readonly COMMA = 19;
-	public static readonly SEMI = 20;
-	public static readonly LBRACK = 21;
-	public static readonly RBRACK = 22;
-	public static readonly WS = 23;
+	public static readonly START_OF_DAY_SHORT = 5;
+	public static readonly END_OF_DAY = 6;
+	public static readonly END_OF_DAY_SHORT = 7;
+	public static readonly DAILY = 8;
+	public static readonly WEEKLY = 9;
+	public static readonly MONTHLY = 10;
+	public static readonly YEARLY = 11;
+	public static readonly BY = 12;
+	public static readonly MONTH = 13;
+	public static readonly WEEKNO = 14;
+	public static readonly YEARDAY = 15;
+	public static readonly MONTHDAY = 16;
+	public static readonly DAY = 17;
+	public static readonly SETPOS = 18;
+	public static readonly UTC = 19;
+	public static readonly IANA_ZONE = 20;
+	public static readonly INTERVAL_OPTION = 21;
+	public static readonly COUNT_OPTION = 22;
+	public static readonly DURATION = 23;
+	public static readonly ZONE_ALIAS = 24;
+	public static readonly INTEGER = 25;
+	public static readonly QUESTION = 26;
+	public static readonly SLASH = 27;
+	public static readonly DASH = 28;
+	public static readonly COLON = 29;
+	public static readonly DOT = 30;
+	public static readonly COMMA = 31;
+	public static readonly SEMI = 32;
+	public static readonly LBRACK = 33;
+	public static readonly RBRACK = 34;
+	public static readonly WS = 35;
 	public static override readonly EOF = Token.EOF;
 	public static readonly RULE_document = 0;
 	public static readonly RULE_statement = 1;
@@ -54,45 +66,63 @@ export default class ScheduleParser extends Parser {
 	public static readonly RULE_timeDuration = 7;
 	public static readonly RULE_timeZone = 8;
 	public static readonly RULE_frequency = 9;
-	public static readonly RULE_frequencyOption = 10;
-	public static readonly RULE_byClause = 11;
-	public static readonly RULE_byItem = 12;
-	public static readonly RULE_signedInteger = 13;
-	public static readonly literalNames: (string | null)[] = [ null, "'tdy'", 
-                                                            "'tmr'", "'now'", 
-                                                            null, null, 
-                                                            null, "'by'", 
-                                                            null, null, 
-                                                            null, null, 
-                                                            null, null, 
-                                                            null, "'?'", 
-                                                            "'/'", "'-'", 
-                                                            null, "','", 
-                                                            "';'", "'['", 
-                                                            "']'" ];
-	public static readonly symbolicNames: (string | null)[] = [ null, "TODAY", 
-                                                             "TOMORROW", 
-                                                             "NOW", "START_OF_DAY", 
-                                                             "END_OF_DAY", 
-                                                             "FREQUENCY", 
-                                                             "BY", "BY_TYPE", 
-                                                             "IANA_ZONE", 
-                                                             "INTERVAL_OPTION", 
-                                                             "COUNT_OPTION", 
-                                                             "DURATION", 
-                                                             "ZONE_ALIAS", 
-                                                             "INTEGER", 
-                                                             "QUESTION", 
-                                                             "SLASH", "DASH", 
-                                                             "TIME_SEPARATOR", 
-                                                             "COMMA", "SEMI", 
-                                                             "LBRACK", "RBRACK", 
+	public static readonly RULE_frequencyUnit = 10;
+	public static readonly RULE_frequencyOption = 11;
+	public static readonly RULE_byClause = 12;
+	public static readonly RULE_byItem = 13;
+	public static readonly RULE_byType = 14;
+	public static readonly RULE_signedInteger = 15;
+	public static readonly RULE_timeSeparator = 16;
+	public static readonly literalNames: (string | null)[] = [ null, "'tdy'",
+                                                            "'tmr'", "'now'",
+                                                            "'start'", "'s'",
+                                                            "'end'", "'e'",
+                                                            "'daily'", "'weekly'",
+                                                            "'monthly'",
+                                                            "'yearly'",
+                                                            "'by'", "'month'",
+                                                            "'weekno'",
+                                                            "'yearday'",
+                                                            "'monthday'",
+                                                            "'day'", "'setpos'",
+                                                            "'UTC'", null,
+                                                            null, null,
+                                                            null, null,
+                                                            null, "'?'",
+                                                            "'/'", "'-'",
+                                                            "':'", "'.'",
+                                                            "','", "';'",
+                                                            "'['", "']'" ];
+	public static readonly symbolicNames: (string | null)[] = [ null, "TODAY",
+                                                             "TOMORROW",
+                                                             "NOW", "START_OF_DAY",
+                                                             "START_OF_DAY_SHORT",
+                                                             "END_OF_DAY",
+                                                             "END_OF_DAY_SHORT",
+                                                             "DAILY", "WEEKLY",
+                                                             "MONTHLY",
+                                                             "YEARLY", "BY",
+                                                             "MONTH", "WEEKNO",
+                                                             "YEARDAY",
+                                                             "MONTHDAY",
+                                                             "DAY", "SETPOS",
+                                                             "UTC", "IANA_ZONE",
+                                                             "INTERVAL_OPTION",
+                                                             "COUNT_OPTION",
+                                                             "DURATION",
+                                                             "ZONE_ALIAS",
+                                                             "INTEGER",
+                                                             "QUESTION",
+                                                             "SLASH", "DASH",
+                                                             "COLON", "DOT",
+                                                             "COMMA", "SEMI",
+                                                             "LBRACK", "RBRACK",
                                                              "WS" ];
 	// tslint:disable:no-trailing-whitespace
 	public static readonly ruleNames: string[] = [
-		"document", "statement", "dateRange", "dateValue", "integerDate", "timeRange", 
-		"timeValue", "timeDuration", "timeZone", "frequency", "frequencyOption", 
-		"byClause", "byItem", "signedInteger",
+		"document", "statement", "dateRange", "dateValue", "integerDate", "timeRange",
+		"timeValue", "timeDuration", "timeZone", "frequency", "frequencyUnit",
+		"frequencyOption", "byClause", "byItem", "byType", "signedInteger", "timeSeparator",
 	];
 	public get grammarFileName(): string { return "Schedule.g4"; }
 	public get literalNames(): (string | null)[] { return ScheduleParser.literalNames; }
@@ -117,37 +147,37 @@ export default class ScheduleParser extends Parser {
 			let _alt: number;
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 28;
+			this.state = 34;
 			this.statement();
-			this.state = 33;
+			this.state = 39;
 			this._errHandler.sync(this);
 			_alt = this._interp.adaptivePredict(this._input, 0, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					{
 					{
-					this.state = 29;
+					this.state = 35;
 					this.match(ScheduleParser.SEMI);
-					this.state = 30;
+					this.state = 36;
 					this.statement();
 					}
 					}
 				}
-				this.state = 35;
+				this.state = 41;
 				this._errHandler.sync(this);
 				_alt = this._interp.adaptivePredict(this._input, 0, this._ctx);
 			}
-			this.state = 37;
+			this.state = 43;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===20) {
+			if (_la===32) {
 				{
-				this.state = 36;
+				this.state = 42;
 				this.match(ScheduleParser.SEMI);
 				}
 			}
 
-			this.state = 39;
+			this.state = 45;
 			this.match(ScheduleParser.EOF);
 			}
 		}
@@ -173,36 +203,36 @@ export default class ScheduleParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 41;
+			this.state = 47;
 			this.dateRange();
-			this.state = 42;
+			this.state = 48;
 			this.timeRange();
-			this.state = 44;
+			this.state = 50;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===9 || _la===13) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & 18350080) !== 0)) {
 				{
-				this.state = 43;
+				this.state = 49;
 				this.timeZone();
 				}
 			}
 
-			this.state = 47;
+			this.state = 53;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===6) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & 3840) !== 0)) {
 				{
-				this.state = 46;
+				this.state = 52;
 				this.frequency();
 				}
 			}
 
-			this.state = 50;
+			this.state = 56;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===7) {
+			if (_la===12) {
 				{
-				this.state = 49;
+				this.state = 55;
 				this.byClause();
 				}
 			}
@@ -231,16 +261,16 @@ export default class ScheduleParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 52;
+			this.state = 58;
 			this.dateValue();
-			this.state = 55;
+			this.state = 61;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===17) {
+			if (_la===28) {
 				{
-				this.state = 53;
+				this.state = 59;
 				this.match(ScheduleParser.DASH);
-				this.state = 54;
+				this.state = 60;
 				this.dateValue();
 				}
 			}
@@ -266,27 +296,27 @@ export default class ScheduleParser extends Parser {
 		let localctx: DateValueContext = new DateValueContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 6, ScheduleParser.RULE_dateValue);
 		try {
-			this.state = 60;
+			this.state = 66;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 1:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 57;
+				this.state = 63;
 				this.match(ScheduleParser.TODAY);
 				}
 				break;
 			case 2:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 58;
+				this.state = 64;
 				this.match(ScheduleParser.TOMORROW);
 				}
 				break;
-			case 14:
+			case 25:
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 59;
+				this.state = 65;
 				this.integerDate();
 				}
 				break;
@@ -316,25 +346,25 @@ export default class ScheduleParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 62;
+			this.state = 68;
 			this.match(ScheduleParser.INTEGER);
-			this.state = 69;
+			this.state = 75;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===16) {
+			if (_la===27) {
 				{
-				this.state = 63;
+				this.state = 69;
 				this.match(ScheduleParser.SLASH);
-				this.state = 64;
+				this.state = 70;
 				this.match(ScheduleParser.INTEGER);
-				this.state = 67;
+				this.state = 73;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===16) {
+				if (_la===27) {
 					{
-					this.state = 65;
+					this.state = 71;
 					this.match(ScheduleParser.SLASH);
-					this.state = 66;
+					this.state = 72;
 					this.match(ScheduleParser.INTEGER);
 					}
 				}
@@ -364,43 +394,49 @@ export default class ScheduleParser extends Parser {
 		this.enterRule(localctx, 10, ScheduleParser.RULE_timeRange);
 		let _la: number;
 		try {
-			this.state = 80;
+			this.state = 86;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 3:
 			case 4:
 			case 5:
-			case 14:
-			case 15:
-			case 18:
+			case 6:
+			case 7:
+			case 25:
+			case 26:
+			case 29:
+			case 30:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 71;
-				this.timeValue();
 				this.state = 77;
+				this.timeValue();
+				this.state = 83;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===17) {
+				if (_la===28) {
 					{
-					this.state = 72;
+					this.state = 78;
 					this.match(ScheduleParser.DASH);
-					this.state = 75;
+					this.state = 81;
 					this._errHandler.sync(this);
 					switch (this._input.LA(1)) {
 					case 3:
 					case 4:
 					case 5:
-					case 14:
-					case 15:
-					case 18:
+					case 6:
+					case 7:
+					case 25:
+					case 26:
+					case 29:
+					case 30:
 						{
-						this.state = 73;
+						this.state = 79;
 						this.timeValue();
 						}
 						break;
-					case 12:
+					case 23:
 						{
-						this.state = 74;
+						this.state = 80;
 						this.timeDuration();
 						}
 						break;
@@ -412,10 +448,10 @@ export default class ScheduleParser extends Parser {
 
 				}
 				break;
-			case 12:
+			case 23:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 79;
+				this.state = 85;
 				this.timeDuration();
 				}
 				break;
@@ -443,55 +479,70 @@ export default class ScheduleParser extends Parser {
 		this.enterRule(localctx, 12, ScheduleParser.RULE_timeValue);
 		let _la: number;
 		try {
-			this.state = 100;
+			this.state = 108;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 3:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 82;
+				this.state = 88;
 				this.match(ScheduleParser.NOW);
 				}
 				break;
 			case 4:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 83;
+				this.state = 89;
 				this.match(ScheduleParser.START_OF_DAY);
 				}
 				break;
 			case 5:
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 84;
+				this.state = 90;
+				this.match(ScheduleParser.START_OF_DAY_SHORT);
+				}
+				break;
+			case 6:
+				this.enterOuterAlt(localctx, 4);
+				{
+				this.state = 91;
 				this.match(ScheduleParser.END_OF_DAY);
 				}
 				break;
-			case 18:
-				this.enterOuterAlt(localctx, 4);
-				{
-				this.state = 85;
-				this.match(ScheduleParser.TIME_SEPARATOR);
-				}
-				break;
-			case 15:
+			case 7:
 				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 86;
+				this.state = 92;
+				this.match(ScheduleParser.END_OF_DAY_SHORT);
+				}
+				break;
+			case 29:
+			case 30:
+				this.enterOuterAlt(localctx, 6);
+				{
+				this.state = 93;
+				this.timeSeparator();
+				}
+				break;
+			case 26:
+				this.enterOuterAlt(localctx, 7);
+				{
+				this.state = 94;
 				this.match(ScheduleParser.QUESTION);
-				this.state = 91;
+				this.state = 99;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===18) {
+				if (_la===29 || _la===30) {
 					{
-					this.state = 87;
-					this.match(ScheduleParser.TIME_SEPARATOR);
-					this.state = 89;
+					this.state = 95;
+					this.timeSeparator();
+					this.state = 97;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-					if (_la===15) {
+					if (_la===26) {
 						{
-						this.state = 88;
+						this.state = 96;
 						this.match(ScheduleParser.QUESTION);
 						}
 					}
@@ -501,26 +552,26 @@ export default class ScheduleParser extends Parser {
 
 				}
 				break;
-			case 14:
-				this.enterOuterAlt(localctx, 6);
+			case 25:
+				this.enterOuterAlt(localctx, 8);
 				{
-				this.state = 93;
+				this.state = 101;
 				this.match(ScheduleParser.INTEGER);
-				this.state = 98;
+				this.state = 106;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===18) {
+				if (_la===29 || _la===30) {
 					{
-					this.state = 94;
-					this.match(ScheduleParser.TIME_SEPARATOR);
-					this.state = 96;
+					this.state = 102;
+					this.timeSeparator();
+					this.state = 104;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-					if (_la===14 || _la===15) {
+					if (_la===25 || _la===26) {
 						{
-						this.state = 95;
+						this.state = 103;
 						_la = this._input.LA(1);
-						if(!(_la===14 || _la===15)) {
+						if(!(_la===25 || _la===26)) {
 						this._errHandler.recoverInline(this);
 						}
 						else {
@@ -560,7 +611,7 @@ export default class ScheduleParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 102;
+			this.state = 110;
 			this.match(ScheduleParser.DURATION);
 			}
 		}
@@ -586,9 +637,9 @@ export default class ScheduleParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 104;
+			this.state = 112;
 			_la = this._input.LA(1);
-			if(!(_la===9 || _la===13)) {
+			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 18350080) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -619,21 +670,21 @@ export default class ScheduleParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 106;
-			this.match(ScheduleParser.FREQUENCY);
-			this.state = 111;
+			this.state = 114;
+			this.frequencyUnit();
+			this.state = 119;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===19) {
+			while (_la===31) {
 				{
 				{
-				this.state = 107;
+				this.state = 115;
 				this.match(ScheduleParser.COMMA);
-				this.state = 108;
+				this.state = 116;
 				this.frequencyOption();
 				}
 				}
-				this.state = 113;
+				this.state = 121;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
@@ -654,16 +705,49 @@ export default class ScheduleParser extends Parser {
 		return localctx;
 	}
 	// @RuleVersion(0)
-	public frequencyOption(): FrequencyOptionContext {
-		let localctx: FrequencyOptionContext = new FrequencyOptionContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 20, ScheduleParser.RULE_frequencyOption);
+	public frequencyUnit(): FrequencyUnitContext {
+		let localctx: FrequencyUnitContext = new FrequencyUnitContext(this, this._ctx, this.state);
+		this.enterRule(localctx, 20, ScheduleParser.RULE_frequencyUnit);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 114;
+			this.state = 122;
 			_la = this._input.LA(1);
-			if(!(_la===10 || _la===11)) {
+			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 3840) !== 0))) {
+			this._errHandler.recoverInline(this);
+			}
+			else {
+				this._errHandler.reportMatch(this);
+			    this.consume();
+			}
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return localctx;
+	}
+	// @RuleVersion(0)
+	public frequencyOption(): FrequencyOptionContext {
+		let localctx: FrequencyOptionContext = new FrequencyOptionContext(this, this._ctx, this.state);
+		this.enterRule(localctx, 22, ScheduleParser.RULE_frequencyOption);
+		let _la: number;
+		try {
+			this.enterOuterAlt(localctx, 1);
+			{
+			this.state = 124;
+			_la = this._input.LA(1);
+			if(!(_la===21 || _la===22)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -689,34 +773,34 @@ export default class ScheduleParser extends Parser {
 	// @RuleVersion(0)
 	public byClause(): ByClauseContext {
 		let localctx: ByClauseContext = new ByClauseContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 22, ScheduleParser.RULE_byClause);
+		this.enterRule(localctx, 24, ScheduleParser.RULE_byClause);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 116;
+			this.state = 126;
 			this.match(ScheduleParser.BY);
-			this.state = 117;
+			this.state = 127;
 			this.match(ScheduleParser.LBRACK);
-			this.state = 118;
+			this.state = 128;
 			this.byItem();
-			this.state = 123;
+			this.state = 133;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===19) {
+			while (_la===31) {
 				{
 				{
-				this.state = 119;
+				this.state = 129;
 				this.match(ScheduleParser.COMMA);
-				this.state = 120;
+				this.state = 130;
 				this.byItem();
 				}
 				}
-				this.state = 125;
+				this.state = 135;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 126;
+			this.state = 136;
 			this.match(ScheduleParser.RBRACK);
 			}
 		}
@@ -737,35 +821,68 @@ export default class ScheduleParser extends Parser {
 	// @RuleVersion(0)
 	public byItem(): ByItemContext {
 		let localctx: ByItemContext = new ByItemContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 24, ScheduleParser.RULE_byItem);
+		this.enterRule(localctx, 26, ScheduleParser.RULE_byItem);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 128;
-			this.match(ScheduleParser.BY_TYPE);
-			this.state = 129;
+			this.state = 138;
+			this.byType();
+			this.state = 139;
 			this.match(ScheduleParser.LBRACK);
-			this.state = 130;
+			this.state = 140;
 			this.signedInteger();
-			this.state = 135;
+			this.state = 145;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===19) {
+			while (_la===31) {
 				{
 				{
-				this.state = 131;
+				this.state = 141;
 				this.match(ScheduleParser.COMMA);
-				this.state = 132;
+				this.state = 142;
 				this.signedInteger();
 				}
 				}
-				this.state = 137;
+				this.state = 147;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 138;
+			this.state = 148;
 			this.match(ScheduleParser.RBRACK);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return localctx;
+	}
+	// @RuleVersion(0)
+	public byType(): ByTypeContext {
+		let localctx: ByTypeContext = new ByTypeContext(this, this._ctx, this.state);
+		this.enterRule(localctx, 28, ScheduleParser.RULE_byType);
+		let _la: number;
+		try {
+			this.enterOuterAlt(localctx, 1);
+			{
+			this.state = 150;
+			_la = this._input.LA(1);
+			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 516096) !== 0))) {
+			this._errHandler.recoverInline(this);
+			}
+			else {
+				this._errHandler.reportMatch(this);
+			    this.consume();
+			}
 			}
 		}
 		catch (re) {
@@ -785,22 +902,22 @@ export default class ScheduleParser extends Parser {
 	// @RuleVersion(0)
 	public signedInteger(): SignedIntegerContext {
 		let localctx: SignedIntegerContext = new SignedIntegerContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 26, ScheduleParser.RULE_signedInteger);
+		this.enterRule(localctx, 30, ScheduleParser.RULE_signedInteger);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 141;
+			this.state = 153;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===17) {
+			if (_la===28) {
 				{
-				this.state = 140;
+				this.state = 152;
 				this.match(ScheduleParser.DASH);
 				}
 			}
 
-			this.state = 143;
+			this.state = 155;
 			this.match(ScheduleParser.INTEGER);
 			}
 		}
@@ -818,53 +935,91 @@ export default class ScheduleParser extends Parser {
 		}
 		return localctx;
 	}
+	// @RuleVersion(0)
+	public timeSeparator(): TimeSeparatorContext {
+		let localctx: TimeSeparatorContext = new TimeSeparatorContext(this, this._ctx, this.state);
+		this.enterRule(localctx, 32, ScheduleParser.RULE_timeSeparator);
+		let _la: number;
+		try {
+			this.enterOuterAlt(localctx, 1);
+			{
+			this.state = 157;
+			_la = this._input.LA(1);
+			if(!(_la===29 || _la===30)) {
+			this._errHandler.recoverInline(this);
+			}
+			else {
+				this._errHandler.reportMatch(this);
+			    this.consume();
+			}
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return localctx;
+	}
 
-	public static readonly _serializedATN: number[] = [4,1,23,146,2,0,7,0,2,
+	public static readonly _serializedATN: number[] = [4,1,35,160,2,0,7,0,2,
 	1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,
-	10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,1,0,1,0,1,0,5,0,32,8,0,10,0,12,0,
-	35,9,0,1,0,3,0,38,8,0,1,0,1,0,1,1,1,1,1,1,3,1,45,8,1,1,1,3,1,48,8,1,1,1,
-	3,1,51,8,1,1,2,1,2,1,2,3,2,56,8,2,1,3,1,3,1,3,3,3,61,8,3,1,4,1,4,1,4,1,
-	4,1,4,3,4,68,8,4,3,4,70,8,4,1,5,1,5,1,5,1,5,3,5,76,8,5,3,5,78,8,5,1,5,3,
-	5,81,8,5,1,6,1,6,1,6,1,6,1,6,1,6,1,6,3,6,90,8,6,3,6,92,8,6,1,6,1,6,1,6,
-	3,6,97,8,6,3,6,99,8,6,3,6,101,8,6,1,7,1,7,1,8,1,8,1,9,1,9,1,9,5,9,110,8,
-	9,10,9,12,9,113,9,9,1,10,1,10,1,11,1,11,1,11,1,11,1,11,5,11,122,8,11,10,
-	11,12,11,125,9,11,1,11,1,11,1,12,1,12,1,12,1,12,1,12,5,12,134,8,12,10,12,
-	12,12,137,9,12,1,12,1,12,1,13,3,13,142,8,13,1,13,1,13,1,13,0,0,14,0,2,4,
-	6,8,10,12,14,16,18,20,22,24,26,0,3,1,0,14,15,2,0,9,9,13,13,1,0,10,11,157,
-	0,28,1,0,0,0,2,41,1,0,0,0,4,52,1,0,0,0,6,60,1,0,0,0,8,62,1,0,0,0,10,80,
-	1,0,0,0,12,100,1,0,0,0,14,102,1,0,0,0,16,104,1,0,0,0,18,106,1,0,0,0,20,
-	114,1,0,0,0,22,116,1,0,0,0,24,128,1,0,0,0,26,141,1,0,0,0,28,33,3,2,1,0,
-	29,30,5,20,0,0,30,32,3,2,1,0,31,29,1,0,0,0,32,35,1,0,0,0,33,31,1,0,0,0,
-	33,34,1,0,0,0,34,37,1,0,0,0,35,33,1,0,0,0,36,38,5,20,0,0,37,36,1,0,0,0,
-	37,38,1,0,0,0,38,39,1,0,0,0,39,40,5,0,0,1,40,1,1,0,0,0,41,42,3,4,2,0,42,
-	44,3,10,5,0,43,45,3,16,8,0,44,43,1,0,0,0,44,45,1,0,0,0,45,47,1,0,0,0,46,
-	48,3,18,9,0,47,46,1,0,0,0,47,48,1,0,0,0,48,50,1,0,0,0,49,51,3,22,11,0,50,
-	49,1,0,0,0,50,51,1,0,0,0,51,3,1,0,0,0,52,55,3,6,3,0,53,54,5,17,0,0,54,56,
-	3,6,3,0,55,53,1,0,0,0,55,56,1,0,0,0,56,5,1,0,0,0,57,61,5,1,0,0,58,61,5,
-	2,0,0,59,61,3,8,4,0,60,57,1,0,0,0,60,58,1,0,0,0,60,59,1,0,0,0,61,7,1,0,
-	0,0,62,69,5,14,0,0,63,64,5,16,0,0,64,67,5,14,0,0,65,66,5,16,0,0,66,68,5,
-	14,0,0,67,65,1,0,0,0,67,68,1,0,0,0,68,70,1,0,0,0,69,63,1,0,0,0,69,70,1,
-	0,0,0,70,9,1,0,0,0,71,77,3,12,6,0,72,75,5,17,0,0,73,76,3,12,6,0,74,76,3,
-	14,7,0,75,73,1,0,0,0,75,74,1,0,0,0,76,78,1,0,0,0,77,72,1,0,0,0,77,78,1,
-	0,0,0,78,81,1,0,0,0,79,81,3,14,7,0,80,71,1,0,0,0,80,79,1,0,0,0,81,11,1,
-	0,0,0,82,101,5,3,0,0,83,101,5,4,0,0,84,101,5,5,0,0,85,101,5,18,0,0,86,91,
-	5,15,0,0,87,89,5,18,0,0,88,90,5,15,0,0,89,88,1,0,0,0,89,90,1,0,0,0,90,92,
-	1,0,0,0,91,87,1,0,0,0,91,92,1,0,0,0,92,101,1,0,0,0,93,98,5,14,0,0,94,96,
-	5,18,0,0,95,97,7,0,0,0,96,95,1,0,0,0,96,97,1,0,0,0,97,99,1,0,0,0,98,94,
-	1,0,0,0,98,99,1,0,0,0,99,101,1,0,0,0,100,82,1,0,0,0,100,83,1,0,0,0,100,
-	84,1,0,0,0,100,85,1,0,0,0,100,86,1,0,0,0,100,93,1,0,0,0,101,13,1,0,0,0,
-	102,103,5,12,0,0,103,15,1,0,0,0,104,105,7,1,0,0,105,17,1,0,0,0,106,111,
-	5,6,0,0,107,108,5,19,0,0,108,110,3,20,10,0,109,107,1,0,0,0,110,113,1,0,
-	0,0,111,109,1,0,0,0,111,112,1,0,0,0,112,19,1,0,0,0,113,111,1,0,0,0,114,
-	115,7,2,0,0,115,21,1,0,0,0,116,117,5,7,0,0,117,118,5,21,0,0,118,123,3,24,
-	12,0,119,120,5,19,0,0,120,122,3,24,12,0,121,119,1,0,0,0,122,125,1,0,0,0,
-	123,121,1,0,0,0,123,124,1,0,0,0,124,126,1,0,0,0,125,123,1,0,0,0,126,127,
-	5,22,0,0,127,23,1,0,0,0,128,129,5,8,0,0,129,130,5,21,0,0,130,135,3,26,13,
-	0,131,132,5,19,0,0,132,134,3,26,13,0,133,131,1,0,0,0,134,137,1,0,0,0,135,
-	133,1,0,0,0,135,136,1,0,0,0,136,138,1,0,0,0,137,135,1,0,0,0,138,139,5,22,
-	0,0,139,25,1,0,0,0,140,142,5,17,0,0,141,140,1,0,0,0,141,142,1,0,0,0,142,
-	143,1,0,0,0,143,144,5,14,0,0,144,27,1,0,0,0,21,33,37,44,47,50,55,60,67,
-	69,75,77,80,89,91,96,98,100,111,123,135,141];
+	10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,2,15,7,15,2,16,7,16,1,0,
+	1,0,1,0,5,0,38,8,0,10,0,12,0,41,9,0,1,0,3,0,44,8,0,1,0,1,0,1,1,1,1,1,1,
+	3,1,51,8,1,1,1,3,1,54,8,1,1,1,3,1,57,8,1,1,2,1,2,1,2,3,2,62,8,2,1,3,1,3,
+	1,3,3,3,67,8,3,1,4,1,4,1,4,1,4,1,4,3,4,74,8,4,3,4,76,8,4,1,5,1,5,1,5,1,
+	5,3,5,82,8,5,3,5,84,8,5,1,5,3,5,87,8,5,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,
+	1,6,3,6,98,8,6,3,6,100,8,6,1,6,1,6,1,6,3,6,105,8,6,3,6,107,8,6,3,6,109,
+	8,6,1,7,1,7,1,8,1,8,1,9,1,9,1,9,5,9,118,8,9,10,9,12,9,121,9,9,1,10,1,10,
+	1,11,1,11,1,12,1,12,1,12,1,12,1,12,5,12,132,8,12,10,12,12,12,135,9,12,1,
+	12,1,12,1,13,1,13,1,13,1,13,1,13,5,13,144,8,13,10,13,12,13,147,9,13,1,13,
+	1,13,1,14,1,14,1,15,3,15,154,8,15,1,15,1,15,1,16,1,16,1,16,0,0,17,0,2,4,
+	6,8,10,12,14,16,18,20,22,24,26,28,30,32,0,6,1,0,25,26,2,0,19,20,24,24,1,
+	0,8,11,1,0,21,22,1,0,13,18,1,0,29,30,170,0,34,1,0,0,0,2,47,1,0,0,0,4,58,
+	1,0,0,0,6,66,1,0,0,0,8,68,1,0,0,0,10,86,1,0,0,0,12,108,1,0,0,0,14,110,1,
+	0,0,0,16,112,1,0,0,0,18,114,1,0,0,0,20,122,1,0,0,0,22,124,1,0,0,0,24,126,
+	1,0,0,0,26,138,1,0,0,0,28,150,1,0,0,0,30,153,1,0,0,0,32,157,1,0,0,0,34,
+	39,3,2,1,0,35,36,5,32,0,0,36,38,3,2,1,0,37,35,1,0,0,0,38,41,1,0,0,0,39,
+	37,1,0,0,0,39,40,1,0,0,0,40,43,1,0,0,0,41,39,1,0,0,0,42,44,5,32,0,0,43,
+	42,1,0,0,0,43,44,1,0,0,0,44,45,1,0,0,0,45,46,5,0,0,1,46,1,1,0,0,0,47,48,
+	3,4,2,0,48,50,3,10,5,0,49,51,3,16,8,0,50,49,1,0,0,0,50,51,1,0,0,0,51,53,
+	1,0,0,0,52,54,3,18,9,0,53,52,1,0,0,0,53,54,1,0,0,0,54,56,1,0,0,0,55,57,
+	3,24,12,0,56,55,1,0,0,0,56,57,1,0,0,0,57,3,1,0,0,0,58,61,3,6,3,0,59,60,
+	5,28,0,0,60,62,3,6,3,0,61,59,1,0,0,0,61,62,1,0,0,0,62,5,1,0,0,0,63,67,5,
+	1,0,0,64,67,5,2,0,0,65,67,3,8,4,0,66,63,1,0,0,0,66,64,1,0,0,0,66,65,1,0,
+	0,0,67,7,1,0,0,0,68,75,5,25,0,0,69,70,5,27,0,0,70,73,5,25,0,0,71,72,5,27,
+	0,0,72,74,5,25,0,0,73,71,1,0,0,0,73,74,1,0,0,0,74,76,1,0,0,0,75,69,1,0,
+	0,0,75,76,1,0,0,0,76,9,1,0,0,0,77,83,3,12,6,0,78,81,5,28,0,0,79,82,3,12,
+	6,0,80,82,3,14,7,0,81,79,1,0,0,0,81,80,1,0,0,0,82,84,1,0,0,0,83,78,1,0,
+	0,0,83,84,1,0,0,0,84,87,1,0,0,0,85,87,3,14,7,0,86,77,1,0,0,0,86,85,1,0,
+	0,0,87,11,1,0,0,0,88,109,5,3,0,0,89,109,5,4,0,0,90,109,5,5,0,0,91,109,5,
+	6,0,0,92,109,5,7,0,0,93,109,3,32,16,0,94,99,5,26,0,0,95,97,3,32,16,0,96,
+	98,5,26,0,0,97,96,1,0,0,0,97,98,1,0,0,0,98,100,1,0,0,0,99,95,1,0,0,0,99,
+	100,1,0,0,0,100,109,1,0,0,0,101,106,5,25,0,0,102,104,3,32,16,0,103,105,
+	7,0,0,0,104,103,1,0,0,0,104,105,1,0,0,0,105,107,1,0,0,0,106,102,1,0,0,0,
+	106,107,1,0,0,0,107,109,1,0,0,0,108,88,1,0,0,0,108,89,1,0,0,0,108,90,1,
+	0,0,0,108,91,1,0,0,0,108,92,1,0,0,0,108,93,1,0,0,0,108,94,1,0,0,0,108,101,
+	1,0,0,0,109,13,1,0,0,0,110,111,5,23,0,0,111,15,1,0,0,0,112,113,7,1,0,0,
+	113,17,1,0,0,0,114,119,3,20,10,0,115,116,5,31,0,0,116,118,3,22,11,0,117,
+	115,1,0,0,0,118,121,1,0,0,0,119,117,1,0,0,0,119,120,1,0,0,0,120,19,1,0,
+	0,0,121,119,1,0,0,0,122,123,7,2,0,0,123,21,1,0,0,0,124,125,7,3,0,0,125,
+	23,1,0,0,0,126,127,5,12,0,0,127,128,5,33,0,0,128,133,3,26,13,0,129,130,
+	5,31,0,0,130,132,3,26,13,0,131,129,1,0,0,0,132,135,1,0,0,0,133,131,1,0,
+	0,0,133,134,1,0,0,0,134,136,1,0,0,0,135,133,1,0,0,0,136,137,5,34,0,0,137,
+	25,1,0,0,0,138,139,3,28,14,0,139,140,5,33,0,0,140,145,3,30,15,0,141,142,
+	5,31,0,0,142,144,3,30,15,0,143,141,1,0,0,0,144,147,1,0,0,0,145,143,1,0,
+	0,0,145,146,1,0,0,0,146,148,1,0,0,0,147,145,1,0,0,0,148,149,5,34,0,0,149,
+	27,1,0,0,0,150,151,7,4,0,0,151,29,1,0,0,0,152,154,5,28,0,0,153,152,1,0,
+	0,0,153,154,1,0,0,0,154,155,1,0,0,0,155,156,5,25,0,0,156,31,1,0,0,0,157,
+	158,7,5,0,0,158,33,1,0,0,0,21,39,43,50,53,56,61,66,73,75,81,83,86,97,99,
+	104,106,108,119,133,145,153];
 
 	private static __ATN: ATN;
 	public static get _ATN(): ATN {
@@ -883,7 +1038,7 @@ export default class ScheduleParser extends Parser {
 export class DocumentContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public statement_list(): StatementContext[] {
 		return this.getTypedRuleContexts(StatementContext) as StatementContext[];
@@ -901,7 +1056,7 @@ export class DocumentContext extends ParserRuleContext {
 		return this.getToken(ScheduleParser.SEMI, i);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_document;
+	return ScheduleParser.RULE_document;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -917,7 +1072,7 @@ export class DocumentContext extends ParserRuleContext {
 export class StatementContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public dateRange(): DateRangeContext {
 		return this.getTypedRuleContext(DateRangeContext, 0) as DateRangeContext;
@@ -935,7 +1090,7 @@ export class StatementContext extends ParserRuleContext {
 		return this.getTypedRuleContext(ByClauseContext, 0) as ByClauseContext;
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_statement;
+	return ScheduleParser.RULE_statement;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -951,7 +1106,7 @@ export class StatementContext extends ParserRuleContext {
 export class DateRangeContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public dateValue_list(): DateValueContext[] {
 		return this.getTypedRuleContexts(DateValueContext) as DateValueContext[];
@@ -963,7 +1118,7 @@ export class DateRangeContext extends ParserRuleContext {
 		return this.getToken(ScheduleParser.DASH, 0);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_dateRange;
+	return ScheduleParser.RULE_dateRange;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -979,7 +1134,7 @@ export class DateRangeContext extends ParserRuleContext {
 export class DateValueContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public TODAY(): TerminalNode {
 		return this.getToken(ScheduleParser.TODAY, 0);
@@ -991,7 +1146,7 @@ export class DateValueContext extends ParserRuleContext {
 		return this.getTypedRuleContext(IntegerDateContext, 0) as IntegerDateContext;
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_dateValue;
+	return ScheduleParser.RULE_dateValue;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1007,7 +1162,7 @@ export class DateValueContext extends ParserRuleContext {
 export class IntegerDateContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public INTEGER_list(): TerminalNode[] {
 	    	return this.getTokens(ScheduleParser.INTEGER);
@@ -1022,7 +1177,7 @@ export class IntegerDateContext extends ParserRuleContext {
 		return this.getToken(ScheduleParser.SLASH, i);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_integerDate;
+	return ScheduleParser.RULE_integerDate;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1038,7 +1193,7 @@ export class IntegerDateContext extends ParserRuleContext {
 export class TimeRangeContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public timeValue_list(): TimeValueContext[] {
 		return this.getTypedRuleContexts(TimeValueContext) as TimeValueContext[];
@@ -1053,7 +1208,7 @@ export class TimeRangeContext extends ParserRuleContext {
 		return this.getTypedRuleContext(TimeDurationContext, 0) as TimeDurationContext;
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_timeRange;
+	return ScheduleParser.RULE_timeRange;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1069,7 +1224,7 @@ export class TimeRangeContext extends ParserRuleContext {
 export class TimeValueContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public NOW(): TerminalNode {
 		return this.getToken(ScheduleParser.NOW, 0);
@@ -1077,11 +1232,17 @@ export class TimeValueContext extends ParserRuleContext {
 	public START_OF_DAY(): TerminalNode {
 		return this.getToken(ScheduleParser.START_OF_DAY, 0);
 	}
+	public START_OF_DAY_SHORT(): TerminalNode {
+		return this.getToken(ScheduleParser.START_OF_DAY_SHORT, 0);
+	}
 	public END_OF_DAY(): TerminalNode {
 		return this.getToken(ScheduleParser.END_OF_DAY, 0);
 	}
-	public TIME_SEPARATOR(): TerminalNode {
-		return this.getToken(ScheduleParser.TIME_SEPARATOR, 0);
+	public END_OF_DAY_SHORT(): TerminalNode {
+		return this.getToken(ScheduleParser.END_OF_DAY_SHORT, 0);
+	}
+	public timeSeparator(): TimeSeparatorContext {
+		return this.getTypedRuleContext(TimeSeparatorContext, 0) as TimeSeparatorContext;
 	}
 	public QUESTION_list(): TerminalNode[] {
 	    	return this.getTokens(ScheduleParser.QUESTION);
@@ -1096,7 +1257,7 @@ export class TimeValueContext extends ParserRuleContext {
 		return this.getToken(ScheduleParser.INTEGER, i);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_timeValue;
+	return ScheduleParser.RULE_timeValue;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1112,13 +1273,13 @@ export class TimeValueContext extends ParserRuleContext {
 export class TimeDurationContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public DURATION(): TerminalNode {
 		return this.getToken(ScheduleParser.DURATION, 0);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_timeDuration;
+	return ScheduleParser.RULE_timeDuration;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1134,16 +1295,19 @@ export class TimeDurationContext extends ParserRuleContext {
 export class TimeZoneContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public IANA_ZONE(): TerminalNode {
 		return this.getToken(ScheduleParser.IANA_ZONE, 0);
+	}
+	public UTC(): TerminalNode {
+		return this.getToken(ScheduleParser.UTC, 0);
 	}
 	public ZONE_ALIAS(): TerminalNode {
 		return this.getToken(ScheduleParser.ZONE_ALIAS, 0);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_timeZone;
+	return ScheduleParser.RULE_timeZone;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1159,10 +1323,10 @@ export class TimeZoneContext extends ParserRuleContext {
 export class FrequencyContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
-	public FREQUENCY(): TerminalNode {
-		return this.getToken(ScheduleParser.FREQUENCY, 0);
+	public frequencyUnit(): FrequencyUnitContext {
+		return this.getTypedRuleContext(FrequencyUnitContext, 0) as FrequencyUnitContext;
 	}
 	public COMMA_list(): TerminalNode[] {
 	    	return this.getTokens(ScheduleParser.COMMA);
@@ -1177,7 +1341,7 @@ export class FrequencyContext extends ParserRuleContext {
 		return this.getTypedRuleContext(FrequencyOptionContext, i) as FrequencyOptionContext;
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_frequency;
+	return ScheduleParser.RULE_frequency;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1190,10 +1354,41 @@ export class FrequencyContext extends ParserRuleContext {
 }
 
 
+export class FrequencyUnitContext extends ParserRuleContext {
+	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
+		super(parent, invokingState);
+	this.parser = parser;
+	}
+	public DAILY(): TerminalNode {
+		return this.getToken(ScheduleParser.DAILY, 0);
+	}
+	public WEEKLY(): TerminalNode {
+		return this.getToken(ScheduleParser.WEEKLY, 0);
+	}
+	public MONTHLY(): TerminalNode {
+		return this.getToken(ScheduleParser.MONTHLY, 0);
+	}
+	public YEARLY(): TerminalNode {
+		return this.getToken(ScheduleParser.YEARLY, 0);
+	}
+    public get ruleIndex(): number {
+	return ScheduleParser.RULE_frequencyUnit;
+	}
+	// @Override
+	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
+		if (visitor.visitFrequencyUnit) {
+			return visitor.visitFrequencyUnit(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
 export class FrequencyOptionContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public INTERVAL_OPTION(): TerminalNode {
 		return this.getToken(ScheduleParser.INTERVAL_OPTION, 0);
@@ -1202,7 +1397,7 @@ export class FrequencyOptionContext extends ParserRuleContext {
 		return this.getToken(ScheduleParser.COUNT_OPTION, 0);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_frequencyOption;
+	return ScheduleParser.RULE_frequencyOption;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1218,7 +1413,7 @@ export class FrequencyOptionContext extends ParserRuleContext {
 export class ByClauseContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public BY(): TerminalNode {
 		return this.getToken(ScheduleParser.BY, 0);
@@ -1242,7 +1437,7 @@ export class ByClauseContext extends ParserRuleContext {
 		return this.getToken(ScheduleParser.COMMA, i);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_byClause;
+	return ScheduleParser.RULE_byClause;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1258,10 +1453,10 @@ export class ByClauseContext extends ParserRuleContext {
 export class ByItemContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
-	public BY_TYPE(): TerminalNode {
-		return this.getToken(ScheduleParser.BY_TYPE, 0);
+	public byType(): ByTypeContext {
+		return this.getTypedRuleContext(ByTypeContext, 0) as ByTypeContext;
 	}
 	public LBRACK(): TerminalNode {
 		return this.getToken(ScheduleParser.LBRACK, 0);
@@ -1282,7 +1477,7 @@ export class ByItemContext extends ParserRuleContext {
 		return this.getToken(ScheduleParser.COMMA, i);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_byItem;
+	return ScheduleParser.RULE_byItem;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
@@ -1295,10 +1490,47 @@ export class ByItemContext extends ParserRuleContext {
 }
 
 
+export class ByTypeContext extends ParserRuleContext {
+	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
+		super(parent, invokingState);
+	this.parser = parser;
+	}
+	public MONTH(): TerminalNode {
+		return this.getToken(ScheduleParser.MONTH, 0);
+	}
+	public WEEKNO(): TerminalNode {
+		return this.getToken(ScheduleParser.WEEKNO, 0);
+	}
+	public YEARDAY(): TerminalNode {
+		return this.getToken(ScheduleParser.YEARDAY, 0);
+	}
+	public MONTHDAY(): TerminalNode {
+		return this.getToken(ScheduleParser.MONTHDAY, 0);
+	}
+	public DAY(): TerminalNode {
+		return this.getToken(ScheduleParser.DAY, 0);
+	}
+	public SETPOS(): TerminalNode {
+		return this.getToken(ScheduleParser.SETPOS, 0);
+	}
+    public get ruleIndex(): number {
+	return ScheduleParser.RULE_byType;
+	}
+	// @Override
+	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
+		if (visitor.visitByType) {
+			return visitor.visitByType(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
 export class SignedIntegerContext extends ParserRuleContext {
 	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
-    	this.parser = parser;
+	this.parser = parser;
 	}
 	public INTEGER(): TerminalNode {
 		return this.getToken(ScheduleParser.INTEGER, 0);
@@ -1307,12 +1539,37 @@ export class SignedIntegerContext extends ParserRuleContext {
 		return this.getToken(ScheduleParser.DASH, 0);
 	}
     public get ruleIndex(): number {
-    	return ScheduleParser.RULE_signedInteger;
+	return ScheduleParser.RULE_signedInteger;
 	}
 	// @Override
 	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
 		if (visitor.visitSignedInteger) {
 			return visitor.visitSignedInteger(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
+export class TimeSeparatorContext extends ParserRuleContext {
+	constructor(parser?: ScheduleParser, parent?: ParserRuleContext, invokingState?: number) {
+		super(parent, invokingState);
+	this.parser = parser;
+	}
+	public COLON(): TerminalNode {
+		return this.getToken(ScheduleParser.COLON, 0);
+	}
+	public DOT(): TerminalNode {
+		return this.getToken(ScheduleParser.DOT, 0);
+	}
+    public get ruleIndex(): number {
+	return ScheduleParser.RULE_timeSeparator;
+	}
+	// @Override
+	public accept<Result>(visitor: ScheduleVisitor<Result>): Result {
+		if (visitor.visitTimeSeparator) {
+			return visitor.visitTimeSeparator(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

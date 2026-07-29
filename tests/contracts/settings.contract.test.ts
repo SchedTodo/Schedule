@@ -48,11 +48,27 @@ describe('settings contract', () => {
   it('normalizes valid time zone abbreviations and rejects conflicts', () => {
     expect(SettingsDtoSchema.parse({
       ...defaultSettings,
-      timeZoneAbbreviations: { work_1: 'America/Chicago' }
-    }).timeZoneAbbreviations).toEqual({ WORK_1: 'America/Chicago' })
+      timeZoneAbbreviations: {
+        work_1: 'America/Chicago',
+        i: 'Europe/London',
+        c: 'Europe/Paris',
+        h: 'Asia/Shanghai',
+        m: 'Asia/Tokyo'
+      }
+    }).timeZoneAbbreviations).toEqual({
+      WORK_1: 'America/Chicago',
+      I: 'Europe/London',
+      C: 'Europe/Paris',
+      H: 'Asia/Shanghai',
+      M: 'Asia/Tokyo'
+    })
 
     for (const timeZoneAbbreviations of [
       { now: 'America/Chicago' },
+      { daily: 'America/Chicago' },
+      { by: 'America/Chicago' },
+      { i2: 'America/Chicago' },
+      { c2: 'America/Chicago' },
       { UTC: 'America/Chicago' },
       { 'bad-name': 'America/Chicago' },
       { CST: 'Unknown/Nowhere' }

@@ -14,6 +14,8 @@ const { t } = useI18n()
       <dt>Ctrl + Arrow Down</dt><dd>{{ t('help.closeAdd') }}</dd>
       <dt>Ctrl + Enter</dt><dd>{{ t('help.confirmAdd') }}</dd>
       <dt>Ctrl + 1/2/3/4/5/6/7</dt><dd>{{ t('help.insertWeekday') }}</dd>
+      <dt>Alt + Enter</dt><dd>{{ t('help.openCompletion') }}</dd>
+      <dt>Tab</dt><dd>{{ t('help.acceptCompletion') }}</dd>
     </dl>
     <h2>{{ t('help.syntax') }}</h2>
     <dl>

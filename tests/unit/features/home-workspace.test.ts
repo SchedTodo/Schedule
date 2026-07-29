@@ -11,7 +11,9 @@ import {
 import { platformGatewayKey } from '../../../src/app/injection-keys'
 import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import type { ScheduleDto } from '../../../src/contracts/schedule.contract'
+import { defaultSettings } from '../../../src/contracts/settings.contract'
 import ScheduleModal from '../../../src/features/schedule/components/ScheduleModal.vue'
+import ScheduleCodeEditor from '../../../src/features/schedule/editor/ScheduleCodeEditor.vue'
 import WeekScheduleView from '../../../src/features/schedule/components/WeekScheduleView.vue'
 import { FixedClock } from '../../../src/domain/shared/clock'
 import { CryptoIdGenerator } from '../../../src/domain/shared/id-generator'
@@ -30,6 +32,18 @@ const todo: ScheduleDto = {
   starred: false,
   createdAt: '2026-07-11T08:00:00Z',
   updatedAt: '2026-07-11T08:00:00Z'
+}
+
+async function setScheduleCode(
+  wrapper: ReturnType<typeof mount>,
+  ariaLabel: 'rTime' | 'exTime',
+  value: string
+) {
+  const editor = wrapper.findAllComponents(ScheduleCodeEditor)
+    .find((candidate) => candidate.props('ariaLabel') === ariaLabel)
+  if (editor === undefined) throw new Error(`Missing ${ariaLabel} editor`)
+  ;(editor.vm as unknown as { insertText(value: string): void }).insertText(value)
+  await wrapper.vm.$nextTick()
 }
 
 const eventOccurrence: CalendarOccurrenceDto = {
@@ -223,7 +237,7 @@ describe('home workspace', () => {
 
   it('uses the Add modal fields and keyboard shortcuts', async () => {
     const wrapper = mount(ScheduleModal, {
-      props: { timeZone: 'UTC' },
+      props: { settings: defaultSettings },
       global: { stubs: { teleport: true } }
     })
 
@@ -235,13 +249,13 @@ describe('home workspace', () => {
     expect(wrapper.text()).toContain('Comment')
 
     await wrapper.get('input[aria-label="Name"]').setValue('Weekly review')
-    await wrapper.get('textarea[aria-label="rTime"]').setValue('2026-07-12 10:00')
+    await setScheduleCode(wrapper, 'rTime', '2026/07/12 10:00')
     window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'Enter' }))
     await vi.waitFor(() => expect(wrapper.emitted('submit')).toHaveLength(1))
     expect(wrapper.emitted('submit')?.[0]).toEqual([
       {
         title: 'Weekly review',
-        recurrenceCode: '2026-07-12 10:00',
+        recurrenceCode: '2026/07/12 10:00',
         exclusionCode: '',
         comment: ''
       }
@@ -265,7 +279,7 @@ describe('home workspace', () => {
 
     await wrapper.getComponent(ScheduleModal).get('button').trigger('click')
     await wrapper.get('input[aria-label="Name"]').setValue(input.title)
-    await wrapper.get('textarea[aria-label="rTime"]').setValue(input.recurrenceCode)
+    await setScheduleCode(wrapper, 'rTime', input.recurrenceCode)
     await wrapper.get('[role="dialog"] button').trigger('click')
     await vi.waitFor(() => expect(create).toHaveBeenCalledWith(input))
     await expect(create.mock.results[0]!.value).resolves.toMatchObject({ ok: true })
@@ -283,7 +297,7 @@ describe('home workspace', () => {
     })
     await wrapper.getComponent(ScheduleModal).get('button').trigger('click')
     await wrapper.get('input[aria-label="Name"]').setValue(input.title)
-    await wrapper.get('textarea[aria-label="rTime"]').setValue(input.recurrenceCode)
+    await setScheduleCode(wrapper, 'rTime', input.recurrenceCode)
     await wrapper.get('[role="dialog"] button').trigger('click')
     await vi.waitFor(() => expect(feedback.error).toHaveBeenCalledWith(
       'Error',
@@ -296,35 +310,24 @@ describe('home workspace', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-07-13T04:00:00.000Z'))
     const wrapper = mount(ScheduleModal, {
-      props: { timeZone: 'UTC' },
+      props: { settings: defaultSettings },
       global: { stubs: { teleport: true } }
     })
-    const activeElement = vi.spyOn(document, 'activeElement', 'get')
 
     try {
       await wrapper.get('button').trigger('click')
-      const recurrenceCode = wrapper.get('textarea[aria-label="rTime"]')
-      await recurrenceCode.setValue('start [remove] end')
-      const recurrenceTextarea = recurrenceCode.element as HTMLTextAreaElement
-      recurrenceTextarea.focus()
-      recurrenceTextarea.setSelectionRange(6, 14)
-      activeElement.mockReturnValue(recurrenceTextarea)
+      const editors = wrapper.findAllComponents(ScheduleCodeEditor)
+      ;(editors[0]?.vm as unknown as { focus(): void }).focus()
       window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: '1' }))
       await wrapper.vm.$nextTick()
-      expect(recurrenceTextarea.value).toBe('start 2026/07/20 end')
+      expect(wrapper.getComponent(ScheduleCodeEditor).props('modelValue')).toBe('2026/07/20')
 
-      const exclusionCode = wrapper.get('textarea[aria-label="exTime"]')
-      await exclusionCode.setValue('except [remove] end')
-      const exclusionTextarea = exclusionCode.element as HTMLTextAreaElement
-      exclusionTextarea.focus()
-      exclusionTextarea.setSelectionRange(7, 15)
-      activeElement.mockReturnValue(exclusionTextarea)
+      ;(editors[1]?.vm as unknown as { focus(): void }).focus()
       window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: '1' }))
       await wrapper.vm.$nextTick()
-      expect(exclusionTextarea.value).toBe('except 2026/07/20 end')
+      expect(wrapper.findAllComponents(ScheduleCodeEditor)[1]?.props('modelValue')).toBe('2026/07/20')
     } finally {
       wrapper.unmount()
-      activeElement.mockRestore()
       vi.useRealTimers()
     }
   })
@@ -383,7 +386,7 @@ describe('home workspace', () => {
 
   it('marks Name and rTime required and shows field errors before submitting', async () => {
     const wrapper = mount(ScheduleModal, {
-      props: { timeZone: 'UTC' },
+      props: { settings: defaultSettings },
       global: { stubs: { teleport: true } }
     })
 
@@ -394,7 +397,7 @@ describe('home workspace', () => {
       expect(wrapper.text()).toContain('Please input rTime')
     })
 
-    expect(wrapper.findAll('.n-input--error-status')).toHaveLength(2)
+    expect(wrapper.findAll('.n-form-item-feedback__line')).toHaveLength(2)
     expect(wrapper.findAll('.n-form-item-label__asterisk')).toHaveLength(2)
     expect(wrapper.emitted('submit')).toBeUndefined()
   })
@@ -407,7 +410,7 @@ describe('home workspace', () => {
       comment: 'Every day'
     }
     const wrapper = mount(ScheduleModal, {
-      props: { mode: 'edit', initialValue, timeZone: 'UTC' },
+      props: { mode: 'edit', initialValue, settings: defaultSettings },
       global: { stubs: { teleport: true } }
     })
 
@@ -417,10 +420,8 @@ describe('home workspace', () => {
       'value',
       initialValue.title
     )
-    expect(wrapper.get('textarea[aria-label="rTime"]').element).toHaveProperty(
-      'value',
-      initialValue.recurrenceCode
-    )
+    expect(wrapper.getComponent(ScheduleCodeEditor).props('modelValue'))
+      .toBe(initialValue.recurrenceCode)
     await wrapper.get('input[aria-label="Name"]').setValue('Changed')
     await wrapper.get('[role="dialog"] button').trigger('click')
 

@@ -23,6 +23,9 @@ await Promise.all(
       body = body.replace(runtimeImport, correctedImport)
       body = `import type { ${typeImports.join(', ')} } from 'antlr4'\n${body}`
     }
+    body = body
+      .replace(/[ \t]+$/gmu, '')
+      .replace(/^ +\t/gmu, '\t')
     await writeFile(path, `${marker}${body}`, 'utf8')
   })
 )

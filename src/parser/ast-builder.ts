@@ -60,7 +60,7 @@ function buildFrequency(context: FrequencyContext): NonNullable<ScheduleStatemen
   }
 
   return {
-    unit: context.FREQUENCY().getText() as FrequencyUnit,
+    unit: context.frequencyUnit().getText() as FrequencyUnit,
     ...(interval === undefined ? {} : { interval }),
     ...(count === undefined ? {} : { count }),
     hasDuplicateOptions: intervalCount > 1 || countCount > 1
@@ -73,7 +73,7 @@ function buildBy(context: ByClauseContext | null): Readonly<Record<string, reado
 
   return Object.fromEntries(
     context.byItem_list().map((item) => [
-      item.BY_TYPE().getText(),
+      item.byType().getText(),
       item.signedInteger_list().map((value) => Number(value.getText()))
     ])
   )

@@ -25,6 +25,7 @@ import type { CreateScheduleInput } from '../../contracts/schedule.contract'
 import { defaultSettings } from '../../contracts/settings.contract'
 import EditableOccurrenceComment from '../../features/schedule/components/EditableOccurrenceComment.vue'
 import ScheduleModal from '../../features/schedule/components/ScheduleModal.vue'
+import ScheduleCodeEditor from '../../features/schedule/editor/ScheduleCodeEditor.vue'
 import { formatInstant } from '../../features/schedule/occurrence-time'
 import {
   formatOccurrenceDateTime,
@@ -46,7 +47,8 @@ const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
 if (!id) throw new Error('Schedule id is required')
 const scheduleId = id
 const detail = useScheduleDetail(platform, scheduleId, showResult)
-const timeZone = ref(defaultSettings.timeZone)
+const appSettings = ref({ ...defaultSettings })
+const timeZone = computed(() => appSettings.value.timeZone)
 const occurrences = ref<ScheduleOccurrenceDto[]>([])
 const records = ref<ConcentrationRecordDto[]>([])
 const checkedRowKeys = ref<DataTableRowKey[]>([])
@@ -97,7 +99,7 @@ async function refreshRecords() {
 
 async function refreshSettings() {
   const result = await platform.settings.get()
-  if (showResult(result)) timeZone.value = result.value.timeZone
+  if (showResult(result)) appSettings.value = result.value
 }
 
 /** 切换当前日程收藏状态，并用宿主返回值更新详情模型。 */
@@ -223,7 +225,7 @@ void refreshSettings()
             <ScheduleModal
               mode="edit"
               :initial-value="editValue"
-              :time-zone="timeZone"
+              :settings="appSettings"
               @submit="saveEdit"
             />
             <NPopconfirm @positive-click="removeSchedule">
@@ -243,8 +245,21 @@ void refreshSettings()
             {{ detail.schedule.value.kind === 'event' ? t('common.event') : t('common.todo') }}
           </NTag>
           <b>{{ t('common.comment') }}</b><span class="pre-line">{{ detail.schedule.value.comment }}</span>
-          <b>rTime</b><span class="pre-line recurrence-code">{{ formatTimeCode(detail.schedule.value.recurrenceCode) }}</span>
-          <b>exTime</b><span class="pre-line exclusion-code">{{ formatTimeCode(detail.schedule.value.exclusionCode) }}</span>
+          <b>rTime</b><ScheduleCodeEditor
+            class="recurrence-code"
+            :model-value="formatTimeCode(detail.schedule.value.recurrenceCode)"
+            :settings="appSettings"
+            v-bind="{ ariaLabel: 'rTime' }"
+            readonly
+          />
+          <b>exTime</b><ScheduleCodeEditor
+            class="exclusion-code"
+            :model-value="formatTimeCode(detail.schedule.value.exclusionCode)"
+            :settings="appSettings"
+            v-bind="{ ariaLabel: 'exTime' }"
+            readonly
+            allow-empty
+          />
           <b>{{ t('common.deleted') }}</b><NTag :type="detail.schedule.value.deleted ? 'success' : 'error'">
             {{ detail.schedule.value.deleted }}
           </NTag>

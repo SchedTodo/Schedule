@@ -30,10 +30,12 @@ timeRange
 timeValue
   : NOW
   | START_OF_DAY
+  | START_OF_DAY_SHORT
   | END_OF_DAY
-  | TIME_SEPARATOR
-  | QUESTION (TIME_SEPARATOR QUESTION?)?
-  | INTEGER (TIME_SEPARATOR (INTEGER | QUESTION)?)?
+  | END_OF_DAY_SHORT
+  | timeSeparator
+  | QUESTION (timeSeparator QUESTION?)?
+  | INTEGER (timeSeparator (INTEGER | QUESTION)?)?
   ;
 
 timeDuration
@@ -42,11 +44,19 @@ timeDuration
 
 timeZone
   : IANA_ZONE
+  | UTC
   | ZONE_ALIAS
   ;
 
 frequency
-  : FREQUENCY (COMMA frequencyOption)*
+  : frequencyUnit (COMMA frequencyOption)*
+  ;
+
+frequencyUnit
+  : DAILY
+  | WEEKLY
+  | MONTHLY
+  | YEARLY
   ;
 
 frequencyOption
@@ -59,21 +69,46 @@ byClause
   ;
 
 byItem
-  : BY_TYPE LBRACK signedInteger (COMMA signedInteger)* RBRACK
+  : byType LBRACK signedInteger (COMMA signedInteger)* RBRACK
+  ;
+
+byType
+  : MONTH
+  | WEEKNO
+  | YEARDAY
+  | MONTHDAY
+  | DAY
+  | SETPOS
   ;
 
 signedInteger
   : DASH? INTEGER
   ;
 
+timeSeparator
+  : COLON
+  | DOT
+  ;
+
 TODAY: 'tdy';
 TOMORROW: 'tmr';
 NOW: 'now';
-START_OF_DAY: 'start' | 's';
-END_OF_DAY: 'end' | 'e';
-FREQUENCY: 'daily' | 'weekly' | 'monthly' | 'yearly';
+START_OF_DAY: 'start';
+START_OF_DAY_SHORT: 's';
+END_OF_DAY: 'end';
+END_OF_DAY_SHORT: 'e';
+DAILY: 'daily';
+WEEKLY: 'weekly';
+MONTHLY: 'monthly';
+YEARLY: 'yearly';
 BY: 'by';
-BY_TYPE: 'month' | 'weekno' | 'yearday' | 'monthday' | 'day' | 'setpos';
+MONTH: 'month';
+WEEKNO: 'weekno';
+YEARDAY: 'yearday';
+MONTHDAY: 'monthday';
+DAY: 'day';
+SETPOS: 'setpos';
+UTC: 'UTC';
 IANA_ZONE: [A-Za-z_] [A-Za-z0-9_+-]* ('/' [A-Za-z0-9_+-]+)+;
 INTERVAL_OPTION: 'i' [0-9]+;
 COUNT_OPTION: 'c' [0-9]+;
@@ -83,7 +118,8 @@ INTEGER: [0-9]+;
 QUESTION: '?';
 SLASH: '/';
 DASH: '-';
-TIME_SEPARATOR: ':' | '.';
+COLON: ':';
+DOT: '.';
 COMMA: ',';
 SEMI: ';';
 LBRACK: '[';

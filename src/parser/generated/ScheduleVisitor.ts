@@ -14,10 +14,13 @@ import { TimeValueContext } from "./ScheduleParser.js";
 import { TimeDurationContext } from "./ScheduleParser.js";
 import { TimeZoneContext } from "./ScheduleParser.js";
 import { FrequencyContext } from "./ScheduleParser.js";
+import { FrequencyUnitContext } from "./ScheduleParser.js";
 import { FrequencyOptionContext } from "./ScheduleParser.js";
 import { ByClauseContext } from "./ScheduleParser.js";
 import { ByItemContext } from "./ScheduleParser.js";
+import { ByTypeContext } from "./ScheduleParser.js";
 import { SignedIntegerContext } from "./ScheduleParser.js";
+import { TimeSeparatorContext } from "./ScheduleParser.js";
 
 
 /**
@@ -89,6 +92,12 @@ export default class ScheduleVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	visitFrequency?: (ctx: FrequencyContext) => Result;
 	/**
+	 * Visit a parse tree produced by `ScheduleParser.frequencyUnit`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFrequencyUnit?: (ctx: FrequencyUnitContext) => Result;
+	/**
 	 * Visit a parse tree produced by `ScheduleParser.frequencyOption`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -107,10 +116,22 @@ export default class ScheduleVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	visitByItem?: (ctx: ByItemContext) => Result;
 	/**
+	 * Visit a parse tree produced by `ScheduleParser.byType`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitByType?: (ctx: ByTypeContext) => Result;
+	/**
 	 * Visit a parse tree produced by `ScheduleParser.signedInteger`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitSignedInteger?: (ctx: SignedIntegerContext) => Result;
+	/**
+	 * Visit a parse tree produced by `ScheduleParser.timeSeparator`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTimeSeparator?: (ctx: TimeSeparatorContext) => Result;
 }
 

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { SupportedLocaleSchema } from '../i18n/locale'
+import { isAvailableTimeZoneAbbreviation } from '../parser/schedule-language'
 
 export const WeekStartSchema = z.union([
   z.literal(1),
@@ -13,13 +14,6 @@ export const WeekStartSchema = z.union([
 ])
 
 export type WeekStart = z.infer<typeof WeekStartSchema>
-
-const scheduleKeywords = new Set([
-  'TDY', 'TMR', 'NOW', 'START', 'S', 'END', 'E',
-  'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY',
-  'BY', 'MONTH', 'WEEKNO', 'YEARDAY', 'MONTHDAY', 'DAY', 'SETPOS',
-  'I', 'C', 'H', 'M', 'UTC'
-])
 
 function isValidTimeZone(value: string): boolean {
   if (value !== 'UTC' && !value.includes('/')) return false
@@ -45,8 +39,7 @@ export const TimeZoneAbbreviationsSchema = z
           path: [abbreviation]
         })
       } else if (
-        scheduleKeywords.has(key) ||
-        /^[IC][0-9]+$/u.test(key) ||
+        !isAvailableTimeZoneAbbreviation(key) ||
         normalized.has(key)
       ) {
         context.addIssue({

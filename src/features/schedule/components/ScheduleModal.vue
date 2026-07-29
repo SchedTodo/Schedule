@@ -6,9 +6,11 @@ import { NButton, NCard, NForm, NFormItem, NInput, NModal } from 'naive-ui'
 import type { CreateScheduleInput } from '../../../contracts/schedule.contract'
 import { Temporal } from '../../../domain/shared/temporal'
 import { useI18n } from 'vue-i18n'
+import ScheduleCodeEditor from '../editor/ScheduleCodeEditor.vue'
+import type { ScheduleEditorSettings } from '../editor/schedule-editor-support'
 
 const props = withDefaults(defineProps<{
-  timeZone: string
+  settings: ScheduleEditorSettings
   loading?: boolean
   error?: string | null
   mode?: 'add' | 'edit'
@@ -27,6 +29,9 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ submit: [input: CreateScheduleInput] }>()
 const show = ref(false)
 const formRef = ref<FormInst | null>(null)
+const recurrenceEditor = ref<InstanceType<typeof ScheduleCodeEditor> | null>(null)
+const exclusionEditor = ref<InstanceType<typeof ScheduleCodeEditor> | null>(null)
+const focusedEditor = ref<'recurrence' | 'exclusion' | null>(null)
 const { t } = useI18n()
 const model = reactive({
   title: '',
@@ -62,6 +67,7 @@ async function submit() {
   } catch {
     return
   }
+  if (!recurrenceEditor.value?.validate() || !exclusionEditor.value?.validate()) return
   emit('submit', {
     title: model.title.trim(),
     recurrenceCode: model.recurrenceCode,
@@ -78,22 +84,17 @@ function handleKeyboard(event: KeyboardEvent) {
   else if (show.value && event.key === 'ArrowDown') show.value = false
   else if (show.value && event.key === 'Enter') void submit()
   else if (show.value && /^[1-7]$/.test(event.key)) {
-    const focusedElement = document.activeElement
-    if (!(focusedElement instanceof HTMLTextAreaElement)) return
-    const field = focusedElement.getAttribute('aria-label')
-    if (field !== 'rTime' && field !== 'exTime') return
+    if (focusedEditor.value === null) return
 
     const weekday = Number(event.key)
     const today = Temporal.Instant.fromEpochMilliseconds(Date.now())
-      .toZonedDateTimeISO(props.timeZone)
+      .toZonedDateTimeISO(props.settings.timeZone)
       .toPlainDate()
     const daysUntilWeekday = (weekday - today.dayOfWeek + 7) % 7 || 7
     const nextDate = today.add({ days: daysUntilWeekday })
     const date = `${nextDate.year}/${String(nextDate.month).padStart(2, '0')}/${String(nextDate.day).padStart(2, '0')}`
-    const value = `${focusedElement.value.slice(0, focusedElement.selectionStart)}${date}${focusedElement.value.slice(focusedElement.selectionEnd)}`
-
-    if (field === 'rTime') model.recurrenceCode = value
-    else model.exclusionCode = value
+    if (focusedEditor.value === 'recurrence') recurrenceEditor.value?.insertText(date)
+    else exclusionEditor.value?.insertText(date)
   }
 }
 
@@ -137,22 +138,27 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
           :label="t('schedule.recurrence')"
           path="recurrenceCode"
         >
-          <NInput
-            v-model:value="model.recurrenceCode"
-            type="textarea"
-            :input-props="{ 'aria-label': 'rTime' }"
-            :autosize="{ minRows: 4, maxRows: 8 }"
+          <ScheduleCodeEditor
+            ref="recurrenceEditor"
+            v-model="model.recurrenceCode"
+            :settings="settings"
+            v-bind="{ ariaLabel: 'rTime' }"
+            @focus="focusedEditor = 'recurrence'"
+            @blur="focusedEditor = null"
           />
         </NFormItem>
         <NFormItem
           :label="t('schedule.exclusion')"
           path="exclusionCode"
         >
-          <NInput
-            v-model:value="model.exclusionCode"
-            type="textarea"
-            :input-props="{ 'aria-label': 'exTime' }"
-            :autosize="{ minRows: 4, maxRows: 8 }"
+          <ScheduleCodeEditor
+            ref="exclusionEditor"
+            v-model="model.exclusionCode"
+            :settings="settings"
+            v-bind="{ ariaLabel: 'exTime' }"
+            allow-empty
+            @focus="focusedEditor = 'exclusion'"
+            @blur="focusedEditor = null"
           />
         </NFormItem>
         <NFormItem
