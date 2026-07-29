@@ -334,6 +334,7 @@ void refreshSettings()
 .schedule-actions :deep(.n-button) { border-radius: 3px; }
 .star-button { margin-inline-end: var(--space-4); }
 .star-icon { font-size: 1.5rem; }
+.recurrence-code, .exclusion-code { border-radius: 0; }
 .pre-line { white-space: pre-line; }
 table { inline-size: 100%; border-collapse: collapse; }
 th, td { padding: 0.6rem; border-block-end: 1px solid var(--color-border); text-align: start; }

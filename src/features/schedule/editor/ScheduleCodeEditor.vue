@@ -237,7 +237,7 @@ onBeforeUnmount(() => view?.destroy())
   min-inline-size: 0;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
+  border-radius: var(--radius-small);
   background: var(--color-surface);
   color: var(--color-text);
 }

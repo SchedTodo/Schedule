@@ -21,6 +21,10 @@ const tokensCss = readFileSync(
   resolve(process.cwd(), 'src/assets/styles/tokens.css'),
   'utf8'
 )
+const scheduleCodeEditorSource = readFileSync(
+  resolve(process.cwd(), 'src/features/schedule/editor/ScheduleCodeEditor.vue'),
+  'utf8'
+)
 
 describe('current UI source conventions', () => {
   it('uses product names instead of migration-oriented names', () => {
@@ -55,6 +59,11 @@ describe('current UI source conventions', () => {
     expect(tokensCss).toContain('inset -1px -1px 2px rgb(255 255 255 / 25%)')
   })
 
+  it('matches the Schedule code editor radius to other form inputs', () => {
+    expect(scheduleCodeEditorSource).toContain('border-radius: var(--radius-small)')
+    expect(scheduleCodeEditorSource).not.toContain('border-radius: var(--radius-medium)')
+  })
+
   it('keeps month cards fixed-width while hovering', () => {
     const month = Object.entries(currentUiModules)
       .find(([path]) => path.endsWith('/MonthScheduleView.vue'))?.[1] ?? ''
@@ -81,6 +90,7 @@ describe('current UI source conventions', () => {
       .find(([path]) => path.endsWith('/src/pages/schedule/[id].vue'))?.[1] ?? ''
 
     expect(detail).toContain('.star-button { margin-inline-end: var(--space-4); }')
+    expect(detail).toContain('.recurrence-code, .exclusion-code { border-radius: 0; }')
     expect(detail).toContain(':deep(.row-before-today) {')
     expect(detail).toContain('--n-td-text-color: var(--color-text-muted)')
     expect(detail).not.toContain(':deep(.row-before-today td) { color: #ccc; }')
