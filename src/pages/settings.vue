@@ -20,6 +20,14 @@ import type { Preferences } from '../stores/preferences'
 import { usePreferencesStore } from '../stores/preferences'
 import { useI18n } from 'vue-i18n'
 import type { SupportedLocale } from '../i18n/locale'
+import {
+  captureShortcut,
+  defaultShortcutBindings,
+  findShortcutConflict,
+  formatShortcut,
+  shortcutDefinitions,
+  type ShortcutCommand
+} from '../app/shortcuts'
 
 const preferences = usePreferencesStore()
 const { t, locale } = useI18n()
@@ -67,6 +75,14 @@ const themeOptions = computed(() => [
   { label: t('appearance.light'), value: 'light' },
   { label: t('appearance.dark'), value: 'dark' }
 ])
+const capturingShortcut = ref<ShortcutCommand | null>(null)
+const shortcutError = ref('')
+const shortcutErrorKeys = {
+  'modifier-only': 'shortcuts.errors.modifierOnly',
+  'modifier-required': 'shortcuts.errors.modifierRequired',
+  reserved: 'shortcuts.errors.reserved',
+  unsupported: 'shortcuts.errors.unsupported'
+} as const
 if (gateway) {
   void gateway.settings.get().then((result) => {
     if (showResult(result)) settings.value = result.value
@@ -105,6 +121,61 @@ async function removeAbbreviation(value: string) {
       .filter(([key]) => key !== value)
   )
   await updateSetting('timeZoneAbbreviations', updated)
+}
+function shortcutLabel(command: ShortcutCommand) {
+  const definition = shortcutDefinitions.find((item) => item.command === command)
+  return definition === undefined ? command : t(definition.labelKey)
+}
+function beginShortcutCapture(command: ShortcutCommand) {
+  capturingShortcut.value = command
+  shortcutError.value = ''
+}
+function recordShortcut(event: KeyboardEvent, command: ShortcutCommand) {
+  if (capturingShortcut.value !== command) return
+  event.preventDefault()
+  event.stopPropagation()
+  if (event.key === 'Escape' && !event.ctrlKey && !event.altKey &&
+      !event.shiftKey && !event.metaKey) {
+    capturingShortcut.value = null
+    return
+  }
+  const result = captureShortcut(event)
+  if (!result.ok) {
+    shortcutError.value = t(shortcutErrorKeys[result.reason])
+    return
+  }
+  const conflict = findShortcutConflict(preferences.shortcuts, command, result.binding)
+  if (conflict !== undefined) {
+    shortcutError.value = t('shortcuts.errors.conflict', {
+      command: shortcutLabel(conflict)
+    })
+    return
+  }
+  preferences.updateShortcut(command, result.binding)
+  capturingShortcut.value = null
+  shortcutError.value = ''
+}
+function clearShortcut(command: ShortcutCommand) {
+  preferences.updateShortcut(command, null)
+  if (capturingShortcut.value === command) capturingShortcut.value = null
+  shortcutError.value = ''
+}
+function resetShortcut(command: ShortcutCommand) {
+  const binding = defaultShortcutBindings[command]
+  const conflict = findShortcutConflict(preferences.shortcuts, command, binding)
+  if (conflict !== undefined) {
+    shortcutError.value = t('shortcuts.errors.conflict', {
+      command: shortcutLabel(conflict)
+    })
+    return
+  }
+  preferences.updateShortcut(command, binding)
+  shortcutError.value = ''
+}
+function resetAllShortcuts() {
+  preferences.resetShortcuts()
+  capturingShortcut.value = null
+  shortcutError.value = ''
 }
 </script>
 
@@ -258,6 +329,57 @@ async function removeAbbreviation(value: string) {
     </NCard>
     <NCard segmented>
       <template #header>
+        <b>{{ t('shortcuts.title') }}</b>
+      </template>
+      <div class="shortcut-settings">
+        <p class="shortcut-hint">
+          {{ t('shortcuts.captureHint') }}
+        </p>
+        <p
+          v-if="shortcutError"
+          class="shortcut-error"
+          role="alert"
+        >
+          {{ shortcutError }}
+        </p>
+        <div
+          v-for="definition in shortcutDefinitions"
+          :key="definition.command"
+          class="shortcut-row"
+        >
+          <label>{{ t(definition.labelKey) }}</label>
+          <NButton
+            class="shortcut-binding"
+            :type="capturingShortcut === definition.command ? 'primary' : 'default'"
+            @click="beginShortcutCapture(definition.command)"
+            @keydown="recordShortcut($event, definition.command)"
+          >
+            {{
+              capturingShortcut === definition.command
+                ? t('shortcuts.pressShortcut')
+                : formatShortcut(preferences.shortcuts[definition.command]) || t('shortcuts.unassigned')
+            }}
+          </NButton>
+          <NButton
+            size="small"
+            @click="clearShortcut(definition.command)"
+          >
+            {{ t('shortcuts.clear') }}
+          </NButton>
+          <NButton
+            size="small"
+            @click="resetShortcut(definition.command)"
+          >
+            {{ t('shortcuts.reset') }}
+          </NButton>
+        </div>
+        <NButton @click="resetAllShortcuts">
+          {{ t('shortcuts.resetAll') }}
+        </NButton>
+      </div>
+    </NCard>
+    <NCard segmented>
+      <template #header>
         <b>{{ t('appearance.appearance') }}</b>
       </template>
       <div class="settings-group">
@@ -290,4 +412,10 @@ async function removeAbbreviation(value: string) {
 .abbreviation-editor { display: grid; grid-template-columns: 10rem minmax(15rem, 1fr) auto; gap: 0.75rem; }
 .setting-field :deep(.n-input-number) { inline-size: 8rem; }
 .setting-field--time :deep(.n-input-number) { inline-size: 6rem; }
+.shortcut-settings { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+.shortcut-hint { margin: 0; color: var(--color-text-muted); }
+.shortcut-error { margin: 0; color: var(--color-danger); }
+.shortcut-row { display: grid; grid-template-columns: 15rem 13rem auto auto; align-items: center; gap: 0.75rem; }
+.shortcut-row > label { font-weight: 700; }
+.shortcut-binding { justify-content: flex-start; inline-size: 13rem; }
 </style>

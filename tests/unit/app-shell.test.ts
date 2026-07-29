@@ -52,6 +52,25 @@ describe('App shell', () => {
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/'))
   })
 
+  it('uses customized navigation shortcuts immediately', async () => {
+    const pinia = createPinia()
+    const router = createRouter({ history: createMemoryHistory(), routes })
+    await router.push('/')
+    const preferences = usePreferencesStore(pinia)
+    preferences.updateShortcut(
+      'navigation.next',
+      'Ctrl+PageDown',
+      { getItem: () => null, setItem: () => undefined }
+    )
+    const wrapper = mount(App, { global: { plugins: [pinia, router] } })
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'ArrowRight' }))
+    expect(router.currentRoute.value.path).toBe('/')
+    window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'PageDown' }))
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/database'))
+    wrapper.unmount()
+  })
+
   it('keeps chrome outside the only scrollable content row', async () => {
     const router = createRouter({ history: createMemoryHistory(), routes })
     await router.push('/settings')

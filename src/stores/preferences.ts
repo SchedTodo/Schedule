@@ -3,6 +3,12 @@ import { z } from 'zod'
 
 import { WeekStartSchema } from '../contracts/settings.contract'
 import {
+  defaultShortcutBindings,
+  ShortcutBindingsSchema,
+  type ShortcutBinding,
+  type ShortcutCommand
+} from '../app/shortcuts'
+import {
   resolveSupportedLocale,
   SupportedLocaleSchema,
   type SupportedLocale
@@ -13,7 +19,8 @@ const PreferencesSchema = z
     themeMode: z.enum(['system', 'light', 'dark']),
     calendarMode: z.enum(['month', 'week']),
     weekStart: WeekStartSchema,
-    locale: SupportedLocaleSchema
+    locale: SupportedLocaleSchema,
+    shortcuts: ShortcutBindingsSchema.default(defaultShortcutBindings)
   })
   .strict()
 
@@ -30,7 +37,8 @@ const defaults: Preferences = {
   themeMode: 'system',
   calendarMode: 'month',
   weekStart: 1,
-  locale: 'en-US'
+  locale: 'en-US',
+  shortcuts: { ...defaultShortcutBindings }
 }
 
 function browserStorage(): PreferencesStorage | undefined {
@@ -44,7 +52,10 @@ function browserLocale(): SupportedLocale {
 }
 
 export const usePreferencesStore = defineStore('preferences', {
-  state: (): Preferences => ({ ...defaults }),
+  state: (): Preferences => ({
+    ...defaults,
+    shortcuts: { ...defaultShortcutBindings }
+  }),
   actions: {
     /** 从浏览器存储恢复通过契约校验的偏好，损坏数据保持默认值。 */
     hydrate(
@@ -81,7 +92,22 @@ export const usePreferencesStore = defineStore('preferences', {
       }
       if (parsed.data.weekStart !== undefined) this.weekStart = parsed.data.weekStart
       if (parsed.data.locale !== undefined) this.locale = parsed.data.locale
+      if (parsed.data.shortcuts !== undefined) {
+        this.shortcuts = { ...parsed.data.shortcuts }
+      }
       storage?.setItem(storageKey, JSON.stringify(this.$state))
+    },
+    updateShortcut(
+      command: ShortcutCommand,
+      binding: ShortcutBinding,
+      storage: PreferencesStorage | undefined = browserStorage()
+    ) {
+      this.update({
+        shortcuts: { ...this.shortcuts, [command]: binding }
+      }, storage)
+    },
+    resetShortcuts(storage: PreferencesStorage | undefined = browserStorage()) {
+      this.update({ shortcuts: { ...defaultShortcutBindings } }, storage)
     }
   }
 })

@@ -14,7 +14,9 @@ Schedule is a local-first scheduling app. The standalone Web app uses `createInM
 
 The in-app **Help** page contains schedule-expression examples. See the [architecture document](docs/architecture.md) for implementation boundaries.
 
-## Shortcuts
+## Default shortcuts
+
+Use Settings → Keyboard Shortcuts to change, clear, or restore these shortcuts. Changes are saved on the current device and restored after restarting the app.
 
 | Shortcut | Action |
 | --- | --- |

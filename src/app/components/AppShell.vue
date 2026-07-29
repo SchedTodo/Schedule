@@ -4,7 +4,7 @@ import HelpCircleOutline from '@vicons/ionicons5/es/HelpCircleOutline'
 import HomeOutline from '@vicons/ionicons5/es/HomeOutline'
 import SettingsOutline from '@vicons/ionicons5/es/SettingsOutline'
 import Database from '@vicons/tabler/es/Database'
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide } from 'vue'
 import { NAvatar } from 'naive-ui/es/avatar'
 import { NIcon } from 'naive-ui/es/icon'
 import { NLayoutContent, NLayoutFooter, NLayoutHeader } from 'naive-ui/es/layout'
@@ -12,10 +12,18 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 import IdeaPane from '../../features/ideas/IdeaPane.vue'
+import {
+  createShortcutManager,
+  shortcutManagerKey
+} from '../shortcuts'
+import { usePreferencesStore } from '../../stores/preferences'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const preferences = usePreferencesStore()
+const shortcutManager = createShortcutManager(() => preferences.shortcuts)
+provide(shortcutManagerKey, shortcutManager)
 const navigation = computed(() => [
   { label: t('nav.home'), path: '/', icon: HomeOutline },
   { label: t('nav.database'), path: '/database', icon: Database },
@@ -27,17 +35,25 @@ const activePath = computed(() => {
   return navigation.value.some(({ path }) => path === route.path) ? route.path : '/'
 })
 
-/** 处理 Ctrl+左右方向键，在应用的顶级页面之间循环切换。 */
-function handleKeyboard(event: KeyboardEvent) {
-  if (!event.ctrlKey || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return
+/** 按方向在应用的顶级页面之间循环切换。 */
+function navigate(direction: 1 | -1) {
   const current = navigation.value.findIndex(({ path }) => path === activePath.value)
-  const direction = event.key === 'ArrowRight' ? 1 : -1
   const next = (current + direction + navigation.value.length) % navigation.value.length
   void router.push(navigation.value[next]?.path ?? '/')
 }
 
-onMounted(() => window.addEventListener('keydown', handleKeyboard))
-onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
+let disposePrevious: (() => void) | undefined
+let disposeNext: (() => void) | undefined
+onMounted(() => {
+  disposePrevious = shortcutManager.register('navigation.previous', () => { navigate(-1) })
+  disposeNext = shortcutManager.register('navigation.next', () => { navigate(1) })
+  shortcutManager.start()
+})
+onBeforeUnmount(() => {
+  disposePrevious?.()
+  disposeNext?.()
+  shortcutManager.stop()
+})
 </script>
 
 <template>

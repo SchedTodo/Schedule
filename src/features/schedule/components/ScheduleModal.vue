@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from 'naive-ui'
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { NButton, NCard, NForm, NFormItem, NInput, NModal } from 'naive-ui'
 
 import type { CreateScheduleInput } from '../../../contracts/schedule.contract'
@@ -8,6 +8,7 @@ import { Temporal } from '../../../domain/shared/temporal'
 import { useI18n } from 'vue-i18n'
 import ScheduleCodeEditor from '../editor/ScheduleCodeEditor.vue'
 import type { ScheduleEditorSettings } from '../editor/schedule-editor-support'
+import { useShortcut, type ShortcutCommand } from '../../../app/shortcuts'
 
 const props = withDefaults(defineProps<{
   settings: ScheduleEditorSettings
@@ -77,29 +78,45 @@ async function submit() {
   show.value = false
 }
 
-/** 实现 Ctrl+Enter 提交和 Escape 关闭的键盘交互。 */
-function handleKeyboard(event: KeyboardEvent) {
-  if (!event.ctrlKey) return
-  if (!show.value && props.mode === 'add' && event.key === 'ArrowUp') open()
-  else if (show.value && event.key === 'ArrowDown') show.value = false
-  else if (show.value && event.key === 'Enter') void submit()
-  else if (show.value && /^[1-7]$/.test(event.key)) {
-    if (focusedEditor.value === null) return
-
-    const weekday = Number(event.key)
-    const today = Temporal.Instant.fromEpochMilliseconds(Date.now())
-      .toZonedDateTimeISO(props.settings.timeZone)
-      .toPlainDate()
-    const daysUntilWeekday = (weekday - today.dayOfWeek + 7) % 7 || 7
-    const nextDate = today.add({ days: daysUntilWeekday })
-    const date = `${nextDate.year}/${String(nextDate.month).padStart(2, '0')}/${String(nextDate.day).padStart(2, '0')}`
-    if (focusedEditor.value === 'recurrence') recurrenceEditor.value?.insertText(date)
-    else exclusionEditor.value?.insertText(date)
-  }
+function insertWeekday(weekday: number) {
+  if (focusedEditor.value === null) return
+  const today = Temporal.Instant.fromEpochMilliseconds(Date.now())
+    .toZonedDateTimeISO(props.settings.timeZone)
+    .toPlainDate()
+  const daysUntilWeekday = (weekday - today.dayOfWeek + 7) % 7 || 7
+  const nextDate = today.add({ days: daysUntilWeekday })
+  const date = `${nextDate.year}/${String(nextDate.month).padStart(2, '0')}/${String(nextDate.day).padStart(2, '0')}`
+  if (focusedEditor.value === 'recurrence') recurrenceEditor.value?.insertText(date)
+  else exclusionEditor.value?.insertText(date)
 }
 
-onMounted(() => window.addEventListener('keydown', handleKeyboard))
-onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyboard))
+useShortcut('schedule.openAdd', open, {
+  enabled: () => props.mode === 'add' && !show.value,
+  priority: 10
+})
+useShortcut('schedule.closeModal', () => { show.value = false }, {
+  enabled: () => show.value,
+  priority: 20
+})
+useShortcut('schedule.submitModal', () => { void submit() }, {
+  enabled: () => show.value,
+  priority: 20
+})
+const weekdayCommands: readonly ShortcutCommand[] = [
+  'schedule.insertMonday',
+  'schedule.insertTuesday',
+  'schedule.insertWednesday',
+  'schedule.insertThursday',
+  'schedule.insertFriday',
+  'schedule.insertSaturday',
+  'schedule.insertSunday'
+]
+weekdayCommands.forEach((command, index) => {
+  useShortcut(command, () => { insertWeekday(index + 1) }, {
+    enabled: () => show.value && focusedEditor.value !== null,
+    priority: 30
+  })
+})
 </script>
 
 <template>

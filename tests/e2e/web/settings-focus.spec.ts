@@ -56,3 +56,32 @@ test('switches language immediately and restores it after reload', async ({ page
   await expect(page.getByRole('link', { name: 'Settings' })).toBeVisible()
   await expect(page.getByText('Appearance', { exact: true })).toBeVisible()
 })
+
+test('customizes, persists, and resets a navigation shortcut', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('link', { name: '设置' }).click()
+  const nextPageRow = page.locator('.shortcut-row')
+    .filter({ hasText: '切换到下一个导航页面' })
+  const binding = nextPageRow.getByRole('button').first()
+
+  await binding.click()
+  await binding.press('Control+PageDown')
+  await expect(binding).toHaveText('Ctrl + PageDown')
+
+  await page.getByRole('link', { name: '首页' }).click()
+  await page.keyboard.press('Control+ArrowRight')
+  await expect(page).toHaveURL(/#\/$/u)
+  await page.keyboard.press('Control+PageDown')
+  await expect(page).toHaveURL(/#\/database$/u)
+
+  await page.reload()
+  await page.getByRole('link', { name: '首页' }).click()
+  await page.keyboard.press('Control+PageDown')
+  await expect(page).toHaveURL(/#\/database$/u)
+
+  await page.getByRole('link', { name: '设置' }).click()
+  await nextPageRow.getByRole('button', { name: '恢复默认', exact: true }).click()
+  await page.getByRole('link', { name: '首页' }).click()
+  await page.keyboard.press('Control+ArrowRight')
+  await expect(page).toHaveURL(/#\/database$/u)
+})

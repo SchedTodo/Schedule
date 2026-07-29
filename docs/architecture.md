@@ -182,7 +182,9 @@ v2 采用“忠实迁移可见行为、重建内部架构”的策略：旧版�
 - 时区选项来自 `Intl.supportedValuesOf('timeZone')`，补充 `UTC` 和当前有效存储值；不支持时退化为 UTC、系统区和存储值。
 - 时区简写编辑器使用同一 IANA 选项源，提供添加、列表和删除，不额外提供表格搜索或分页。
 - Appearance 只保留 Theme，不保留已移除的 Compact Density。
-- `Ctrl+1…7` 只在 Add modal 聚焦的 rTime/exTime 中插入下一个周一至周日；应用导航和 modal 快捷键以 Help 页面为准。
+- renderer 快捷键由应用级 Shortcut Manager 统一分发，组件只注册命令及生效上下文；默认绑定、设置页和 Help 展示共享同一命令元数据。
+- 用户可修改或解绑全部 Help 快捷键；绑定写入严格校验的本地 Preferences，Web 刷新和 Electron 重启后恢复，不进入 SQLite 或 IPC。
+- 默认 `Ctrl+1…7` 只在 Add modal 聚焦的 rTime/exTime 中插入下一个周一至周日；修改绑定不改变命令原有生效范围。
 
 ## 专注循环
 

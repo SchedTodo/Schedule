@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { formatShortcut, shortcutDefinitions } from '../app/shortcuts'
+import { usePreferencesStore } from '../stores/preferences'
 
 const { t } = useI18n()
+const preferences = usePreferencesStore()
 </script>
 
 <template>
@@ -9,13 +12,15 @@ const { t } = useI18n()
     <h1>{{ t('help.title') }}</h1>
     <h2>{{ t('help.keyboard') }}</h2>
     <dl>
-      <dt>Ctrl + Arrow Left / Right</dt><dd>{{ t('help.navigation') }}</dd>
-      <dt>Ctrl + Arrow Up</dt><dd>{{ t('help.openAdd') }}</dd>
-      <dt>Ctrl + Arrow Down</dt><dd>{{ t('help.closeAdd') }}</dd>
-      <dt>Ctrl + Enter</dt><dd>{{ t('help.confirmAdd') }}</dd>
-      <dt>Ctrl + 1/2/3/4/5/6/7</dt><dd>{{ t('help.insertWeekday') }}</dd>
-      <dt>Alt + Enter</dt><dd>{{ t('help.openCompletion') }}</dd>
-      <dt>Tab</dt><dd>{{ t('help.acceptCompletion') }}</dd>
+      <template
+        v-for="definition in shortcutDefinitions"
+        :key="definition.command"
+      >
+        <dt>
+          {{ formatShortcut(preferences.shortcuts[definition.command]) || t('shortcuts.unassigned') }}
+        </dt>
+        <dd>{{ t(definition.labelKey) }}</dd>
+      </template>
     </dl>
     <h2>{{ t('help.syntax') }}</h2>
     <dl>
