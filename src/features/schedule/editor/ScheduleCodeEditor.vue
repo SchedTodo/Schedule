@@ -25,6 +25,7 @@ import {
   scheduleSemanticDescription,
   type ScheduleEditorSettings
 } from './schedule-editor-support'
+import { useShortcut } from '../../../app/shortcuts'
 
 const props = withDefaults(defineProps<{
   modelValue: string
@@ -88,11 +89,21 @@ function editableExtensions(readonly: boolean) {
   ]
 }
 
-const scheduleCompletionKeymap = [
-  { key: 'Alt-Enter', run: startCompletion },
-  { key: 'Tab', run: acceptCompletion },
-  ...completionKeymap.filter(({ key }) => key !== 'Ctrl-Space')
-]
+const scheduleCompletionKeymap =
+  completionKeymap.filter(({ key }) => key !== 'Ctrl-Space')
+
+useShortcut('editor.startCompletion', () => (
+  view === undefined ? false : startCompletion(view)
+), {
+  enabled: () => !props.readonly && (view?.hasFocus ?? false),
+  priority: 40
+})
+useShortcut('editor.acceptCompletion', () => (
+  view === undefined ? false : acceptCompletion(view)
+), {
+  enabled: () => !props.readonly && (view?.hasFocus ?? false),
+  priority: 40
+})
 
 function hoverExtension() {
   return hoverTooltip((editor, position) => {

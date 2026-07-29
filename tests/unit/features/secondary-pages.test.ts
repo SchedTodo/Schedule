@@ -11,6 +11,7 @@ import DatabasePage from '../../../src/pages/database.vue'
 import HelpPage from '../../../src/pages/help.vue'
 import ScheduleDetailPage from '../../../src/pages/schedule/[id].vue'
 import SettingsPage from '../../../src/pages/settings.vue'
+import { usePreferencesStore } from '../../../src/stores/preferences'
 
 const schedule: ScheduleDto = {
   id: '0198f0de-8f7f-7000-8000-000000000001',
@@ -228,14 +229,54 @@ describe('secondary pages', () => {
     })
   })
 
+  it('captures, rejects conflicts, clears, and restores shortcut preferences', async () => {
+    const pinia = createPinia()
+    const router = await routerAt('/settings')
+    const wrapper = mount(SettingsPage, {
+      global: { plugins: [pinia, router] }
+    })
+    const preferences = usePreferencesStore(pinia)
+    const nextRow = wrapper.findAll('.shortcut-row')
+      .find((row) => row.text().includes('Next navigation page'))!
+    const bindingButton = nextRow.findAll('button')[0]!
+
+    await bindingButton.trigger('click')
+    await bindingButton.trigger('keydown', { ctrlKey: true, key: 'PageDown' })
+    expect(preferences.shortcuts['navigation.next']).toBe('Ctrl+PageDown')
+
+    await bindingButton.trigger('click')
+    await bindingButton.trigger('keydown', { ctrlKey: true, key: 'ArrowLeft' })
+    expect(preferences.shortcuts['navigation.next']).toBe('Ctrl+PageDown')
+    expect(wrapper.get('[role="alert"]').text()).toContain('Previous navigation page')
+
+    await nextRow.findAll('button')[1]!.trigger('click')
+    expect(preferences.shortcuts['navigation.next']).toBeNull()
+    await nextRow.findAll('button')[2]!.trigger('click')
+    expect(preferences.shortcuts['navigation.next']).toBe('Ctrl+ArrowRight')
+  })
+
   it('documents the shortcuts on Help', () => {
-    const wrapper = mount(HelpPage)
-    expect(wrapper.text()).toContain('Ctrl + Arrow Left / Right')
+    const wrapper = mount(HelpPage, { global: { plugins: [createPinia()] } })
+    expect(wrapper.text()).toContain('Ctrl + Arrow Left')
+    expect(wrapper.text()).toContain('Ctrl + Arrow Right')
     expect(wrapper.text()).toContain('Ctrl + Arrow Up')
     expect(wrapper.text()).toContain('Ctrl + Enter')
     expect(wrapper.text()).toContain('Alt + Enter')
     expect(wrapper.text()).toContain('Tab')
     expect(wrapper.text()).toContain('now')
     expect(wrapper.text()).toContain('10:?-2h')
+  })
+
+  it('shows customized and unassigned shortcuts on Help', () => {
+    const pinia = createPinia()
+    const preferences = usePreferencesStore(pinia)
+    const storage = { getItem: () => null, setItem: () => undefined }
+    preferences.updateShortcut('navigation.next', 'Ctrl+PageDown', storage)
+    preferences.updateShortcut('editor.acceptCompletion', null, storage)
+
+    const wrapper = mount(HelpPage, { global: { plugins: [pinia] } })
+
+    expect(wrapper.text()).toContain('Ctrl + PageDown')
+    expect(wrapper.text()).toContain('Not assigned')
   })
 })

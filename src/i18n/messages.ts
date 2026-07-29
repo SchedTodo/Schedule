@@ -176,6 +176,36 @@ export const enUS = {
     exclusions: 'Exclusions',
     exclusionsDescription: 'Use the exTime field to remove matching concrete occurrences'
   },
+  shortcuts: {
+    title: 'Keyboard Shortcuts',
+    captureHint: 'Select a shortcut, then press the new key combination. Press Escape to cancel.',
+    pressShortcut: 'Press shortcut…',
+    unassigned: 'Not assigned',
+    clear: 'Clear',
+    reset: 'Reset',
+    resetAll: 'Reset all shortcuts',
+    previousPage: 'Previous navigation page',
+    nextPage: 'Next navigation page',
+    openAdd: 'Open Add schedule dialog',
+    closeModal: 'Close the open schedule dialog',
+    submitModal: 'Submit the open schedule dialog',
+    insertMonday: 'Insert next Monday in the focused rTime or exTime',
+    insertTuesday: 'Insert next Tuesday in the focused rTime or exTime',
+    insertWednesday: 'Insert next Wednesday in the focused rTime or exTime',
+    insertThursday: 'Insert next Thursday in the focused rTime or exTime',
+    insertFriday: 'Insert next Friday in the focused rTime or exTime',
+    insertSaturday: 'Insert next Saturday in the focused rTime or exTime',
+    insertSunday: 'Insert next Sunday in the focused rTime or exTime',
+    startCompletion: 'Show schedule code suggestions',
+    acceptCompletion: 'Accept a visible suggestion; otherwise move focus',
+    errors: {
+      modifierOnly: 'Press a complete shortcut, not only a modifier key.',
+      modifierRequired: 'Letters and numbers require Ctrl, Alt, Shift, or Meta.',
+      reserved: 'This shortcut is reserved by the application or operating system.',
+      unsupported: 'This key cannot be used as a shortcut.',
+      conflict: 'This shortcut is already assigned to “{command}”.'
+    }
+  },
   error: {
     validationFailed: 'The provided data is invalid.',
     notFound: 'The requested item was not found.',
@@ -269,6 +299,36 @@ export const zhCN: MessageShape<typeof enUS> = {
     unknownDescription: '事件范围中用 ? 表示未知小时或分钟；整小时持续时间会保留未知分钟，例如 10:?-2h',
     multipleRules: '多条规则', multipleDescription: '使用分号分隔语句',
     exclusions: '排除规则', exclusionsDescription: '在 exTime 中填写规则以移除匹配的具体实例'
+  },
+  shortcuts: {
+    title: '键盘快捷键',
+    captureHint: '选择一个快捷键后按下新的组合键；按 Escape 取消录制。',
+    pressShortcut: '请按快捷键…',
+    unassigned: '未设置',
+    clear: '清除',
+    reset: '恢复默认',
+    resetAll: '全部恢复默认',
+    previousPage: '切换到上一个导航页面',
+    nextPage: '切换到下一个导航页面',
+    openAdd: '打开添加日程对话框',
+    closeModal: '关闭当前日程对话框',
+    submitModal: '提交当前日程对话框',
+    insertMonday: '在聚焦的 rTime 或 exTime 中插入下一个周一',
+    insertTuesday: '在聚焦的 rTime 或 exTime 中插入下一个周二',
+    insertWednesday: '在聚焦的 rTime 或 exTime 中插入下一个周三',
+    insertThursday: '在聚焦的 rTime 或 exTime 中插入下一个周四',
+    insertFriday: '在聚焦的 rTime 或 exTime 中插入下一个周五',
+    insertSaturday: '在聚焦的 rTime 或 exTime 中插入下一个周六',
+    insertSunday: '在聚焦的 rTime 或 exTime 中插入下一个周日',
+    startCompletion: '显示日程代码联想',
+    acceptCompletion: '接受可见联想；没有联想时切换焦点',
+    errors: {
+      modifierOnly: '请输入完整快捷键，不能只按修饰键。',
+      modifierRequired: '字母和数字必须与 Ctrl、Alt、Shift 或 Meta 组合。',
+      reserved: '该快捷键已被应用或操作系统保留。',
+      unsupported: '该按键不能用作快捷键。',
+      conflict: '该快捷键已分配给“{command}”。'
+    }
   },
   error: {
     validationFailed: '提供的数据无效。', notFound: '未找到请求的内容。',

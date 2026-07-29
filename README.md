@@ -52,7 +52,9 @@ flowchart LR
 
 `src` 不依赖 Electron、Node 或数据库驱动；Electron 通过经过 Zod 校验的具名 IPC 契约接入平台无关核心。独立 Web 使用内存网关，Electron 使用 SQLite 持久化。更完整的边界与生命周期说明见[架构文档](docs/architecture.md)。
 
-## 快捷键
+## 默认快捷键
+
+可在“设置 → 键盘快捷键”中修改、清除或恢复这些快捷键。修改会保存在当前设备并在应用重启后恢复。
 
 | 快捷键 | 行为 |
 | --- | --- |

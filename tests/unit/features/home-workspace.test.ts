@@ -9,6 +9,11 @@ import {
   type AppFeedback
 } from '../../../src/app/app-feedback'
 import { platformGatewayKey } from '../../../src/app/injection-keys'
+import {
+  createShortcutManager,
+  defaultShortcutBindings,
+  shortcutManagerKey
+} from '../../../src/app/shortcuts'
 import type { CalendarOccurrenceDto } from '../../../src/contracts/occurrence.contract'
 import type { ScheduleDto } from '../../../src/contracts/schedule.contract'
 import { defaultSettings } from '../../../src/contracts/settings.contract'
@@ -236,30 +241,40 @@ describe('home workspace', () => {
   })
 
   it('uses the Add modal fields and keyboard shortcuts', async () => {
+    const shortcutManager = createShortcutManager(() => defaultShortcutBindings)
+    shortcutManager.start()
     const wrapper = mount(ScheduleModal, {
       props: { settings: defaultSettings },
-      global: { stubs: { teleport: true } }
+      global: {
+        provide: { [shortcutManagerKey as symbol]: shortcutManager },
+        stubs: { teleport: true }
+      }
     })
 
-    window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'ArrowUp' }))
-    await wrapper.vm.$nextTick()
-    expect(wrapper.text()).toContain('Name')
-    expect(wrapper.text()).toContain('rTime')
-    expect(wrapper.text()).toContain('exTime')
-    expect(wrapper.text()).toContain('Comment')
+    try {
+      window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'ArrowUp' }))
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('Name')
+      expect(wrapper.text()).toContain('rTime')
+      expect(wrapper.text()).toContain('exTime')
+      expect(wrapper.text()).toContain('Comment')
 
-    await wrapper.get('input[aria-label="Name"]').setValue('Weekly review')
-    await setScheduleCode(wrapper, 'rTime', '2026/07/12 10:00')
-    window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'Enter' }))
-    await vi.waitFor(() => expect(wrapper.emitted('submit')).toHaveLength(1))
-    expect(wrapper.emitted('submit')?.[0]).toEqual([
-      {
-        title: 'Weekly review',
-        recurrenceCode: '2026/07/12 10:00',
-        exclusionCode: '',
-        comment: ''
-      }
-    ])
+      await wrapper.get('input[aria-label="Name"]').setValue('Weekly review')
+      await setScheduleCode(wrapper, 'rTime', '2026/07/12 10:00')
+      window.dispatchEvent(new KeyboardEvent('keydown', { ctrlKey: true, key: 'Enter' }))
+      await vi.waitFor(() => expect(wrapper.emitted('submit')).toHaveLength(1))
+      expect(wrapper.emitted('submit')?.[0]).toEqual([
+        {
+          title: 'Weekly review',
+          recurrenceCode: '2026/07/12 10:00',
+          exclusionCode: '',
+          comment: ''
+        }
+      ])
+    } finally {
+      wrapper.unmount()
+      shortcutManager.stop()
+    }
   })
 
   it('reports schedule creation success and failure through application feedback', async () => {
@@ -309,9 +324,14 @@ describe('home workspace', () => {
   it('inserts the next weekday into the focused rTime and exTime fields', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-07-13T04:00:00.000Z'))
+    const shortcutManager = createShortcutManager(() => defaultShortcutBindings)
+    shortcutManager.start()
     const wrapper = mount(ScheduleModal, {
       props: { settings: defaultSettings },
-      global: { stubs: { teleport: true } }
+      global: {
+        provide: { [shortcutManagerKey as symbol]: shortcutManager },
+        stubs: { teleport: true }
+      }
     })
 
     try {
@@ -328,6 +348,7 @@ describe('home workspace', () => {
       expect(wrapper.findAllComponents(ScheduleCodeEditor)[1]?.props('modelValue')).toBe('2026/07/20')
     } finally {
       wrapper.unmount()
+      shortcutManager.stop()
       vi.useRealTimers()
     }
   })
