@@ -37,5 +37,6 @@ Add focused integration or Playwright commands when the changed area requires th
 ## Git
 
 - Follow [`docs/development/git-conventions.md`](docs/development/git-conventions.md).
+- Create linked worktrees only under `<repository-root>/.worktrees/<name>`; do not create them as sibling directories outside the repository.
 - All new commit subjects must use a Conventional Commit type followed by a concise Chinese description.
 - Do not rewrite the two existing English v2 commits; the Chinese requirement applies prospectively.
