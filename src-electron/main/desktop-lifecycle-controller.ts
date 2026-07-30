@@ -34,6 +34,8 @@ export interface DesktopLifecycleDependencies {
   resources: readonly Disposable[]
   backgroundEnabled: boolean
   development: boolean
+  onMainShown?(): void
+  onMainHidden?(): void
 }
 
 /** 根据 Electron 启动参数区分正常启动和后台自启动。 */
@@ -82,6 +84,7 @@ export class DesktopLifecycleController {
     window.show()
     window.maximize()
     window.focus()
+    this.dependencies.onMainShown?.()
   }
 
   /** 后台模式下阻止窗口关闭并将其隐藏；退出流程中不再拦截。 */
@@ -89,6 +92,7 @@ export class DesktopLifecycleController {
     if (this.quitting) return
     event?.preventDefault()
     this.dependencies.window.hide()
+    this.dependencies.onMainHidden?.()
   }
 
   /** 标记退出状态并请求 Electron 应用退出。 */

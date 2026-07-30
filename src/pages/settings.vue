@@ -13,7 +13,7 @@ import {
   type DataTableColumns
 } from 'naive-ui'
 import { useOperationFeedback } from '../app/app-feedback'
-import { platformGatewayKey } from '../app/injection-keys'
+import { desktopWidgetKey, platformGatewayKey } from '../app/injection-keys'
 import { defaultSettings, type SettingsDto } from '../contracts/settings.contract'
 import { createTimeZoneOptions } from '../features/settings/time-zone-options'
 import type { Preferences } from '../stores/preferences'
@@ -33,6 +33,8 @@ const preferences = usePreferencesStore()
 const { t, locale } = useI18n()
 const { showResult } = useOperationFeedback()
 const gateway = inject(platformGatewayKey)
+const desktopWidget = inject(desktopWidgetKey)
+const widgetEnabled = ref(false)
 const settings = ref<SettingsDto>({ ...defaultSettings })
 const timeZoneOptions = computed(() => createTimeZoneOptions(settings.value.timeZone))
 const abbreviation = ref('')
@@ -87,6 +89,13 @@ if (gateway) {
   void gateway.settings.get().then((result) => {
     if (showResult(result)) settings.value = result.value
   })
+}
+if (desktopWidget) {
+  void desktopWidget.getState().then((state) => { widgetEnabled.value = state.enabled })
+}
+async function setWidgetEnabled(value: boolean) {
+  if (!desktopWidget) return
+  widgetEnabled.value = (await desktopWidget.setEnabled(value)).enabled
 }
 function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
   preferences.update({ [key]: value })
@@ -300,6 +309,14 @@ function resetAllShortcuts() {
             @update:value="updateSetting('openAtLogin', $event)"
           />
         </div>
+        <template v-if="desktopWidget">
+          <label>{{ t('settings.desktopWidget') }}</label><div class="setting-field">
+            <NSwitch
+              :value="widgetEnabled"
+              @update:value="setWidgetEnabled"
+            />
+          </div>
+        </template>
       </div>
     </NCard>
     <NCard segmented>

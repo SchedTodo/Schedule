@@ -20,14 +20,17 @@ describe('application tray', () => {
       })
     }
     const show = vi.fn()
+    const toggleWidget = vi.fn()
     const quit = vi.fn()
 
-    expect(createApplicationTray('icon.ico', { show, quit }, factory)).toBe(tray)
+    expect(createApplicationTray('icon.ico', { show, toggleWidget, quit }, factory)).toBe(tray)
     template.find((item) => item.label === 'Show Schedule')?.click?.()
+    template.find((item) => item.label === 'Show/Hide Today Widget')?.click?.()
     template.find((item) => item.label === 'Quit')?.click?.()
     listeners.get('double-click')?.()
 
     expect(show).toHaveBeenCalledTimes(2)
+    expect(toggleWidget).toHaveBeenCalledOnce()
     expect(quit).toHaveBeenCalledOnce()
     expect(tray.setToolTip).toHaveBeenCalledWith('Schedule')
     expect(tray.setContextMenu).toHaveBeenCalledWith({ menu: true })

@@ -145,7 +145,10 @@ export function registerScheduleIpcHandlers(
   const commentContract = scheduleIpcContracts[scheduleIpcChannels.updateOccurrenceComment]
   ipcMain.handle(scheduleIpcChannels.updateOccurrenceComment, (_event, input) => execute(
     input, (value) => commentContract.input.parse(value),
-    ({ id, comment }) => gateway.occurrences.updateComment(id, comment),
+    async ({ id, comment }) => recalculateAfterSuccess(
+      await gateway.occurrences.updateComment(id, comment),
+      options.onAlarmInputsChanged
+    ),
     (value) => commentContract.output.parse(value)
   ))
   const excludeContract = scheduleIpcContracts[scheduleIpcChannels.excludeOccurrences]

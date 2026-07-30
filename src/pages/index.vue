@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { NButton, NButtonGroup, NLayout, NLayoutContent, NLayoutSider } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { useOperationFeedback } from '../app/app-feedback'
@@ -79,6 +79,11 @@ watch(needsLiveClock, (visible) => {
 
 onBeforeUnmount(() => {
   if (relativeTimeTimer !== undefined) clearInterval(relativeTimeTimer)
+  window.removeEventListener('focus', refreshTodos)
+})
+
+onMounted(() => {
+  window.addEventListener('focus', refreshTodos)
 })
 
 function select(id: string) {

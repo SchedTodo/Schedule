@@ -2,6 +2,7 @@ import { Menu, Tray } from 'electron'
 
 export interface TrayActions {
   show(): void
+  toggleWidget(): void
   quit(): void
 }
 
@@ -48,6 +49,7 @@ export function createApplicationTray(
   tray.setToolTip('Schedule')
   tray.setContextMenu(factory.buildMenu([
     { label: 'Show Schedule', click: actions.show },
+    { label: 'Show/Hide Today Widget', click: actions.toggleWidget },
     { type: 'separator' },
     { label: 'Quit', click: actions.quit }
   ]))

@@ -63,7 +63,7 @@ test('renders a visible week grid and the schedule comment tooltip', async () =>
       expect((await column.boundingBox())?.height).toBeGreaterThan((weekBox?.height ?? 0) * 0.95)
     }
 
-    const card = week.getByRole('button', { name: /周视图回归/ })
+    const card = week.getByRole('button', { name: '周视图回归', exact: true })
     await expect(card).toBeVisible()
     expect((await card.boundingBox())?.height).toBeGreaterThan(0)
     await card.hover()
@@ -77,7 +77,7 @@ test('renders a visible week grid and the schedule comment tooltip', async () =>
     await window.getByRole('button', { name: 'month', exact: true }).click()
     const monthCard = window
       .getByTestId('month-view')
-      .getByRole('button', { name: /周视图回归/ })
+      .getByRole('button', { name: '周视图回归', exact: true })
     await monthCard.click()
     await expect(window.locator('.n-page-header__title')).toHaveText('Schedule')
     await window.locator('.n-page-header__back').click()

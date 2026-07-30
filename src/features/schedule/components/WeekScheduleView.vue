@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CalendarOccurrenceDto } from '../../../contracts/occurrence.contract'
 import { NEmpty } from 'naive-ui'
-import { computed, reactive, type CSSProperties } from 'vue'
+import { computed, reactive, watch, type CSSProperties } from 'vue'
 import {
   formatOccurrenceRange,
   formatRelativeTime,
@@ -26,6 +26,10 @@ const props = withDefaults(defineProps<{
   timeDisplayMode?: TimeDisplayMode
   timeDisplayOverrides?: readonly string[]
   now?: string
+  hourHeight?: number | undefined
+  draggable?: boolean
+  interactive?: boolean
+  tooltipTransparent?: boolean
 }>(), {
   startDate: () => new Date().toISOString().slice(0, 10),
   dayCount: 5,
@@ -33,7 +37,11 @@ const props = withDefaults(defineProps<{
   startMinute: 0,
   timeDisplayMode: 'clock',
   timeDisplayOverrides: () => [],
-  now: () => new Date().toISOString()
+  now: () => new Date().toISOString(),
+  hourHeight: undefined,
+  draggable: true,
+  interactive: true,
+  tooltipTransparent: false
 })
 const emit = defineEmits<{
   select: [id: string]
@@ -43,6 +51,9 @@ const { t, locale } = useI18n()
 const dragStartOffsets = reactive(new Map<string, number>())
 const dragOffsets = reactive(new Map<string, number>())
 const hovered = reactive(new Set<string>())
+watch(() => props.interactive, (interactive) => {
+  if (!interactive) hovered.clear()
+})
 const days = computed(() => Array.from({ length: props.dayCount }, (_, offset) => {
   const date = new Date(`${props.startDate}T00:00:00Z`)
   date.setUTCDate(date.getUTCDate() + offset)
@@ -87,6 +98,9 @@ function timeLabel(item: CalendarOccurrenceDto): string {
 }
 
 function positionInDay(startMinutes: number, offsetPixels = 0): string {
+  if (props.hourHeight !== undefined) {
+    return `calc(var(--day-header-height) + ${startMinutes * props.hourHeight / 60}px + ${offsetPixels}px)`
+  }
   return `calc(4.8vh + (100% - 4.8vh) * ${startMinutes / 1440} + ${offsetPixels}px)`
 }
 
@@ -112,7 +126,9 @@ function eventStyle(segment: WeekEventSegment) {
       segment.startMinutes,
       dragOffsets.get(item.id) ?? 0
     ),
-    blockSize: `max(2%, calc((100% - 4.8vh) * ${duration / 1440}))`,
+    blockSize: props.hourHeight === undefined
+      ? `max(2%, calc((100% - 4.8vh) * ${duration / 1440}))`
+      : `${Math.max(28, duration * props.hourHeight / 60)}px`,
     backgroundColor: `${color}${isHovered ? '90' : '65'}`,
     border: `1.5px solid ${color}`,
     ...(isHovered
@@ -137,8 +153,16 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
 <template>
   <div
     data-testid="week-view"
-    class="week-view"
-    :style="{ gridTemplateColumns: `repeat(${dayCount}, minmax(0, 1fr))` }"
+    :class="['week-view', { 'fixed-hour-height': hourHeight !== undefined }]"
+    :style="{
+      gridTemplateColumns: `repeat(${dayCount}, minmax(0, 1fr))`,
+      ...(hourHeight === undefined
+        ? {}
+        : {
+          '--timeline-body-height': `${hourHeight * 24}px`,
+          '--day-header-height': '42px'
+        })
+    }"
   >
     <section
       v-for="day in days"
@@ -151,18 +175,20 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
         :key="segment.key"
         :item="segment.item"
         :time-zone="timeZone"
+        :disabled="!interactive"
+        :transparent="tooltipTransparent"
       >
         <div
           :data-occurrence-id="segment.item.id"
           :data-segment-date="segment.logicalDate"
           class="event-card"
-          draggable="true"
+          :draggable="draggable"
           :style="eventStyle(segment)"
           @click="emit('select', segment.item.scheduleId)"
-          @mouseenter="hovered.add(segment.item.id)"
-          @mouseleave="hovered.delete(segment.item.id)"
-          @dragstart="handleDragStart($event, segment.item)"
-          @dragend="handleDragEnd($event, segment.item)"
+          @mouseenter="interactive && hovered.add(segment.item.id)"
+          @mouseleave="interactive && hovered.delete(segment.item.id)"
+          @dragstart="draggable && handleDragStart($event, segment.item)"
+          @dragend="draggable && handleDragEnd($event, segment.item)"
         >
           <button
             type="button"
@@ -205,6 +231,9 @@ function handleDragEnd(event: DragEvent, item: CalendarOccurrenceDto): void {
 <style scoped>
 .week-view { display: grid; flex: 1 1 0; min-block-size: 0; }
 .day-card { position: relative; min-block-size: 0; overflow: hidden; border: 1px solid var(--color-border); border-radius: 4px; text-align: center; word-break: break-word; }
+.fixed-hour-height { flex: none; block-size: calc(var(--day-header-height) + var(--timeline-body-height)); }
+.fixed-hour-height .day-card { block-size: 100%; }
+.fixed-hour-height .day-card header { block-size: var(--day-header-height); line-height: var(--day-header-height); }
 .day-card header { block-size: 4.8vh; line-height: 4.8vh; padding: 0; border-block-end: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); }
 .event-card { position: absolute; inset-inline: 0; display: flex; align-items: center; justify-content: space-between; inline-size: 100%; padding-inline: 10px; overflow: hidden; border-radius: 4px; box-sizing: border-box; color: inherit; cursor: pointer; }
 .current-time-indicator { --time-label-width: 3.25rem; position: absolute; z-index: 1000; inset-inline: 0; block-size: 1px; }

@@ -94,6 +94,34 @@ export function calendarRange(
   }
 }
 
+/** 构造包含当前 instant 的完整逻辑日 occurrence 查询范围。 */
+export function currentLogicalDayRange(
+  timeZone: string,
+  logicalDayStartHour: number,
+  logicalDayStartMinute: number,
+  now: Temporal.Instant = Temporal.Now.instant()
+): OccurrenceRangeQuery {
+  const zonedNow = now.toZonedDateTimeISO(timeZone)
+  const boundaryTime = Temporal.PlainTime.from({
+    hour: logicalDayStartHour,
+    minute: logicalDayStartMinute
+  })
+  let logicalDate = zonedNow.toPlainDate()
+  let start = logicalDate.toZonedDateTime({ timeZone, plainTime: boundaryTime })
+  if (Temporal.Instant.compare(now, start.toInstant()) < 0) {
+    logicalDate = logicalDate.subtract({ days: 1 })
+    start = logicalDate.toZonedDateTime({ timeZone, plainTime: boundaryTime })
+  }
+  return {
+    start: start.toInstant().toString(),
+    end: logicalDate.add({ days: 1 })
+      .toZonedDateTime({ timeZone, plainTime: boundaryTime })
+      .toInstant()
+      .toString(),
+    limit: 5000
+  }
+}
+
 export function formatInstant(
   instant: string,
   timeZone: string,

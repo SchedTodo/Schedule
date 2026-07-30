@@ -6,11 +6,20 @@ import {
   formatOccurrenceRange
 } from '../occurrence-time'
 import { useI18n } from 'vue-i18n'
+import {
+  widgetTooltipContentStyle,
+  widgetTooltipThemeOverrides
+} from '../widget-tooltip-theme'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   item: CalendarOccurrenceDto
   timeZone: string
-}>()
+  disabled?: boolean
+  transparent?: boolean
+}>(), {
+  disabled: false,
+  transparent: false
+})
 const { locale } = useI18n()
 
 function dateLabel(): string {
@@ -24,7 +33,16 @@ function dateLabel(): string {
 </script>
 
 <template>
-  <NTooltip trigger="hover">
+  <NTooltip
+    trigger="hover"
+    :disabled="disabled"
+    v-bind="transparent
+      ? {
+        themeOverrides: widgetTooltipThemeOverrides,
+        contentStyle: widgetTooltipContentStyle
+      }
+      : {}"
+  >
     <template #trigger>
       <slot />
     </template>

@@ -9,6 +9,12 @@ const router = createRouter({
       component: () => import('./pages/index.vue')
     },
     {
+      path: '/widget',
+      name: 'widget',
+      meta: { standalone: true },
+      component: () => import('./pages/widget.vue')
+    },
+    {
       path: '/schedule/:id',
       name: 'schedule-detail',
       component: () => import('./pages/schedule/[id].vue')

@@ -5,6 +5,7 @@ import { NNotificationProvider } from 'naive-ui'
 import { darkTheme } from 'naive-ui/es/themes'
 import { dateEnUS, dateZhCN, enUS, zhCN } from 'naive-ui/es/locales'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 
 import { naiveThemeOverrides } from './app/naive-theme'
 import AppFeedbackProvider from './app/components/AppFeedbackProvider.vue'
@@ -17,6 +18,8 @@ const preferences = usePreferencesStore()
 const gateway = inject(platformGatewayKey)
 const { locale } = useI18n()
 const runtime = useRuntimeStore()
+const route = useRoute()
+const standalone = computed(() => route.meta.standalone === true)
 runtime.init(preferences.calendarMode)
 watch(
   () => preferences.locale,
@@ -52,7 +55,8 @@ const usesDarkTheme = computed(
           data-testid="app-shell"
           :class="{ 'theme-dark': usesDarkTheme }"
         >
-          <AppShell />
+          <RouterView v-if="standalone" />
+          <AppShell v-else />
         </main>
       </AppFeedbackProvider>
     </NNotificationProvider>

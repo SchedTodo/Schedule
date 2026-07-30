@@ -78,6 +78,18 @@ export const enUS = {
     deleteTimes: 'Delete selected times?',
     notFound: 'Schedule not found'
   },
+  widget: {
+    today: 'Today',
+    todayTodo: 'Today Todo',
+    todaySchedule: 'Today Schedule',
+    absoluteTime: 'Absolute',
+    relativeTime: 'Relative',
+    passthrough: 'Passthrough',
+    alwaysOnTop: 'Always on top',
+    hide: 'Hide',
+    backToNow: 'Back to now',
+    noTodos: 'No todos'
+  },
   database: {
     allSchedules: 'Show all schedules',
     database: 'Database',
@@ -100,6 +112,7 @@ export const enUS = {
     minutes: 'minutes',
     monthView: 'Month View',
     openAtLogin: 'Open At Login',
+    desktopWidget: 'Today Desktop Widget',
     pomodoro: 'Pomodoro',
     preferences: 'Preferences',
     priority: 'Priority',
@@ -250,6 +263,12 @@ export const zhCN: MessageShape<typeof enUS> = {
     duration: '时长', deleteSchedule: '确定删除整个日程吗？',
     deleteTimes: '确定删除选中的时间实例吗？', notFound: '未找到日程'
   },
+  widget: {
+    today: '今天', todayTodo: '今日 Todo', todaySchedule: '今日日程',
+    absoluteTime: '绝对时间', relativeTime: '相对时间',
+    passthrough: '穿透', alwaysOnTop: '置顶', hide: '隐藏',
+    backToNow: '回到现在', noTodos: '暂无待办'
+  },
   database: {
     allSchedules: '显示全部日程', database: '数据库', endDate: '结束日期',
     search: '搜索名称或备注', searchPlaceholder: '搜索名称或备注（空格：且，|：或）…',
@@ -258,6 +277,7 @@ export const zhCN: MessageShape<typeof enUS> = {
   },
   settings: {
     abbreviation: '缩写', abbreviationIana: '缩写对应的 IANA 时区', alarm: '提醒',
+    desktopWidget: '今日桌面组件',
     bigBreak: '长休息', event: '事件', focusTime: '专注时长',
     ianaTimeZone: 'IANA 时区', minutes: '分钟', monthView: '月视图',
     openAtLogin: '开机启动', pomodoro: '番茄钟', preferences: '偏好',
